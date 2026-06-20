@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Local datasets, caches, and generated thesis outputs.
+data/raw/*
+data/processed_features/*
+outputs/figures/*
+outputs/tables/*
+
+# Keep directory placeholders.
+!data/raw/.gitkeep
+!data/processed_features/.gitkeep
+!outputs/figures/.gitkeep
+!outputs/tables/.gitkeep

@@ -1,0 +1,14 @@
+Feature name,Domain,Physical meaning,Used by models
+elapsed_scaled,time feature,Normalized elapsed operating time used as temporal input,yes
+rms,time-domain,Signal energy amplitude through root mean square vibration,yes
+std,time-domain,Vibration dispersion around the mean,yes
+ptp,time-domain,Peak-to-peak vibration range,yes
+kurtosis,time-domain,Impulsiveness of vibration signal,yes
+crest_factor,time-domain,Peak amplitude relative to RMS,yes
+mean_abs,time-domain,Mean absolute vibration amplitude,yes
+E_FTF,physics-informed frequency feature,Envelope spectral energy around cage fault train frequency harmonics,yes
+E_BPFO,physics-informed frequency feature,Envelope spectral energy around outer-race fault frequency harmonics,yes
+E_BPFI,physics-informed frequency feature,Envelope spectral energy around inner-race fault frequency harmonics,yes
+E_BSF,physics-informed frequency feature,Envelope spectral energy around rolling-element fault frequency harmonics,yes
+E_kin,physics-informed frequency feature,Combined bearing kinematic fault-frequency spectral energy,yes
+sigma_H_norm,auxiliary placeholder,Constant placeholder; not a Hertzian contact stress calculation,yes

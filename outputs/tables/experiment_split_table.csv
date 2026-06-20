@@ -1,0 +1,4 @@
+Experiment,Train runs,Validation run,Test run,Purpose
+Exp 1,ds2_b1 + ds1_b3,ds1_b4,ds3_b3,Cross-dataset/cross-bearing transfer with ds3_b3 held out for testing
+Exp 2,ds2_b1 + ds1_b4,ds1_b3,ds3_b3,Alternative training-bearing combination with the same ds3_b3 test run
+Exp 3,ds2_b1 + ds3_b3,ds1_b4,ds1_b3,Cross-dataset transfer to ds1_b3 with balanced training runs

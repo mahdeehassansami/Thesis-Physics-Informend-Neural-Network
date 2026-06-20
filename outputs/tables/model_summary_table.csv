@@ -1,0 +1,5 @@
+Model,Model type,Input format,Role in thesis,Target
+Data-only neural baseline,Feed-forward neural network,Single snapshot feature vector,Data-only baseline,Normalized RUL
+Proposed DeepXDE Physics-Informed RUL Model,DeepXDE physics-informed neural network,Single snapshot feature vector with time and fault-frequency energy features,Proposed model,Normalized RUL
+LSTM baseline,Recurrent neural network,Sliding-window sequence of feature vectors,Sequence baseline,Normalized RUL
+CNN baseline,1D convolutional neural network,Sliding-window sequence of feature vectors,Sequence baseline,Normalized RUL

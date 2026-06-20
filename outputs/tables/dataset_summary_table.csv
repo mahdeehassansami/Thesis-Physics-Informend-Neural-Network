@@ -1,0 +1,5 @@
+Run ID,IMS dataset,Bearing number,Failure type if available,Number of samples,Used in experiments,Notes
+ds2_b1,2nd_test,1,Not specified in cleaned notebook,984,Exp 1 Train; Exp 2 Train; Exp 3 Train,Run-to-failure IMS bearing run used in cross-bearing experiments
+ds1_b3,1st_test,3,Not specified in cleaned notebook,2156,Exp 1 Train; Exp 2 Validation; Exp 3 Test,Run-to-failure IMS bearing run used in cross-bearing experiments
+ds1_b4,1st_test,4,Not specified in cleaned notebook,2156,Exp 1 Validation; Exp 2 Train; Exp 3 Validation,Run-to-failure IMS bearing run used in cross-bearing experiments
+ds3_b3,3rd_test,3,Not specified in cleaned notebook,6324,Exp 1 Test; Exp 2 Test; Exp 3 Train,Run-to-failure IMS bearing run used in cross-bearing experiments

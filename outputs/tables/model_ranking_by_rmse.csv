@@ -1,0 +1,13 @@
+Experiment,Model,RMSE,Rank by RMSE
+Exp 1,LSTM baseline,0.11195694116955,1
+Exp 1,Data-only neural baseline,0.12849986434810617,2
+Exp 1,Proposed DeepXDE Physics-Informed RUL Model,0.17349300870908452,3
+Exp 1,CNN baseline,0.2656080296649138,4
+Exp 2,Proposed DeepXDE Physics-Informed RUL Model,0.1439273952476978,1
+Exp 2,Data-only neural baseline,0.1476217491977409,2
+Exp 2,LSTM baseline,0.15542548910003903,3
+Exp 2,CNN baseline,0.23464544111141886,4
+Exp 3,CNN baseline,0.20442140879115367,1
+Exp 3,LSTM baseline,0.21935459441461727,2
+Exp 3,Data-only neural baseline,0.2795608846607953,3
+Exp 3,Proposed DeepXDE Physics-Informed RUL Model,0.35139833432073103,4

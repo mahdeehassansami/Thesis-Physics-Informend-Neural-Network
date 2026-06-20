@@ -1,0 +1,5 @@
+Frequency name,Symbol,Value in Hz,Related bearing component,Extracted feature
+FTF,FTF,14.77521695557971,Cage / fundamental train,E_FTF
+BPFO,BPFO,236.40347128927536,Outer race,E_BPFO
+BPFI,BPFI,296.929862044058,Inner race,E_BPFI
+BSF,BSF,139.9166557862542,Rolling element,E_BSF
