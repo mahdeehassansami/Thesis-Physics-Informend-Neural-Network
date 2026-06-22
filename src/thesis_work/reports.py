@@ -226,7 +226,6 @@ def plot_model_ranking(paths: ProjectPaths, ranking: pd.DataFrame) -> None:
         edgecolor=COLORS["ink"],
         linewidth=0.7,
     )
-    ax.invert_yaxis()
     ax.set_yticks([1, 2, 3, 4])
     polish_axes(ax, "Experiment", "Rank by RMSE")
     top_legend(ax, ncol=2)
