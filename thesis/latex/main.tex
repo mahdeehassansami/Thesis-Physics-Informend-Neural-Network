@@ -1,0 +1,125 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{placeins}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage[nottoc]{tocbibind}
+\usepackage{cite}
+
+\graphicspath{{assets/images/}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\titleformat{\chapter}[display]
+{\centering\bfseries\fontsize{22pt}{22pt}\selectfont}
+{Chapter \thechapter}
+{0pt}
+{}
+[\vspace{1em}]
+
+\titlespacing*{\chapter}{0pt}{6pt}{8pt}
+
+\titleformat{\section}
+{\fontsize{13pt}{13pt}\selectfont\MakeUppercase}
+{\thesection}
+{1em}
+{}
+
+\titlespacing*{\section}{0pt}{6pt}{6pt}
+
+\titleformat{\subsection}
+{\bfseries\fontsize{12pt}{12pt}\selectfont}
+{\thesubsection}
+{1em}
+{}
+
+\titleformat{\subsubsection}
+{\itshape\fontsize{12pt}{12pt}\selectfont}
+{\thesubsubsection}
+{1em}
+{}
+
+\setlength{\parskip}{12pt}
+\setlength{\parindent}{0pt}
+
+\geometry{
+    left=1.2in,
+    right=0.8in,
+    top=1in,
+    bottom=0.8in
+}
+
+\onehalfspacing
+\pagestyle{plain}
+\sloppy
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,
+    urlcolor=black,
+    citecolor=black,
+    pdftitle={Physics-Informed Neural Networks for Remaining-Useful-Life Prediction of Rolling-Element Bearings},
+    pdfauthor={Mahdee Hassan Sami}
+}
+
+\begin{document}
+
+\pagenumbering{gobble}
+
+\input{sections/cover}
+\input{sections/information}
+
+\clearpage
+\pagenumbering{roman}
+
+\phantomsection
+\input{sections/abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+\phantomsection
+\input{sections/acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+
+\tableofcontents
+\addcontentsline{toc}{chapter}{\contentsname}
+\listoffigures
+\listoftables
+
+\phantomsection
+\input{sections/nomenclature}
+\addcontentsline{toc}{chapter}{Nomenclature}
+
+\newpage
+\pagenumbering{arabic}
+\renewcommand{\thechapter}{\arabic{chapter}}
+\renewcommand{\thesection}{\thechapter.\arabic{section}}
+\setcounter{chapter}{0}
+
+\input{sections/introduction}
+\input{sections/literature_review}
+\input{sections/methodology}
+\input{sections/implementation}
+\input{sections/results}
+\input{sections/conclusion}
+
+\renewcommand{\bibname}{References}
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\input{sections/appendices}
+
+\end{document}

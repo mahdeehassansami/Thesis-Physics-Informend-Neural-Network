@@ -1,0 +1,259 @@
+\chapter{Results and Discussion}
+\label{chapter:results}
+
+\section{Feature Behavior Over Bearing Life}
+
+The extracted features do not evolve identically across bearing runs. This is expected because different bearings can have different fault initiation times and degradation rates. RMS and peak-to-peak values capture energy growth. Kurtosis and crest factor are more sensitive to impulsive behavior. $E_{kin}$ summarizes energy near the calculated fault-frequency harmonics.
+
+Figures~\ref{fig:feature_rms} to \ref{fig:feature_ekin} show representative feature evolution over normalized lifetime. The plotted feature values are normalized for visualization so that their trends can be compared across bearings.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{feature_evolution_rms.pdf}
+    \caption{RMS evolution over normalized bearing life.}
+    \label{fig:feature_rms}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{feature_evolution_kurtosis.pdf}
+    \caption{Kurtosis evolution over normalized bearing life.}
+    \label{fig:feature_kurtosis}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{feature_evolution_crest_factor.pdf}
+    \caption{Crest factor evolution over normalized bearing life.}
+    \label{fig:feature_crest}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{feature_evolution_e_kin.pdf}
+    \caption{Combined fault-frequency envelope energy evolution over normalized bearing life.}
+    \label{fig:feature_ekin}
+\end{figure}
+\FloatBarrier
+
+The plots show why cross-bearing RUL prediction is difficult. Some features rise smoothly in one run and irregularly in another. A model trained on one degradation shape may misread a different shape. This is the central challenge behind the results that follow.
+
+Figure~\ref{fig:feature_correlation} shows the Spearman correlation structure among the extracted features and normalized RUL. The time-domain amplitude features are strongly related to each other, while the fault-frequency energy terms add a different but still related view of degradation.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{feature_correlation_heatmap.pdf}
+    \caption{Spearman correlation structure of extracted features and normalized RUL.}
+    \label{fig:feature_correlation}
+\end{figure}
+\FloatBarrier
+
+\section{Main Prediction Results}
+
+Table~\ref{tab:final_results} gives the full model results for all three experiments.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.25}
+    \caption{Final prediction metrics for all models and experiments.}
+    \label{tab:final_results}
+    \begin{tabularx}{\textwidth}{@{}l l c c c@{}}
+        \toprule
+        Experiment & Model & MAE & RMSE & R2 \\
+        \midrule
+        Exp 1 & Data-only FNN & 0.083 & 0.128 & 0.801 \\
+        Exp 1 & Proposed PINN & 0.147 & 0.173 & 0.638 \\
+        Exp 1 & LSTM & 0.101 & 0.112 & 0.848 \\
+        Exp 1 & CNN & 0.244 & 0.266 & 0.146 \\
+        Exp 2 & Data-only FNN & 0.104 & 0.148 & 0.738 \\
+        Exp 2 & Proposed PINN & 0.114 & 0.144 & 0.751 \\
+        Exp 2 & LSTM & 0.141 & 0.155 & 0.708 \\
+        Exp 2 & CNN & 0.200 & 0.235 & 0.334 \\
+        Exp 3 & Data-only FNN & 0.156 & 0.280 & 0.032 \\
+        Exp 3 & Proposed PINN & 0.262 & 0.351 & -0.530 \\
+        Exp 3 & LSTM & 0.176 & 0.219 & 0.382 \\
+        Exp 3 & CNN & 0.183 & 0.204 & 0.463 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\FloatBarrier
+
+The average performance across the three experiments is shown in Table~\ref{tab:average_results}. On average, the LSTM baseline is the strongest model. It has the lowest average RMSE at 0.162 and the highest average $R^2$ at 0.646. The data-only feed-forward baseline is second by average RMSE at 0.185. The proposed physics-informed model has an average RMSE of 0.223. The CNN baseline has the weakest average RMSE at 0.235, although it performs best in Experiment 3.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.25}
+    \caption{Average model performance across the three experiments.}
+    \label{tab:average_results}
+    \begin{tabularx}{\textwidth}{@{}l c c c@{}}
+        \toprule
+        Model & Average MAE & Average RMSE & Average R2 \\
+        \midrule
+        CNN & 0.209 & 0.235 & 0.314 \\
+        Data-only FNN & 0.114 & 0.185 & 0.524 \\
+        LSTM & 0.139 & 0.162 & 0.646 \\
+        Proposed PINN & 0.175 & 0.223 & 0.286 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{average_rmse_by_model.pdf}
+    \caption{Average RMSE by model across the three experiments.}
+    \label{fig:average_rmse}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{average_mae_by_model.pdf}
+    \caption{Average MAE by model across the three experiments.}
+    \label{fig:average_mae}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{average_r2_by_model.pdf}
+    \caption{Average $R^2$ by model across the three experiments.}
+    \label{fig:average_r2}
+\end{figure}
+\FloatBarrier
+
+These results do not support the original expectation that the proposed PINN would dominate the baselines. They show a more specific conclusion: the weak physics-informed formulation can help in one split, but it is not robustly better across all held-out bearing runs.
+
+\section{Experiment-Wise Comparison}
+
+The model ranking by RMSE is given in Table~\ref{tab:ranking} and Figure~\ref{fig:model_ranking}. The ranking figure is oriented so that ranks increase upward: rank 1 is at the bottom and rank 4 is at the top.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.25}
+    \caption{Model ranking by RMSE.}
+    \label{tab:ranking}
+    \begin{tabularx}{\textwidth}{@{}l l c c@{}}
+        \toprule
+        Experiment & Model & RMSE & Rank by RMSE \\
+        \midrule
+        Exp 1 & LSTM & 0.112 & 1 \\
+        Exp 1 & Data-only FNN & 0.128 & 2 \\
+        Exp 1 & Proposed PINN & 0.173 & 3 \\
+        Exp 1 & CNN & 0.266 & 4 \\
+        Exp 2 & Proposed PINN & 0.144 & 1 \\
+        Exp 2 & Data-only FNN & 0.148 & 2 \\
+        Exp 2 & LSTM & 0.155 & 3 \\
+        Exp 2 & CNN & 0.235 & 4 \\
+        Exp 3 & CNN & 0.204 & 1 \\
+        Exp 3 & LSTM & 0.219 & 2 \\
+        Exp 3 & Data-only FNN & 0.280 & 3 \\
+        Exp 3 & Proposed PINN & 0.351 & 4 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{model_ranking_by_rmse.pdf}
+    \caption{Model ranking by RMSE for each experiment. Lower rank is better.}
+    \label{fig:model_ranking}
+\end{figure}
+\FloatBarrier
+
+The ranking changes from experiment to experiment. In Experiment 1, the LSTM baseline performs best with RMSE 0.112. In Experiment 2, the proposed PINN performs best with RMSE 0.144, narrowly ahead of the data-only baseline. In Experiment 3, the CNN baseline performs best with RMSE 0.204, followed by the LSTM. The proposed PINN performs worst in Experiment 3, with negative $R^2$.
+
+Figure~\ref{fig:best_model} makes this instability clear by showing only the lowest-RMSE model in each experiment. A single model does not win every split. The metric comparison plots in Figures~\ref{fig:metric_rmse} to \ref{fig:metric_r2} show the same pattern from different viewpoints.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.78\textwidth]{best_model_by_experiment.pdf}
+    \caption{Lowest-RMSE model in each experiment.}
+    \label{fig:best_model}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{metric_comparison_rmse.pdf}
+    \caption{RMSE by model and experiment.}
+    \label{fig:metric_rmse}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{metric_comparison_mae.pdf}
+    \caption{MAE by model and experiment.}
+    \label{fig:metric_mae}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{metric_comparison_r2.pdf}
+    \caption{$R^2$ by model and experiment.}
+    \label{fig:metric_r2}
+\end{figure}
+\FloatBarrier
+
+\section{True Versus Predicted RUL}
+
+Figures~\ref{fig:exp1_predictions} to \ref{fig:exp3_predictions} compare the true normalized RUL curve with model predictions on the held-out test runs.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{exp_1_true_vs_predicted_rul.pdf}
+    \caption{Experiment 1 true and predicted normalized RUL on the held-out test run.}
+    \label{fig:exp1_predictions}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{exp_2_true_vs_predicted_rul.pdf}
+    \caption{Experiment 2 true and predicted normalized RUL on the held-out test run.}
+    \label{fig:exp2_predictions}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{exp_3_true_vs_predicted_rul.pdf}
+    \caption{Experiment 3 true and predicted normalized RUL on the held-out test run.}
+    \label{fig:exp3_predictions}
+\end{figure}
+\FloatBarrier
+
+In Experiment 1, the LSTM follows the decreasing RUL trend more closely than the other models. The proposed PINN is smoother, but it does not match the test curve as well. In Experiment 2, the PINN is more competitive and gives the lowest RMSE. This suggests that the physics prior can help when the training bearings give a degradation pattern compatible with the held-out test bearing. In Experiment 3, the PINN struggles on \texttt{ds1\_b3}, while the CNN and LSTM sequence models handle the test run better.
+
+\section{Error Analysis}
+
+Figure~\ref{fig:absolute_error} shows smoothed absolute prediction error over normalized test life. The largest errors tend to appear when the degradation curve changes more sharply or when a model predicts RUL too conservatively near the end of life.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{absolute_error_over_life.pdf}
+    \caption{Smoothed absolute prediction error over normalized test life.}
+    \label{fig:absolute_error}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{prediction_error_distribution.pdf}
+    \caption{Signed prediction error distribution. Positive error means the model overestimated normalized RUL.}
+    \label{fig:error_distribution}
+\end{figure}
+\FloatBarrier
+
+The distribution confirms that the sequence models do not merely improve the average score. They also reduce the spread of errors in several cases. The proposed PINN has a wider error distribution because its weak physical prior does not fully capture the different degradation paths of the test bearings.
+
+\section{Discussion of the Physics-Informed Model}
+
+The proposed PINN includes two forms of physical regularization: a monotonicity residual and a spectral prior based on fault-frequency energy. Both are reasonable engineering assumptions, but both are incomplete.
+
+The monotonicity residual assumes RUL should not increase with elapsed life. That is correct at the life-label level, but the model sees noisy features. If the feature pattern of a held-out bearing differs from the training bearings, a strict preference for smooth monotonic behavior can prevent the model from adapting to local signal changes. The implementation uses a tolerance and small weight to reduce this issue, but the result still depends on the split.
+
+The spectral prior assumes that higher combined fault-frequency energy should correspond to greater damage. This is physically plausible, but envelope energy is not a perfect damage variable. It can be affected by resonance, noise, axis direction, load-zone behavior, and the timing of fault development. If $E_{kin}$ grows late or irregularly in one run, a model trained on another run may apply the prior at the wrong time.
+
+The strongest lesson is that physics-informed learning is not automatically better because it contains engineering language. The prior must match the data-generating process closely enough to help. In this thesis, the prior is useful in Experiment 2 but not enough to beat sequence modeling overall.
+
+\section{Why the LSTM Performed Well}
+
+The LSTM baseline uses recent history instead of a single snapshot. This is important because degradation is a process. A feature value by itself may be ambiguous, but its recent trend gives more information. For example, moderate RMS may mean early healthy operation in one run or a temporary plateau after fault growth in another. A short sequence helps the model distinguish these cases.
+
+The LSTM also has fewer assumptions about the exact physical relationship between $E_{kin}$ and damage. It learns temporal patterns directly from the feature sequences. This flexibility likely explains why it achieved the best average RMSE and $R^2$.
+
+\section{Why the CNN Won Experiment 3}
+
+The CNN baseline performs worst on average but best in Experiment 3. This result shows that model choice depends on the train-test pairing. A 1D CNN can detect local temporal patterns in the sliding feature window. In Experiment 3, those local patterns transferred well to \texttt{ds1\_b3}. In the other experiments, the same model did not generalize as strongly.
+
+This does not mean the CNN is the best overall choice. It means that a single average metric can hide split-specific behavior. For a thesis, the split-wise analysis is therefore as important as the average table.
+
+\section{Practical Implications}
+
+For an engineering maintenance system, the safest conclusion is conservative. The current PINN formulation should not be deployed as a final RUL predictor. The LSTM baseline is stronger in the completed experiments, but it also needs more validation before field use. A practical system would need more run-to-failure data, multiple operating conditions, uncertainty estimates, and a clear maintenance decision rule.
+
+The work still gives useful direction. Physics-informed features are valuable for interpretation, and the PINN framework remains promising. The next step is not to abandon physics. It is to improve the physical model, use better degradation constraints, and evaluate on more splits and datasets.

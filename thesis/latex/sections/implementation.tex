@@ -1,0 +1,41 @@
+\chapter{Local Implementation and Experimental Setup}
+\label{chapter:implementation}
+
+\section{Local Project Structure}
+
+The original work began as a Google Colab notebook. For this thesis, the workflow was converted into a local Python project. The code no longer mounts Google Drive. It reads data from \texttt{data/raw}, caches extracted features in \texttt{data/processed\_features}, and writes tables and figures to \texttt{outputs}.
+
+The main package is under \texttt{src/thesis\_work}. It contains separate modules for configuration, IMS data loading, feature extraction, preprocessing, model training, metrics, report generation, and command-line execution. This structure makes the experiment easier to test and rerun than a single notebook.
+
+\section{Reproducibility Commands}
+
+The project uses \texttt{uv} for dependency management. The main commands are:
+
+\begin{verbatim}
+uv sync --extra dev
+uv run thesis-work validate-data
+uv run thesis-work extract-features
+uv run thesis-work run
+uv run thesis-work regenerate-figures
+uv run pytest -q
+\end{verbatim}
+
+The full run trains all four models for all three experiments. The command can take a long time on CPU, so the project also supports shorter smoke-test arguments. The final results in this thesis come from the completed full run saved in \texttt{outputs/tables/final\_results\_table.csv}.
+
+\section{Software Environment}
+
+The implementation uses Python 3.11 and the following main libraries: NumPy, pandas, SciPy, scikit-learn, matplotlib, seaborn, DeepXDE, PyTorch, and tqdm. The LaTeX thesis is compiled with MiKTeX using the Windows batch script included in the thesis source folder.
+
+The local PC used for the completed run had an AMD Ryzen 7 5800H CPU with 8 cores and 16 logical processors, 16 GB RAM, Windows 11 Home Single Language, and an NVIDIA GeForce RTX 3060 Laptop GPU with 4 GB VRAM. Training and inference wall time is machine-specific and should be reported together with this hardware context.
+
+\section{Data Validation}
+
+The validation command checks that the expected folders are present and that the first snapshot in each dataset can be read with the correct number of columns. This step matters because the IMS text files may be stored either as extracted folders or zip files. The local loader supports both, but the final run used extracted folders under \texttt{data/raw}.
+
+\section{Feature Cache}
+
+Feature extraction is the slowest preprocessing step because every vibration snapshot must be read and transformed. The pipeline therefore caches per-run feature tables and a combined \texttt{all\_runs\_features.csv}. Cached features make it possible to regenerate figures and tables without reprocessing the raw data or retraining the models.
+
+\section{Visual Reporting}
+
+The final figures were generated with matplotlib and seaborn using a consistent color palette. Models use the same colors across all plots: gray for the data-only baseline, blue for the proposed PINN, green for LSTM, and orange-red for CNN. Bearing runs also use fixed colors. In the LaTeX thesis, plot files avoid embedded chart titles where possible because figure captions and labels provide the formal titles in the document.

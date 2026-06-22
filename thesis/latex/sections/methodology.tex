@@ -1,0 +1,229 @@
+\chapter{Dataset and Research Methodology}
+\label{chapter:methodology}
+
+\section{Introduction}
+
+This chapter describes the dataset, signal-processing steps, RUL target construction, model definitions, experiment design, and evaluation metrics used in the study. The workflow begins with raw IMS vibration files and ends with model rankings, prediction curves, and error analysis. Figure~\ref{fig:methodology_workflow} summarizes the local pipeline.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{methodology_flowchart.pdf}
+    \caption{End-to-end local workflow used for IMS bearing RUL prediction.}
+    \label{fig:methodology_workflow}
+\end{figure}
+\FloatBarrier
+
+\section{Dataset Description}
+
+The IMS bearing dataset contains run-to-failure vibration measurements collected from a bearing test rig. The raw data are stored as timestamped text files. Each file contains a vibration snapshot sampled at high frequency. In this project, the extracted dataset folders are stored locally under \texttt{data/raw}.
+
+The local pipeline uses three IMS folders: \texttt{1st\_test}, \texttt{2nd\_test}, and \texttt{3rd\_test}. The first test contains eight columns because two accelerometer channels are available for each of four bearings. The second and third tests contain four columns, one for each bearing. The implementation maps each selected column to a bearing and averages two axes when the first test provides x and y directions for the target bearing.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.25}
+    \caption{Bearing runs used in the final experiments.}
+    \label{tab:dataset_summary}
+    \begin{tabularx}{\textwidth}{@{}l l c c Y@{}}
+        \toprule
+        Run ID & IMS dataset & Bearing number & Number of samples & Used in experiments \\
+        \midrule
+        ds2\_b1 & 2nd\_test & 1 & 984 & Exp 1 Train; Exp 2 Train; Exp 3 Train \\
+        ds1\_b3 & 1st\_test & 3 & 2156 & Exp 1 Train; Exp 2 Validation; Exp 3 Test \\
+        ds1\_b4 & 1st\_test & 4 & 2156 & Exp 1 Validation; Exp 2 Train; Exp 3 Validation \\
+        ds3\_b3 & 3rd\_test & 3 & 6324 & Exp 1 Test; Exp 2 Test; Exp 3 Train \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\FloatBarrier
+
+Figure~\ref{fig:dataset_sample_counts} shows the number of snapshots available for each selected run. The difference in run length is large. The third dataset bearing run has 6324 samples, while the second dataset bearing run has 984 samples. This imbalance affects model training and is one reason why Experiment 3 uses balanced sampling for its training runs.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{dataset_sample_counts.pdf}
+    \caption{Snapshot coverage for the four bearing runs used in the final experiments.}
+    \label{fig:dataset_sample_counts}
+\end{figure}
+\FloatBarrier
+
+\section{Feature Extraction}
+
+Each vibration snapshot is converted into a feature vector. The time-domain features are RMS, standard deviation, peak-to-peak value, kurtosis, crest factor, and mean absolute value. These features summarize amplitude, spread, impulsiveness, and peak behavior. They are widely used in bearing condition monitoring because they are simple and physically interpretable.
+
+The physics-related features are calculated from envelope spectral energy near bearing fault frequencies. The signal is centered, transformed with the Hilbert transform to obtain the envelope, centered again, windowed with a Hann window, and transformed with a real FFT. For each fault frequency, the pipeline sums spectral energy in a 5 Hz band around the first four harmonics. The four energy features are $E_{FTF}$, $E_{BPFO}$, $E_{BPFI}$, and $E_{BSF}$. Their sum is stored as $E_{kin}$.
+
+The fault-frequency equations used by the implementation are
+\begin{equation}
+FTF = \frac{f_r}{2}\left(1-\frac{d}{D}\cos\theta\right),
+\end{equation}
+\begin{equation}
+BPFO = \frac{n f_r}{2}\left(1-\frac{d}{D}\cos\theta\right),
+\end{equation}
+\begin{equation}
+BPFI = \frac{n f_r}{2}\left(1+\frac{d}{D}\cos\theta\right),
+\end{equation}
+\begin{equation}
+BSF = \frac{D f_r}{2d}\left(1-\left(\frac{d}{D}\cos\theta\right)^2\right),
+\end{equation}
+where $f_r$ is shaft frequency, $n$ is the number of rolling elements, $d$ is rolling-element diameter, $D$ is pitch diameter, and $\theta$ is contact angle.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \renewcommand{\arraystretch}{1.25}
+    \caption{Extracted features used by the neural models.}
+    \label{tab:feature_set}
+    \begin{tabularx}{\textwidth}{@{}l l Y c@{}}
+        \toprule
+        Feature name & Domain & Physical meaning & Used by models \\
+        \midrule
+        elapsed\_scaled & time feature & Normalized elapsed operating time used as temporal input & yes \\
+        rms & time-domain & Signal energy amplitude through root mean square vibration & yes \\
+        std & time-domain & Vibration dispersion around the mean & yes \\
+        ptp & time-domain & Peak-to-peak vibration range & yes \\
+        kurtosis & time-domain & Impulsiveness of vibration signal & yes \\
+        crest\_factor & time-domain & Peak amplitude relative to RMS & yes \\
+        mean\_abs & time-domain & Mean absolute vibration amplitude & yes \\
+        E\_FTF & physics-informed frequency feature & Envelope spectral energy around cage fault train frequency harmonics & yes \\
+        E\_BPFO & physics-informed frequency feature & Envelope spectral energy around outer-race fault frequency harmonics & yes \\
+        E\_BPFI & physics-informed frequency feature & Envelope spectral energy around inner-race fault frequency harmonics & yes \\
+        E\_BSF & physics-informed frequency feature & Envelope spectral energy around rolling-element fault frequency harmonics & yes \\
+        E\_kin & physics-informed frequency feature & Combined bearing kinematic fault-frequency spectral energy & yes \\
+        sigma\_H\_norm & auxiliary placeholder & Constant placeholder; not a Hertzian contact stress calculation & yes \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\FloatBarrier\begin{table}[htbp]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.25}
+    \caption{Bearing fault frequencies used for envelope spectral-energy extraction.}
+    \label{tab:fault_frequencies}
+    \begin{tabularx}{\textwidth}{@{}l l c Y l@{}}
+        \toprule
+        Frequency name & Symbol & Value in Hz & Related bearing component & Extracted feature \\
+        \midrule
+        FTF & FTF & 14.78 & Cage / fundamental train & E\_FTF \\
+        BPFO & BPFO & 236.40 & Outer race & E\_BPFO \\
+        BPFI & BPFI & 296.93 & Inner race & E\_BPFI \\
+        BSF & BSF & 139.92 & Rolling element & E\_BSF \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{fault_frequencies.pdf}
+    \caption{Bearing fault-frequency values used as markers for envelope spectral-energy extraction.}
+    \label{fig:fault_frequencies}
+\end{figure}
+\FloatBarrier
+
+\section{RUL Target Labeling}
+
+For each selected bearing run, elapsed time is computed from the timestamp of the first snapshot. RUL is computed by subtracting the current timestamp from the timestamp of the final snapshot. The model target is normalized RUL:
+\begin{equation}
+RUL_{norm}(t) = \frac{RUL(t)}{\max(RUL)}.
+\end{equation}
+This gives a target near 1 at the beginning of the run and near 0 at the end. The normalization makes results comparable across runs with different durations. It also means that the model predicts relative life fraction, not absolute hours.
+
+\section{Preprocessing}
+
+Feature values can differ greatly between bearing runs. To reduce the effect of run-specific scale, each run is normalized using its early healthy baseline. The first 5 percent of samples, with a minimum of 20 samples, are treated as the healthy baseline. For each model feature, the median baseline value is used. The feature is converted to a nonnegative relative increase, transformed with \texttt{log1p}, and smoothed with a rolling median of 15 samples.
+
+Elapsed time is converted to \texttt{elapsed\_scaled} by dividing elapsed hours by 1200. The model input vector contains \texttt{elapsed\_scaled}, the normalized feature set, and \texttt{sigma\_H\_norm}. The final variable is a constant placeholder kept for compatibility with the original notebook structure. It is not treated as a real Hertzian contact stress calculation in the final interpretation.
+
+\section{PCA Health Indicator}
+
+A PCA-based health indicator is built to inspect whether the extracted features contain a monotonic degradation signal. The model feature matrix is standardized and projected onto the first principal component. The resulting component is scaled between 0 and 1. If the Spearman correlation with damage is negative, the indicator is flipped so that higher values correspond to greater damage.
+
+The health indicator is not used as the final RUL target. It is used as an explanatory tool. It helps show whether the engineered features broadly track degradation.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.25}
+    \caption{PCA health-indicator monotonicity and damage correlation.}
+    \label{tab:pca_hi}
+    \begin{tabularx}{\textwidth}{@{}l c c Y@{}}
+        \toprule
+        Bearing run & Monotonicity score & Correlation with damage & Interpretation \\
+        \midrule
+        ds1\_b3 & 0.766 & 0.889 & Strongly degradation-consistent PCA-HI behavior \\
+        ds3\_b3 & 0.864 & 0.777 & Strongly degradation-consistent PCA-HI behavior \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{pca_health_indicator.pdf}
+    \caption{Smoothed PCA health indicator compared with normalized damage on held-out test runs.}
+    \label{fig:pca_health_indicator}
+\end{figure}
+\FloatBarrier
+
+\section{Model Definitions}
+
+Four models are evaluated. The data-only neural baseline is a feed-forward neural network implemented in DeepXDE \cite{lu2021}. It uses three hidden layers with 64 neurons per layer and tanh activation. A sigmoid output transform constrains predictions between 0 and 1. It is trained with mean squared error.
+
+The proposed physics-informed model uses the same basic feed-forward architecture but adds weak physical residuals. The first residual penalizes positive RUL slope with respect to time beyond a small tolerance, because RUL should generally decrease as life is consumed. The second residual connects high $E_{kin}$ to damage by encouraging the predicted damage term $1 - RUL$ to be consistent with fault-frequency energy. The model loss can be written as
+\begin{equation}
+\mathcal{L} = \mathcal{L}_{data} + \lambda_m \mathcal{L}_{mono} + \lambda_e \mathcal{L}_{energy},
+\end{equation}
+where $\mathcal{L}_{data}$ is the supervised RUL loss, $\mathcal{L}_{mono}$ is the monotonicity residual, $\mathcal{L}_{energy}$ is the fault-energy residual, and $\lambda_m$ and $\lambda_e$ are small regularization weights.
+
+The LSTM baseline uses sliding windows of feature vectors. It reads a sequence of length 20 and predicts the RUL at the end of the sequence. The architecture has one LSTM layer with 64 hidden units followed by a small dense head and a sigmoid output. The CNN baseline uses the same sequence windows but applies 1D convolutions across the time axis.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \renewcommand{\arraystretch}{1.25}
+    \caption{Model definitions and roles in the experiment.}
+    \label{tab:model_summary}
+    \begin{tabularx}{\textwidth}{@{}Y Y Y Y l@{}}
+        \toprule
+        Model & Model type & Input format & Role in thesis & Target \\
+        \midrule
+        Data-only neural baseline & Feed-forward neural network & Single snapshot feature vector & Data-only baseline & Normalized RUL \\
+        Proposed DeepXDE Physics-Informed RUL Model & DeepXDE physics-informed neural network & Single snapshot feature vector with time and fault-frequency energy features & Proposed model & Normalized RUL \\
+        LSTM baseline & Recurrent neural network & Sliding-window sequence of feature vectors & Sequence baseline & Normalized RUL \\
+        CNN baseline & 1D convolutional neural network & Sliding-window sequence of feature vectors & Sequence baseline & Normalized RUL \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\FloatBarrier
+
+\section{Experiment Design}
+
+The three experiments hold out complete bearing runs for validation and testing. This is stricter than randomly splitting snapshots because the model must transfer across bearing runs. Table~\ref{tab:experiment_split} and Figure~\ref{fig:experiment_split_matrix} show the split design.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \renewcommand{\arraystretch}{1.25}
+    \caption{Train-validation-test split for each experiment.}
+    \label{tab:experiment_split}
+    \begin{tabularx}{\textwidth}{@{}l l l l Y@{}}
+        \toprule
+        Experiment & Train runs & Validation run & Test run & Purpose \\
+        \midrule
+        Exp 1 & ds2\_b1 + ds1\_b3 & ds1\_b4 & ds3\_b3 & Cross-dataset/cross-bearing transfer with ds3\_b3 held out for testing \\
+        Exp 2 & ds2\_b1 + ds1\_b4 & ds1\_b3 & ds3\_b3 & Alternative training-bearing combination with the same ds3\_b3 test run \\
+        Exp 3 & ds2\_b1 + ds3\_b3 & ds1\_b4 & ds1\_b3 & Cross-dataset transfer to ds1\_b3 with balanced training runs \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{experiment_split_matrix.pdf}
+    \caption{Experiment split matrix showing how each bearing run is used.}
+    \label{fig:experiment_split_matrix}
+\end{figure}
+\FloatBarrier
+
+\section{Evaluation Metrics}
+
+The models are evaluated with MAE, RMSE, and $R^2$. MAE is the average absolute prediction error. RMSE penalizes larger errors more strongly because the error is squared before averaging. $R^2$ measures how much variance in the target is explained by the prediction. A negative $R^2$ means the model performs worse than predicting the mean target value.
+
+The thesis uses RMSE as the main ranking metric because large RUL errors are especially undesirable in maintenance planning. MAE and $R^2$ are still reported to give a fuller view of model behavior. The metric definitions follow common prognostics evaluation practice \cite{saxena2008}.

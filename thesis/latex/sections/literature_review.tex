@@ -1,0 +1,52 @@
+\chapter{Literature Review}
+\label{chapter:literature}
+
+\section{Introduction}
+
+This chapter reviews the research background for bearing RUL prediction with physics-informed neural networks. The discussion follows the structure of the thesis proposal, but it is updated to reflect the completed experiments. It begins with rolling-element bearing failure modes and vibration-based health monitoring, then reviews predictive maintenance methods, deep learning for bearing prognosis, general PINN theory, and recent physics-informed learning work in bearing condition monitoring. The chapter closes by identifying the research gap addressed in this thesis.
+
+\section{Literature Survey}
+
+\subsection{Rolling-Element Bearings: Fundamentals and Failure Modes}
+
+A rolling-element bearing contains an inner race, an outer race, rolling elements, and a cage. The rolling elements transfer load through small contact regions, so repeated stress cycles can initiate subsurface or surface-initiated fatigue. Defects may also arise from lubrication failure, contamination, overload, misalignment, electrical pitting, poor installation, or manufacturing variation. Once a defect begins, repeated rolling contact can grow it into a spall or crack that changes the vibration response of the machine \cite{rycerz2017,sadeghi2009,xu2023}.
+
+The vibration signature depends on the component that is damaged. An outer-race defect produces impacts when rolling elements pass over a fixed damaged region. An inner-race defect rotates with the shaft and is affected by the load zone. Rolling-element and cage defects produce different modulation patterns. These mechanisms explain why bearing monitoring often uses characteristic frequencies derived from bearing geometry and shaft speed. The frequencies are not perfect fault labels, but they provide physically meaningful regions in the spectrum and envelope spectrum \cite{li2000,wu2022}.
+
+The thesis proposal emphasized that bearing prognostics should not treat vibration features as arbitrary numbers. That point remains important in the completed work. RMS, kurtosis, crest factor, and envelope energy have mechanical meaning, even when they are later passed into neural models. Using physically interpretable features also makes it easier to see why a model succeeds or fails on a held-out bearing run.
+
+\subsection{Traditional Predictive Maintenance Techniques for Bearings}
+
+Predictive maintenance is normally discussed as part of condition-based maintenance and prognostics and health management. Jardine et al. \cite{jardine2006} describe the broader machinery diagnostics and prognostics framework, while Lei et al. \cite{lei2018} review the full path from data acquisition to RUL prediction. In a bearing application, the workflow usually includes sensor measurement, preprocessing, feature extraction, health indicator construction, fault diagnosis, and future-life estimation.
+
+Vibration remains one of the most widely used signals for bearing health monitoring because bearing faults generate impacts and modulations in the mechanical response. Time-domain features such as RMS and kurtosis summarize energy and impulsiveness. Frequency-domain and envelope-domain features can reveal periodic impact patterns linked to bearing kinematics. Similarity-based and health-indicator methods then convert these features into a degradation measure or RUL estimate \cite{huang2020}.
+
+The IMS bearing dataset is one of the common public run-to-failure datasets used for this type of work. It is associated with the wavelet-filter bearing prognostics study of Qiu et al. \cite{qiu2006}. The PRONOSTIA platform is another well-known accelerated bearing degradation benchmark \cite{nectoux2012}. Public datasets are valuable because they let different researchers test methods on the same raw measurements. At the same time, public datasets are small compared with industrial variability, so the train-test split must be designed carefully. Random snapshot splits can overstate performance by allowing information from the same run-to-failure trajectory into both training and testing.
+
+\subsection{Deep Learning in Predictive Maintenance}
+
+Deep learning has become popular in bearing prognostics because it can fit nonlinear relationships between sensor measurements and degradation labels. A feed-forward neural network can work directly with engineered feature vectors. A CNN can detect local patterns from a sequence or transformed signal representation. An LSTM can model temporal dependence and is therefore naturally suited to degradation trajectories. Babu et al. \cite{babu2016} showed early CNN-based RUL regression, and later studies extended deep learning for transfer learning, high-quality representation learning, and hybrid sequence architectures \cite{berghout2022,ayman2025,wang2025}.
+
+Recent studies also combine convolutional, recurrent, and autoencoder structures for bearing health monitoring and RUL prediction \cite{farooq2024,han2024,yang2024}. These models are attractive because inference is fast after training and because they can learn patterns that are difficult to specify manually. However, their performance depends strongly on the similarity between the training and test distributions. In bearing RUL prediction, this is a serious issue because two bearings under similar nominal conditions may fail at different times and with different feature trajectories.
+
+For this reason, model evaluation should hold out complete bearing runs when the research question is transfer across bearings. A random split of individual snapshots may measure interpolation within one degradation curve rather than generalization to another bearing. The experiment design in this thesis uses complete held-out runs for validation and testing.
+
+\subsection{Physics-Informed Neural Networks}
+
+Physics-informed neural networks were introduced as a way to train neural networks under physical residual constraints \cite{raissi2019}. In the usual PINN setting, a neural network approximates a field variable, and automatic differentiation is used to compute derivatives that appear in a governing equation. The training loss combines data mismatch and a physics residual. This has made PINNs attractive in fluid mechanics, heat transfer, wave propagation, and inverse problems where governing equations are available.
+
+The PINN literature has expanded quickly. Reviews by Lawal et al. \cite{lawal2022} and Ren et al. \cite{ren2025} describe methodological growth, optimization issues, and applications across scientific computing. The strength of a PINN is not simply that it contains a neural network and a physical equation. Its value depends on whether the physical residual is relevant, correctly weighted, and numerically trainable. Poorly chosen physical constraints can slow training or add bias.
+
+Bearing RUL prediction is not a textbook PINN problem because the degradation process is not governed by a single known partial differential equation. Rolling contact fatigue, lubrication, load distribution, resonance, material variation, and measurement noise interact in ways that are difficult to reduce to one residual. Crack-growth laws such as Paris and Erdogan \cite{paris1963} show how mechanics can describe damage propagation in some contexts, but a complete bearing RUL equation for vibration features is rarely available in practice. This motivates weaker physics-informed learning: monotonic damage behavior, lifetime distributions, fault-frequency consistency, and other engineering priors.
+
+\subsection{Physics-Informed Neural Networks for Bearing Predictive Maintenance}
+
+Recent bearing-related studies have begun to use physics-informed or knowledge-informed learning. Chen et al. \cite{chen2022} proposed a physics-informed deep neural network for bearing prognosis with multisensory signals. Parziale et al. \cite{parziale2023} applied PINNs to condition monitoring of rotating shafts. Herwig et al. \cite{herwig2025} developed a signal-processing and physics-informed network for explainable bearing condition monitoring. Zhong et al. \cite{zhong2025} used a multi-source physics-informed SincNet structure for rolling bearing fault diagnosis. von Hahn and Mechefske \cite{vonhahn2022} investigated a knowledge-informed loss based on Weibull lifetime behavior.
+
+These studies show why the approach is promising. Physics can improve interpretability, guide learning when data are limited, and discourage predictions that conflict with engineering expectations. They also show why the approach must be tested carefully. A physical prior only helps when it matches the measured data closely enough. If the prior is too weak, the model may behave like a data-only network. If it is too strong or mismatched, it may prevent the model from fitting valid degradation patterns.
+
+\section{Research Gap}
+
+The literature shows three gaps that motivate this thesis. First, many bearing RUL studies report strong results, but their preprocessing, RUL labeling, train-test split, and evaluation protocol differ. This makes comparisons difficult. Second, some studies use random sample splits that can leak run-specific degradation information into both training and testing. Third, physics-informed learning for bearing prognosis is still developing, and there is no guarantee that a weak physical prior improves prediction on complete held-out bearing runs.
+
+This thesis addresses a narrower and reproducible question: how does a weak physics-informed RUL model behave when compared with common neural baselines on complete held-out IMS bearing runs? The study uses a local project structure, explicit feature extraction, a defined RUL target, saved tables and figures, and three train-validation-test splits. The goal is not to claim a universal best model. The goal is to test a specific physics-informed formulation and report what the completed experiment shows.
