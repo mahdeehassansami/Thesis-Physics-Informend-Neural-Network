@@ -8,38 +8,40 @@ from matplotlib.patches import Patch
 FONT_FAMILY = ["Aptos", "Segoe UI", "DejaVu Sans", "Arial"]
 
 COLORS = {
-    "ink": "#20262E",
-    "muted": "#68707C",
-    "grid": "#D9DEE7",
+    "ink": "#18202A",
+    "muted": "#667085",
+    "grid": "#E4EAF2",
     "panel": "#FFFFFF",
-    "blue": "#3B6EA8",
-    "blue_dark": "#234A73",
-    "gold": "#C9972B",
-    "gold_dark": "#816018",
-    "olive": "#5F8E5E",
-    "olive_dark": "#3C613B",
-    "orange": "#D9793D",
-    "orange_dark": "#93491F",
-    "pink": "#C15E87",
-    "pink_dark": "#843A58",
-    "teal": "#3E8F91",
-    "teal_dark": "#235C5E",
-    "gray": "#9AA3AF",
-    "gray_dark": "#5E6673",
+    "blue": "#0072B2",
+    "blue_dark": "#00466E",
+    "sky": "#56B4E9",
+    "sky_dark": "#277DAA",
+    "gold": "#E69F00",
+    "gold_dark": "#9A6A00",
+    "emerald": "#009E73",
+    "emerald_dark": "#00664A",
+    "vermillion": "#D55E00",
+    "vermillion_dark": "#8F3F00",
+    "violet": "#CC79A7",
+    "violet_dark": "#88486C",
+    "teal": "#00A6A6",
+    "teal_dark": "#006B6B",
+    "slate": "#7A869A",
+    "slate_dark": "#475467",
 }
 
 RUN_PALETTE = {
     "ds2_b1": COLORS["blue"],
     "ds1_b3": COLORS["gold"],
-    "ds1_b4": COLORS["olive"],
-    "ds3_b3": COLORS["pink"],
+    "ds1_b4": COLORS["emerald"],
+    "ds3_b3": COLORS["violet"],
 }
 
 MODEL_PALETTE = {
-    "Data-only neural baseline": COLORS["gray"],
+    "Data-only neural baseline": COLORS["slate"],
     "Proposed DeepXDE Physics-Informed RUL Model": COLORS["blue"],
-    "LSTM baseline": COLORS["olive"],
-    "CNN baseline": COLORS["orange"],
+    "LSTM baseline": COLORS["emerald"],
+    "CNN baseline": COLORS["vermillion"],
 }
 
 

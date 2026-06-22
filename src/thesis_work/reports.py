@@ -60,7 +60,7 @@ def plot_pca_hi(paths: ProjectPaths, pca_hi_df: pd.DataFrame, pca_hi_summary: pd
             run["life_norm_for_plot"],
             run["damage_norm"],
             linestyle="--",
-            color=COLORS["gray_dark"],
+            color=COLORS["slate_dark"],
             alpha=0.68,
             linewidth=1.5,
             label=f"{run_id} damage = 1 - RUL",
@@ -338,8 +338,8 @@ def save_static_tables_and_figures(
     frequency_palette = {
         "FTF": COLORS["blue"],
         "BPFO": COLORS["gold"],
-        "BPFI": COLORS["olive"],
-        "BSF": COLORS["pink"],
+        "BPFI": COLORS["emerald"],
+        "BSF": COLORS["violet"],
     }
     sns.barplot(
         data=fault_frequency,
