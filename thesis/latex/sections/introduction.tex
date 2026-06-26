@@ -3,13 +3,13 @@
 
 \section{Background and Motivation}
 
-Rolling-element bearings support shafts, carry loads, and reduce friction in motors, pumps, turbines, gearboxes, fans, compressors, and many other machines. Because they sit directly in the load path, a bearing defect rarely remains an isolated issue for long. A small defect on a raceway or rolling element can create repeated impacts, excite vibration, produce heat, damage nearby parts, and eventually force the machine out of service. In industrial maintenance, the cost of a bearing failure is often much larger than the cost of the bearing itself.
+Rolling-element bearings support shafts, carry loads, and reduce friction in motors, pumps, turbines, gearboxes, fans, compressors, and many other machines. Because they sit directly in the load path, a bearing defect rarely remains an isolated issue for long. A small defect on a raceway or rolling element can create repeated impacts, excite vibration, produce heat, damage nearby parts, and eventually force the machine out of service. The consequences of a bearing failure are sometimes far greater than the cost of the bearing in industrial maintenance.
 
-Traditional maintenance strategies do not fully solve the problem. Reactive maintenance waits for failure and accepts the risk of unplanned shutdown. Preventive maintenance replaces parts on a fixed schedule, but that schedule is usually conservative. It can remove healthy components too early or miss faults that develop faster than expected. Condition-based maintenance improves on both approaches by measuring the actual condition of the machine and using that evidence to support maintenance decisions. Prognostics and health management extends this idea by estimating not only whether a component is damaged, but how much useful life may remain before failure \cite{jardine2006,lei2018}.
+While traditional maintenance approaches could help, they don't completely address the issue. Reactive maintenance is waiting for failure and takes the risk of unplanned shutdown. Preventive maintenance involves exchanges of parts at a predetermined interval, typically a more conservative interval than necessary. Can take out healthy components too soon or miss faults that occur quicker than they should. The improvements of both methods are provided in condition-based maintenance, in that the state of the machine is assessed and a maintenance decision is made based on the evidence. Prognostics and health management is a further step that attempts to predict the remaining useful life of a component before failure, in addition to predicting failure, \cite{jardine2006,lei2018}.
 
-Remaining useful life prediction is difficult for bearings because degradation is not a simple straight line. Vibration can remain low for a long portion of the test, then change rapidly near the end of life. The measured signal depends on fault type, speed, load, sensor placement, noise, resonance, lubrication, and bearing geometry \cite{wu2022,kannan2024}. A model trained on one bearing may not behave well on another bearing, even when both bearings come from the same test rig. This is why benchmark run-to-failure datasets such as the IMS bearing dataset are useful. They allow researchers to study the same raw measurements and compare methods under repeatable conditions \cite{qiu2006}.
+The reason why the remaining useful life prediction for bearings is difficult is that the deterioration process is not linear. Vibration may stay low for a considerable length of the test, but then increase dramatically towards the end of life. The measured signals are affected by the type of fault, the speed of the fault, the load, the position of the sensor, noise, resonance, lubrication, and the geometry of the bearings \cite{wu2022, kannan2024}. Training on one of the bearings doesn't mean that the model works well on another bearing, even if they are both from the same test rig. This is the reason that the IMS bearing data set is helpful for benchmarking run-to-failure experiments. They enable a study of the same raw measurements and the comparison of methods under identical conditions \cite{qiu2006}.
 
-Deep learning methods have become common in bearing diagnosis and RUL prediction because they can model nonlinear patterns in vibration signals. CNNs can learn local patterns from windows of data, LSTMs can model temporal dependence, and feed-forward networks can fit engineered feature vectors \cite{babu2016,berghout2022,ayman2025}. These methods can work well when the training and test data are similar. Their weakness is that they usually learn only from examples. When labeled run-to-failure data are limited or the test bearing degrades differently from the training bearings, a data-only model may produce predictions that are numerically plausible but physically questionable.
+The deep learning techniques have gained popularity for their ability to capture nonlinear patterns within vibration signals, which is crucial for bearing diagnosis and RUL prediction. CNNs can learn local patterns from windows of data, LSTMs can model temporal dependence, and feed-forward networks can fit engineered feature vectors \cite{babu2016,berghout2022,ayman2025}. These methods can work well when the training and test data are similar. Their weakness is that they usually learn only from examples. When labeled run-to-failure data are limited or the test bearing degrades differently from the training bearings, a data-only model may produce predictions that are numerically plausible but physically questionable.
 
 Physics-informed neural networks offer a way to include prior engineering knowledge in the learning process. In their most established form, PINNs train a neural network while penalizing violations of governing equations or physical constraints \cite{raissi2019}. Bearing RUL prediction does not usually provide a complete closed-form degradation equation, but it does provide useful partial knowledge. Damage should generally increase with operating time, RUL should generally decrease, and bearing geometry gives characteristic fault frequencies associated with cage, inner-race, outer-race, and rolling-element defects. This thesis studies whether such weak physical information can improve RUL prediction on the IMS data.
 
@@ -24,34 +24,31 @@ This question is practical as well as methodological. In a real machine, the fut
 The objectives of this thesis are:
 
 \begin{enumerate}[label=\arabic*.]
-    \item To build a local, reproducible processing pipeline for the IMS bearing data without depending on Google Colab or Google Drive.
-    \item To extract time-domain vibration features and physics-related envelope spectral features from selected IMS bearing runs.
-    \item To construct normalized RUL targets and a PCA-based health indicator for degradation analysis.
-    \item To design and evaluate a DeepXDE physics-informed neural model for RUL prediction.
-    \item To compare the proposed physics-informed model with a data-only neural baseline, an LSTM baseline, and a 1D CNN baseline.
-    \item To discuss the results honestly, including the cases where the proposed model does not outperform the baselines.
+    \item To extract degradation-relevant vibration features from selected IMS bearing runs and construct normalized RUL targets with a PCA-based health indicator for analysis.
+    \item To design and evaluate a DeepXDE physics-informed neural model that uses weak monotonicity and fault-frequency energy priors for bearing RUL prediction.
+    \item To compare the proposed physics-informed model with data-only, LSTM, and CNN neural baselines under complete held-out bearing splits and interpret where each model succeeds or fails.
 \end{enumerate}
 
 \section{Scope}
 
 This study is limited to the IMS bearing data placed locally under \texttt{data/raw/1st\_test}, \texttt{data/raw/2nd\_test}, and \texttt{data/raw/3rd\_test}. Four bearing runs are used in the final experiment design: \texttt{ds2\_b1}, \texttt{ds1\_b3}, \texttt{ds1\_b4}, and \texttt{ds3\_b3}. The work uses vibration signals only. It does not add temperature, oil debris, acoustic emission, or motor-current data.
 
-The models predict normalized RUL from extracted features. The thesis does not claim field deployment readiness. The data come from a controlled test rig, and the operational conditions are much simpler than many industrial machines. The physical information in the PINN is also intentionally weak. It uses monotonicity and fault-frequency energy priors rather than a full contact mechanics or crack growth model.
+The models predict normalized RUL from extracted features. The thesis does not claim field deployment readiness. The data come from a controlled test rig, and the operational conditions are much simpler than many industrial machines. There is also an intentional weak physical information from PINN. It relies on monotonicity and energy priors for fault frequency, instead of a full energy balance contact mechanics or crack growth model.
 
 \section{Importance of the Study}
 
-This work connects three parts of the bearing prognostics problem in one local workflow: signal processing, machine learning, and physical interpretation. The feature extraction step keeps the connection to vibration analysis through RMS, kurtosis, crest factor, and envelope spectral energies. The neural models test whether those features can support RUL prediction across bearing runs. The physics-informed model tests whether simple physical priors can regularize the learning process.
-
-The final result is not a simple success story for the proposed model. That is important. A thesis result should report what the experiment shows, not what the proposal expected. The completed run suggests that LSTM sequence modeling captured the degradation trend more consistently than the proposed weakly physics-informed feed-forward model. At the same time, the PINN was competitive in Experiment 2 and ranked first there by RMSE. This mixed behavior gives a clearer direction for future work than an overconfident positive claim would.
+This work is the integration of three parts of the bearing prognostics problem in one local workflow: Signal processing, machine learning and physical interpretation. The feature extraction step maintains the links with vibration analysis of RMS, kurtosis, crest factor, and envelope spectral energies. The neural models investigate if those features can contribute to Predicting RULs over bearing runs. The physics-informed model is used to test if simple Priorities can be regularized in the learning process through physical priors.
+The final result isn't just a success story for the proposed model. That is important. A thesis result should state what happens during the experiment, not what is expected to happen in the proposal. The final run indicates that LSTM sequence modeling was able to capture the degradation .The proposed weakly physics-informed feed-forward model is less consistent in their trend. Meanwhile, the PINN was competitive in Experiment 2 and ranked first in Experiment 2 (RMSE).This mixed behavior is more clearly specified for future work than an overconfident
+positive claim would.
 
 \section{Limitations}
 
 The main limitations are:
 
 \begin{enumerate}[label=\arabic*.]
-    \item The IMS dataset contains a small number of run-to-failure records, so the experiment design is constrained.
-    \item The selected physics prior is not a full bearing degradation law. It is a weak regularizer based on monotonic RUL behavior and fault-frequency energy.
-    \item The model uses hand-engineered features, not raw vibration waveforms.
+    \item The IMS dataset has small number of total run-to-failure records which creates a experiment design constraint.
+    \item The physics selected prior is not a full bearing degradation law. It is a regularizer based on monotonic RUL behavior and fault-frequency energy.
+    \item The model uses hand-engineered features, not raw vibration waveform.
     \item The RUL labels are derived from elapsed time to the end of each run, which assumes the last available file represents failure or near-failure.
     \item The experiments are run on one local PC, so training time and numerical results may vary on other machines.
 \end{enumerate}

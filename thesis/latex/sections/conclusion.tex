@@ -3,28 +3,28 @@
 
 \section{Summary}
 
-This thesis studied remaining useful life prediction for rolling-element bearings using the IMS run-to-failure dataset. A local Python project was built from the original notebook so the workflow can run without Google Drive. The pipeline reads raw IMS folders, extracts time-domain and envelope spectral features, constructs normalized RUL labels, builds a PCA health indicator, trains four neural models, and writes reproducible tables and figures.
+In this thesis the we investigated the prediction of remaining useful life for rolling element bearings. The study used the IMS run-to-failure dataset. To ensure the workflow is functional without Google Drive, we converted the original notebook into a local Python project. By using this pipeline, the system reads raw dataset folders and extracts features from the time domain and the envelope spectrum. As part of the process, the system creates normalized labels for remaining useful life plus develops a health indicator using principal component analysis. For the final stages, the software trains four neural models and generates tables and figures that can be reproduced.
 
-The proposed model was a DeepXDE physics-informed neural network with weak physical residuals based on monotonic RUL behavior and fault-frequency energy. It was compared with a data-only feed-forward neural baseline, an LSTM sequence baseline, and a CNN sequence baseline across three cross-bearing experiments.
+The proposed model is a physics informed neural network within the DeepXDE framework. It uses weak physical residuals that relate to the energy at fault frequencies but also the fact that remaining useful life decreases over time. To evaluate this model, the researcher compared it with a feed forward neural baseline that uses only data, an LSTM sequence baseline and a CNN sequence baseline - those comparisons occurred during three experiments involving different bearings.
 
-The results were mixed. The proposed PINN achieved the best RMSE in Experiment 2, but it did not perform best overall. The LSTM baseline had the best average performance, with average RMSE 0.162 and average $R^2$ 0.646. The data-only baseline was second by average RMSE. The proposed PINN ranked third by average RMSE, and the CNN ranked fourth, although the CNN performed best in Experiment 3.
+here were different outcomes across the various tests - in Experiment 2, the proposed physics informed neural network resulted in the lowest root mean square error. It is not the most effective model when considering all data. The LSTM baseline is the most consistent performer, as it has an average root mean square error of 0.162 and an average coefficient of determination of 0.646. If ranked by average root mean square error, the data only baseline is the second most effective model. The proposed physics informed neural network is in third place according to this metric. And the CNN is in fourth place, although the CNN is the most accurate model in Experiment 3.
 
 \section{Contributions}
 
 The main contributions of this thesis are:
 
 \begin{enumerate}[label=\arabic*.]
-    \item A complete local RUL prediction pipeline for the IMS bearing dataset.
-    \item A documented feature extraction method combining time-domain vibration features and bearing fault-frequency envelope energy.
-    \item A PCA-based health indicator analysis for degradation consistency.
-    \item A DeepXDE physics-informed RUL model using monotonicity and spectral priors.
-    \item A fair comparison with feed-forward, LSTM, and CNN baselines under complete held-out bearing splits.
-    \item A clear discussion of the mismatch between the original proposal expectation and the final experimental evidence.
+    \item A local RUL prediction pipeline for the IMS bearing dataset.
+    \item A feature extraction method combining time-domain vibration features and bearing fault-frequency envelope energy which has been documented.
+    \item A degradation consistency for analysis of PCA-based health indicator.
+    \item A DeepXDE physics-informed RUL model using monotonicity and frequency features.
+    \item A comparison with feed-forward, LSTM, and CNN baselines under complete held-out bearing splits.
+    \item A discussion of the mismatch between the original proposal expectation and the final experimental results.
 \end{enumerate}
 
 \section{Limitations}
 
-The study has several limitations. The IMS data provide only a small number of complete failure runs. The RUL target is normalized by the final timestamp, so it does not represent an independently measured failure threshold. The physical prior is weak and does not include a full contact fatigue model, lubrication model, temperature effect, or uncertainty estimate. The model is trained on engineered features rather than raw waveforms. Finally, the results are from one local implementation and one set of hyperparameters.
+The study consists of a couple limitations. The number of complete failure runs were low. The RUL target is normalized by the final timestamp, so it does not represent an independently measured failure threshold. The physical prior is weak and does not include a full contact fatigue model, lubrication model, temperature effect, or uncertainty estimate. The model is trained on engineered features rather than raw waveforms. Finally, the results are from one local implementation and one set of hyperparameters.
 
 \section{Future Work}
 

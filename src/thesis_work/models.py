@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import random
 
 os.environ.setdefault("DDE_BACKEND", "pytorch")
 
@@ -9,9 +10,13 @@ import numpy as np
 from thesis_work.config import (
     CNN_BASELINE_NAME,
     DATA_BASELINE_NAME,
+    CNN_SEED,
+    DATA_BASELINE_SEED,
     EKIN_COL,
     FEATURE_COLS_MULTI,
+    LSTM_SEED,
     LSTM_BASELINE_NAME,
+    PINN_SEED,
     PROPOSED_MODEL_NAME,
     TARGET_COL,
     TIME_COL,
@@ -39,13 +44,37 @@ def _torch_nn():
     return torch, nn
 
 
+def seed_python_numpy(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+
+
+def seed_torch(torch, seed: int) -> None:
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    if hasattr(torch.backends, "cudnn"):
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    if hasattr(torch, "use_deterministic_algorithms"):
+        torch.use_deterministic_algorithms(True, warn_only=True)
+
+
+def seed_deepxde(dde, torch, seed: int) -> None:
+    seed_python_numpy(seed)
+    if hasattr(dde.config, "set_random_seed"):
+        dde.config.set_random_seed(seed)
+    seed_torch(torch, seed)
+
+
 def predict_dde_model(model, x: np.ndarray) -> np.ndarray:
     pred = model.predict(x)
     return np.clip(pred, 0, 1).ravel()
 
 
-def train_data_only_baseline(ctx: dict[str, object], iterations: int):
+def train_data_only_baseline(ctx: dict[str, object], iterations: int, seed: int):
     dde, torch = _deepxde_and_torch()
+    seed_deepxde(dde, torch, seed)
     data = dde.data.DataSet(
         X_train=ctx["X_train"],
         y_train=ctx["y_train"],
@@ -73,8 +102,9 @@ def weak_fault_frequency_physics_residual(x, y):
     return [monotonicity_residual, spectral_prior_residual]
 
 
-def train_proposed_deepxde_model(ctx: dict[str, object], iterations: int):
+def train_proposed_deepxde_model(ctx: dict[str, object], iterations: int, seed: int):
     dde, torch = _deepxde_and_torch()
+    seed_deepxde(dde, torch, seed)
     geom = dde.geometry.PointCloud(ctx["X_train"])
     observe_rul = dde.icbc.PointSetBC(ctx["X_train"], ctx["y_train"], component=0)
     data = dde.data.PDE(
@@ -205,8 +235,8 @@ def train_torch_sequence_model(
     sequence_length: int,
 ) -> tuple[object, np.ndarray, np.ndarray, np.ndarray]:
     torch, nn = _torch_nn()
-    torch.manual_seed(seed)
-    np.random.seed(seed)
+    seed_python_numpy(seed)
+    seed_torch(torch, seed)
 
     x_train, y_train, _ = make_sequence_arrays(
         ctx["train_df"], ctx["scaler"], spec["train_runs"], sequence_length
@@ -270,6 +300,10 @@ def train_all_models(
     sequence_patience: int,
     sequence_batch_size: int,
     sequence_length: int,
+    data_baseline_seed: int = DATA_BASELINE_SEED,
+    pinn_seed: int = PINN_SEED,
+    lstm_seed: int = LSTM_SEED,
+    cnn_seed: int = CNN_SEED,
 ) -> tuple[object, dict[str, dict[str, object]], dict[str, dict[str, object]]]:
     import pandas as pd
 
@@ -290,7 +324,7 @@ def train_all_models(
         trained_models[spec["name"]] = {}
 
         print(f'\n=== {spec["name"]} data-only baseline ===')
-        baseline_model = train_data_only_baseline(ctx, baseline_iterations)
+        baseline_model = train_data_only_baseline(ctx, baseline_iterations, seed=data_baseline_seed)
         baseline_pred = predict_dde_model(baseline_model, ctx["X_test"])
         print(f"{DATA_BASELINE_NAME}: {regression_metrics(ctx['y_test'], baseline_pred)}")
         core_rows.append(evaluation_row(spec, DATA_BASELINE_NAME, ctx["y_test"], baseline_pred))
@@ -299,7 +333,7 @@ def train_all_models(
         trained_models[spec["name"]][DATA_BASELINE_NAME] = baseline_model
 
         print(f'\n=== {spec["name"]} proposed DeepXDE model ===')
-        proposed_model = train_proposed_deepxde_model(ctx, pinn_iterations)
+        proposed_model = train_proposed_deepxde_model(ctx, pinn_iterations, seed=pinn_seed)
         proposed_pred = predict_dde_model(proposed_model, ctx["X_test"])
         print(f"{PROPOSED_MODEL_NAME}: {regression_metrics(ctx['y_test'], proposed_pred)}")
         core_rows.append(evaluation_row(spec, PROPOSED_MODEL_NAME, ctx["y_test"], proposed_pred))
@@ -308,8 +342,8 @@ def train_all_models(
         trained_models[spec["name"]][PROPOSED_MODEL_NAME] = proposed_model
 
         for model_name, builder, seed, rows in [
-            (LSTM_BASELINE_NAME, build_lstm_regressor, 42, lstm_rows),
-            (CNN_BASELINE_NAME, build_cnn_regressor, 123, cnn_rows),
+            (LSTM_BASELINE_NAME, build_lstm_regressor, lstm_seed, lstm_rows),
+            (CNN_BASELINE_NAME, build_cnn_regressor, cnn_seed, cnn_rows),
         ]:
             print(f'\n=== {spec["name"]} {model_name} ===')
             model, y_seq, pred_seq, x_seq = train_torch_sequence_model(

@@ -54,6 +54,12 @@ MODEL_ORDER = [
     CNN_BASELINE_NAME,
 ]
 
+GLOBAL_SEED = 42
+DATA_BASELINE_SEED = 42
+PINN_SEED = 42
+LSTM_SEED = 42
+CNN_SEED = 123
+
 EXPERIMENTS = [
     {
         "name": "Exp 1",
@@ -87,9 +93,16 @@ class ProjectPaths:
     outputs: Path = ROOT_DIR / "outputs"
     figures: Path = ROOT_DIR / "outputs" / "figures"
     tables: Path = ROOT_DIR / "outputs" / "tables"
+    thesis_images: Path | None = None
     raw_datasets: dict[str, Path] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        if self.thesis_images is None:
+            object.__setattr__(
+                self,
+                "thesis_images",
+                self.root / "thesis" / "latex" / "assets" / "images",
+            )
         if not self.raw_datasets:
             object.__setattr__(
                 self,
@@ -98,7 +111,7 @@ class ProjectPaths:
             )
 
     def ensure_output_dirs(self) -> None:
-        for path in [self.processed_features, self.outputs, self.figures, self.tables]:
+        for path in [self.processed_features, self.outputs, self.figures, self.tables, self.thesis_images]:
             path.mkdir(parents=True, exist_ok=True)
 
 

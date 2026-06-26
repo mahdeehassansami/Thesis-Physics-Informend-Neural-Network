@@ -1,10 +1,10 @@
 # Thesis Work: Local NASA IMS Bearing RUL Pipeline
 
-This project is a local, testable version of the original Colab notebook:
+This project is the authoritative, local, testable version of the original Colab notebook:
 
 `Thesis_v3_with_extra_graphs_tables.ipynb`
 
-The code no longer mounts Google Drive. It reads IMS data from `data/raw/`, caches extracted features in `data/processed_features/`, and writes tables/figures to `outputs/`.
+The notebook is kept as prior-work context only. Final tables, figures, manifests, and LaTeX assets should be generated from this Python project. The code no longer mounts Google Drive. It reads IMS data from `data/raw/`, caches extracted features in `data/processed_features/`, and writes tables/figures to `outputs/`.
 
 ## Data Layout
 
@@ -59,6 +59,8 @@ Regenerate polished figures from cached full-run data without retraining:
 uv run thesis-work regenerate-figures
 ```
 
+This command also refreshes `thesis/latex/assets/images/` with the exact PNG and PDF filenames used by the LaTeX manuscript.
+
 For a quick smoke run, use fewer files and shorter training:
 
 ```powershell
@@ -73,6 +75,14 @@ Generated artifacts are written under:
 outputs/
   figures/
   tables/
+```
+
+The full run writes `outputs/tables/run_manifest.json`; cached figure regeneration writes `outputs/tables/figure_manifest.json`. These record seeds, run options, package versions, raw-data counts, feature-cache hashes, and result-table hashes so future figure changes can be traced.
+
+LaTeX-ready figures are mirrored to:
+
+```text
+thesis/latex/assets/images/
 ```
 
 Feature caches are written under:

@@ -35,16 +35,6 @@ Figures~\ref{fig:feature_rms} to \ref{fig:feature_ekin} show representative feat
 
 The plots show why cross-bearing RUL prediction is difficult. Some features rise smoothly in one run and irregularly in another. A model trained on one degradation shape may misread a different shape. This is the central challenge behind the results that follow.
 
-Figure~\ref{fig:feature_correlation} shows the Spearman correlation structure among the extracted features and normalized RUL. The time-domain amplitude features are strongly related to each other, while the fault-frequency energy terms add a different but still related view of degradation.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.85\textwidth]{feature_correlation_heatmap.pdf}
-    \caption{Spearman correlation structure of extracted features and normalized RUL.}
-    \label{fig:feature_correlation}
-\end{figure}
-\FloatBarrier
-
 \section{Main Prediction Results}
 
 Table~\ref{tab:final_results} gives the full model results for all three experiments.
@@ -236,24 +226,24 @@ The proposed PINN includes two forms of physical regularization: a monotonicity 
 
 The monotonicity residual assumes RUL should not increase with elapsed life. That is correct at the life-label level, but the model sees noisy features. If the feature pattern of a held-out bearing differs from the training bearings, a strict preference for smooth monotonic behavior can prevent the model from adapting to local signal changes. The implementation uses a tolerance and small weight to reduce this issue, but the result still depends on the split.
 
-The spectral prior assumes that higher combined fault-frequency energy should correspond to greater damage. This is physically plausible, but envelope energy is not a perfect damage variable. It can be affected by resonance, noise, axis direction, load-zone behavior, and the timing of fault development. If $E_{kin}$ grows late or irregularly in one run, a model trained on another run may apply the prior at the wrong time.
+The spectral prior assumes that higher combined fault-frequency energy should correspond to greater damage. This is a plausible thing physically, but envelope energy is not an actual damage type. It may be detected by resonance, noise, axis direction and load-zone behavior as well as the occurrence of fault development. Because $E_(kin)$ growth is late or late sporadically in one run, a model learned from another run could use the previous on the wrong time.
 
-The strongest lesson is that physics-informed learning is not automatically better because it contains engineering language. The prior must match the data-generating process closely enough to help. In this thesis, the prior is useful in Experiment 2 but not enough to beat sequence modeling overall.
+The take-away message from the strongest lesson is that physics-informed learning is not necessarily superior just because it uses engineering terminology. The previous one must be close enough to the data generation process to assist. In this thesis the former is helpful in the case of Experiment 2 but not sufficient to overcome sequence modeling on the whole.
 
 \section{Why the LSTM Performed Well}
 
-The LSTM baseline uses recent history instead of a single snapshot. This is important because degradation is a process. A feature value by itself may be ambiguous, but its recent trend gives more information. For example, moderate RMS may mean early healthy operation in one run or a temporary plateau after fault growth in another. A short sequence helps the model distinguish these cases.
+While the LSTM baseline is based on recent history, not a single snapshot. This is significant as degradation is a process. The trend of a feature value provides additional information; a single value may be ambiguous. Some examples of moderate RMS may be early healthy operation in one run, or a temporary plateau upon fault growth in another. A brief sentence is provided to make this distinction.
 
-The LSTM also has fewer assumptions about the exact physical relationship between $E_{kin}$ and damage. It learns temporal patterns directly from the feature sequences. This flexibility likely explains why it achieved the best average RMSE and $R^2$.
+The LSTM also contains much less assumptions regarding the exact physical link between $E_(kin)$ and damage. It directly learns temporal patterns from the feature sequences. This is likely to be the reason for its best average RMSE and $R^2$.
 
 \section{Why the CNN Won Experiment 3}
 
-The CNN baseline performs worst on average but best in Experiment 3. This result shows that model choice depends on the train-test pairing. A 1D CNN can detect local temporal patterns in the sliding feature window. In Experiment 3, those local patterns transferred well to \texttt{ds1\_b3}. In the other experiments, the same model did not generalize as strongly.
+The CNN baseline is the least successful overall, while it is the most successful in Experiment 3. This outcome indicates that the choice of the model is affected by the pairing of the train and test sets. A 1D CNN is able to recognize the temporal patterns within the sliding feature window. Those local patterns also worked well for \texttt{ds1\_b3} in Experiment 3. In the other experiments, the same model was not as generalized.
 
-This does not mean the CNN is the best overall choice. It means that a single average metric can hide split-specific behavior. For a thesis, the split-wise analysis is therefore as important as the average table.
+This is not to say the CNN is the best overall. It means that there may be behaviour in a single average metric that is not present in the split. The split-wise analysis is, therefore, as significant as the average table in the case of a thesis.
 
 \section{Practical Implications}
 
-For an engineering maintenance system, the safest conclusion is conservative. The current PINN formulation should not be deployed as a final RUL predictor. The LSTM baseline is stronger in the completed experiments, but it also needs more validation before field use. A practical system would need more run-to-failure data, multiple operating conditions, uncertainty estimates, and a clear maintenance decision rule.
+In case of an engineering maintenance system, the best and safest conclusion is the conservative one. The current PINN formulation should not be deployed as a final RUL predictor. The LSTM baseline is stronger in the completed experiments. But it also needs more validation before field use. A practical system is going to need more run-to-failure data, multiple operating conditions, uncertainty estimates along with a clear maintenance decision rule.
 
-The work still gives useful direction. Physics-informed features are valuable for interpretation, and the PINN framework remains promising. The next step is not to abandon physics. It is to improve the physical model, use better degradation constraints, and evaluate on more splits and datasets.
+The work still provides a useful direction. Physics-informed features are important for interpretation, and the PINN framework is promising. The future work to be done is not to abandon physics and improve the physical model, use better degradation constraints, and evaluate on more splits and datasets.

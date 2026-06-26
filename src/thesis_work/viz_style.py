@@ -1,11 +1,29 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib import font_manager
 from matplotlib.patches import Patch
 
 
-FONT_FAMILY = ["Aptos", "Segoe UI", "DejaVu Sans", "Arial"]
+def register_latin_modern() -> None:
+    font_dirs = [
+        Path.home() / "AppData" / "Local" / "Programs" / "MiKTeX" / "fonts" / "opentype" / "public" / "lm",
+        Path("/usr/share/texmf/fonts/opentype/public/lm"),
+        Path("/usr/local/share/texmf/fonts/opentype/public/lm"),
+    ]
+    for font_dir in font_dirs:
+        if not font_dir.exists():
+            continue
+        for font_file in font_dir.glob("lmroman*.otf"):
+            font_manager.fontManager.addfont(str(font_file))
+
+
+register_latin_modern()
+
+FONT_FAMILY = ["Latin Modern Roman", "DejaVu Serif", "Times New Roman"]
 
 COLORS = {
     "ink": "#18202A",
@@ -51,8 +69,11 @@ def apply_theme() -> None:
         style="whitegrid",
         font=FONT_FAMILY[0],
         rc={
-            "font.family": "sans-serif",
-            "font.sans-serif": FONT_FAMILY,
+            "font.family": "serif",
+            "font.serif": FONT_FAMILY,
+            "mathtext.fontset": "cm",
+            "pdf.fonttype": 42,
+            "ps.fonttype": 42,
             "axes.facecolor": COLORS["panel"],
             "figure.facecolor": COLORS["panel"],
             "savefig.facecolor": COLORS["panel"],
@@ -64,12 +85,12 @@ def apply_theme() -> None:
             "grid.color": COLORS["grid"],
             "grid.linewidth": 0.8,
             "axes.linewidth": 0.9,
-            "axes.titlesize": 15,
-            "axes.labelsize": 10.5,
-            "xtick.labelsize": 9,
-            "ytick.labelsize": 9,
-            "legend.fontsize": 8.5,
-            "legend.title_fontsize": 9,
+            "axes.titlesize": 16,
+            "axes.labelsize": 11.5,
+            "xtick.labelsize": 10,
+            "ytick.labelsize": 10,
+            "legend.fontsize": 9.5,
+            "legend.title_fontsize": 10,
         },
     )
 

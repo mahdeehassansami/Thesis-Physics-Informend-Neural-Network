@@ -1,17 +1,32 @@
 from __future__ import annotations
 
 import os
+import random
 
 os.environ.setdefault("DDE_BACKEND", "pytorch")
 
+import numpy as np
 import pandas as pd
 
-from thesis_work.config import EXPERIMENTS, MODEL_ORDER, TARGET_RUNS, ProjectPaths, default_paths
+from thesis_work.config import (
+    CNN_SEED,
+    DATA_BASELINE_SEED,
+    EXPERIMENTS,
+    GLOBAL_SEED,
+    LSTM_SEED,
+    MODEL_ORDER,
+    PINN_SEED,
+    TARGET_RUNS,
+    ProjectPaths,
+    default_paths,
+)
 from thesis_work.features import load_or_extract_run
 from thesis_work.ims import list_snapshots, load_snapshot, resolve_dataset_source
+from thesis_work.manifest import write_run_manifest
 from thesis_work.preprocessing import compute_pca_hi, prepare_all_contexts, preprocess_features
 from thesis_work.reports import (
     plot_final_predictions_from_table,
+    plot_prediction_error_analysis,
     prediction_store_to_table,
     save_static_tables_and_figures,
 )
@@ -76,8 +91,15 @@ def run_pipeline(
     sequence_patience: int = 8,
     sequence_batch_size: int = 128,
     sequence_length: int = 20,
+    global_seed: int = GLOBAL_SEED,
+    data_baseline_seed: int = DATA_BASELINE_SEED,
+    pinn_seed: int = PINN_SEED,
+    lstm_seed: int = LSTM_SEED,
+    cnn_seed: int = CNN_SEED,
 ) -> dict[str, object]:
     paths = paths or default_paths()
+    random.seed(global_seed)
+    np.random.seed(global_seed)
     multi_df = load_or_build_all_features(paths, max_files=max_files, refresh=refresh_features)
     proc_df = preprocess_features(multi_df)
     pca_hi_df, pca_hi_summary = compute_pca_hi(proc_df)
@@ -99,6 +121,10 @@ def run_pipeline(
             sequence_patience=sequence_patience,
             sequence_batch_size=sequence_batch_size,
             sequence_length=sequence_length,
+            data_baseline_seed=data_baseline_seed,
+            pinn_seed=pinn_seed,
+            lstm_seed=lstm_seed,
+            cnn_seed=cnn_seed,
         )
         final_results["Model"] = pd.Categorical(final_results["Model"], categories=MODEL_ORDER, ordered=True)
         final_results = final_results.sort_values(["Experiment", "Model"]).reset_index(drop=True)
@@ -115,6 +141,29 @@ def run_pipeline(
         pca_hi_summary=pca_hi_summary,
         final_results=final_results,
         prediction_store=prediction_store,
+    )
+    write_run_manifest(
+        paths,
+        command="run",
+        options={
+            "max_files": max_files,
+            "refresh_features": refresh_features,
+            "skip_training": skip_training,
+            "baseline_iterations": baseline_iterations,
+            "pinn_iterations": pinn_iterations,
+            "sequence_epochs": sequence_epochs,
+            "sequence_patience": sequence_patience,
+            "sequence_batch_size": sequence_batch_size,
+            "sequence_length": sequence_length,
+            "source_of_truth": "python_project",
+        },
+        seeds={
+            "global": global_seed,
+            "data_baseline": data_baseline_seed,
+            "pinn": pinn_seed,
+            "lstm": lstm_seed,
+            "cnn": cnn_seed,
+        },
     )
     return {
         "multi_df": multi_df,
@@ -155,7 +204,27 @@ def regenerate_figures_from_cache(paths: ProjectPaths | None = None) -> dict[str
     )
     prediction_path = paths.tables / "prediction_series.csv"
     if prediction_path.exists():
-        plot_final_predictions_from_table(paths, pd.read_csv(prediction_path))
+        prediction_table = pd.read_csv(prediction_path)
+        plot_final_predictions_from_table(paths, prediction_table)
+        plot_prediction_error_analysis(paths, prediction_table)
+    write_run_manifest(
+        paths,
+        command="regenerate-figures",
+        options={
+            "feature_cache": str(feature_path),
+            "final_results_table": str(final_results_path) if final_results_path.exists() else None,
+            "prediction_series": str(prediction_path) if prediction_path.exists() else None,
+            "source_of_truth": "python_project",
+        },
+        seeds={
+            "global": GLOBAL_SEED,
+            "data_baseline": DATA_BASELINE_SEED,
+            "pinn": PINN_SEED,
+            "lstm": LSTM_SEED,
+            "cnn": CNN_SEED,
+        },
+        filename="figure_manifest.json",
+    )
     return {
         "multi_df": multi_df,
         "proc_df": proc_df,
