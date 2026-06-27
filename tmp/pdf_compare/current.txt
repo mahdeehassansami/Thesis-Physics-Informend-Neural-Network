@@ -1,0 +1,1529 @@
+--- PAGE 1 ---
+Course no: ME-498
+PHYSICS-INFORMED NEURAL NETWORKS FOR
+REMAINING-USEFUL-LIFE PREDICTION OF
+ROLLING-ELEMENT BEARINGS
+A thesis submitted in partial fulllment of
+requirements for the degree of
+Bachelor of Science
+in
+Mechanical Engineering
+Submitted By:
+Mahdee Hassan Sami
+Student ID: 2003101
+Supervised By:
+Dr. Md. Abu Mowazzem Hossain
+Professor
+Department of Mechanical Engineering
+Chittagong University of Engineering & Technology
+Chattogram-4349, Bangladesh
+
+--- PAGE 2 ---
+CHITTAGONG UNIVERSITY OF ENGINEERING
+AND TECHNOLOGY, CHATTOGRAM
+(PROJECT AND THESIS)
+COURSE NO: ME-498
+Title of Project:Physics-Informed Neural Networks for Remaining-Useful-Life Predic-
+tion of Rolling-Element Bearings
+Name of the Student:Mahdee Hassan Sami
+Student ID:2003101Session:2024-2025
+Name of the Department:Mechanical EngineeringProgram:B.Sc. Engg.
+Name of the Supervisor:Dr. Md. Abu Mowazzem Hossain
+Professor
+Department of Mechanical Engineering, CUET
+Signature of the Student: Signature of the Supervisor:
+
+--- PAGE 3 ---
+Abstract
+Rolling-element bearings are relatively small parts, but the reliability of many rotating
+machines depends on them. A minor surface defect can start quietly and then develop
+into strong vibration, heat generation, loss of alignment, damage to nearby components,
+and eventually an unplanned shutdown. For this reason, estimating a bearing's remaining
+useful life is an important problem in prognostics and health management. This thesis
+uses the NASA IMS run-to-failure bearing dataset to study bearing remaining useful
+life prediction and compares a physics-informed neural network with three data-driven
+baseline models. At the start of the project, the expectation was that adding physical
+constraints would clearly improve performance over a purely data-driven model. The nal
+local experiments told a more nuanced story. The proposed DeepXDE physics-informed
+model performed best in one of the three cross-bearing experiments, but the LSTM
+baseline gave the lowest average RMSE and highest averageR 2 across the full experiment
+set. This does not make the physics-informed approach unimportant. It shows that weak
+physical regularization, when applied to noisy run-to-failure vibration features, must be
+designed and weighted carefully. A simple monotonicity and fault-frequency prior can
+help in some transfer settings, but it may also restrict the network when the degradation
+path of the test bearing diers from the training bearings. The nal pipeline reads the IMS
+data locally from extracted folders, removes the dependency on Google Drive, extracts
+time-domain and envelope spectral features, constructs normalized RUL targets, builds a
+PCA-based health indicator, and evaluates four models: a feed-forward neural baseline,
+the proposed DeepXDE physics-informed model, an LSTM sequence model, and a 1D
+CNN sequence model. The experiments use three train-validation-test splits designed to
+test cross-bearing and cross-dataset transfer. The best average RMSE was achieved by
+the LSTM baseline at 0.162, followed by the data-only feed-forward baseline at 0.185,
+the proposed physics-informed model at 0.223, and the CNN baseline at 0.235. The work
+contributes a reproducible local project structure, a documented feature and evaluation
+pipeline, and an honest analysis of where the investigated physics-informed formulation
+helped and where it did not.
+Keywords:remaining useful life, rolling-element bearing, prognostics and health man-
+agement, physics-informed neural network, IMS bearing dataset, vibration analysis,
+LSTM, CNN.
+i
+
+--- PAGE 4 ---
+Acknowledgement
+First, I oer my gratitude to Allah for giving me the strength, patience, and opportunity
+to complete this thesis work. I am deeply grateful to my undergraduate thesis supervisor,
+Dr. Md. Abu Mowazzem Hossain, Professor, Department of Mechanical Engineering,
+Chittagong University of Engineering & Technology, for his supervision, advice, and
+encouragement throughout this project.
+I also thank my family for their constant support during the long process of learning the
+theory, writing code, running experiments, correcting mistakes, and preparing this thesis.
+Their patience made the work easier to continue when the results did not come out as
+simply as expected.
+Finally, I acknowledge the researchers who made the IMS bearing dataset publicly avail-
+able. Open run-to-failure datasets make it possible for students and researchers to test
+prognostic methods in a reproducible way.
+ii
+
+--- PAGE 5 ---
+Contents
+Abstract i
+Acknowledgement ii
+Contents vi
+List of Figures vii
+List of Tables ix
+Nomenclature x
+1 Introduction 1
+1.1 Background and Motivation . . . . . . . . . . . . . . . . . . . . . . . . . 1
+1.2 Problem Statement . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2
+1.3 Objectives of the Study . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2
+1.4 Scope . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.5 Importance of the Study . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.6 Limitations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+1.7 Thesis Outline . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+2 Literature Review 5
+2.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+2.2 Literature Survey . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+iii
+
+--- PAGE 6 ---
+2.2.1 Rolling-Element Bearings: Fundamentals and Failure Modes . . . 5
+2.2.2 Traditional Predictive Maintenance Techniques for Bearings . . . 6
+2.2.3 Deep Learning in Predictive Maintenance . . . . . . . . . . . . . . 6
+2.2.4 Physics-Informed Neural Networks . . . . . . . . . . . . . . . . . 7
+2.2.5 Physics-Informed Neural Networks for Bearing Predictive Mainte-
+nance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+2.3 Research Gap . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+3 Dataset and Research Methodology 10
+3.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+3.2 Experimental Setup . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+3.3 Dataset Description . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+3.4 Feature Extraction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+3.5 RUL Target Labeling . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+3.6 Preprocessing . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+3.7 PCA Health Indicator . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+3.8 Model Denitions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+3.9 Experiment Design . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17
+3.10 Evaluation Metrics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18
+4 Local Implementation and Experimental Setup 19
+4.1 Local Project Structure . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+4.2 Reproducibility Commands . . . . . . . . . . . . . . . . . . . . . . . . . 19
+4.3 Software Environment . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20
+4.4 Data Validation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20
+4.5 Feature Cache . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20
+iv
+
+--- PAGE 7 ---
+4.6 Visual Reporting . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20
+5 Results and Discussion 21
+5.1 Feature Behavior Over Bearing Life . . . . . . . . . . . . . . . . . . . . . 21
+5.2 Main Prediction Results . . . . . . . . . . . . . . . . . . . . . . . . . . . 23
+5.3 Experiment-Wise Comparison . . . . . . . . . . . . . . . . . . . . . . . . 26
+5.4 True Versus Predicted RUL . . . . . . . . . . . . . . . . . . . . . . . . . 29
+5.5 Error Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+5.6 Discussion of the Physics-Informed Model . . . . . . . . . . . . . . . . . 32
+5.7 Why the LSTM Performed Well . . . . . . . . . . . . . . . . . . . . . . . 33
+5.8 Why the CNN Won Experiment 3 . . . . . . . . . . . . . . . . . . . . . . 33
+5.9 Practical Implications . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 33
+6 Conclusion 35
+6.1 Summary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 35
+6.2 Contributions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 35
+6.3 Limitations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36
+6.4 Future Work . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36
+6.5 Final Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36
+References 38
+A Reproducibility Notes 41
+A.1 Final Result Table . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41
+A.2 Commands Used for the Local Pipeline . . . . . . . . . . . . . . . . . . . 41
+A.3 Raw Data Location . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41
+v
+
+--- PAGE 8 ---
+A.4 LaTeX Build . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 42
+vi
+
+--- PAGE 9 ---
+List of Figures
+3.1 End-to-end local workow used for IMS bearing RUL prediction. . . . . . 10
+3.2 IMS bearing test rig and sensor placement used for run-to-failure data
+collection, adapted from the IMS Bearing Data README and Qiu et al. [1]. 11
+3.3 Snapshot coverage for the four bearing runs used in the nal experiments. 13
+3.4 Bearing fault-frequency values used as markers for envelope spectral-energy
+extraction. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+3.5 Smoothed PCA health indicator compared with normalized damage on
+held-out test runs. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+3.6 Experiment split matrix showing how each bearing run is used. . . . . . . 18
+5.1 RMS evolution over normalized bearing life. . . . . . . . . . . . . . . . . 21
+5.2 Kurtosis evolution over normalized bearing life. . . . . . . . . . . . . . . 22
+5.3 Crest factor evolution over normalized bearing life. . . . . . . . . . . . . 22
+5.4 Combined fault-frequency envelope energy evolution over normalized bear-
+ing life. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23
+5.5 A verage RMSE by model across the three experiments. . . . . . . . . . . 25
+5.6 A verage MAE by model across the three experiments. . . . . . . . . . . . 25
+5.7 A verageR 2 by model across the three experiments. . . . . . . . . . . . . 25
+5.8 Model ranking by RMSE for each experiment. Lower rank is better. . . . 26
+5.9 Lowest-RMSE model in each experiment. . . . . . . . . . . . . . . . . . . 27
+5.10 RMSE by model and experiment. . . . . . . . . . . . . . . . . . . . . . . 27
+5.11 MAE by model and experiment. . . . . . . . . . . . . . . . . . . . . . . . 28
+vii
+
+--- PAGE 10 ---
+5.12R 2 by model and experiment. . . . . . . . . . . . . . . . . . . . . . . . . 28
+5.13 Experiment 1 true and predicted normalized RUL on the held-out test run. 29
+5.14 Experiment 2 true and predicted normalized RUL on the held-out test run. 30
+5.15 Experiment 3 true and predicted normalized RUL on the held-out test run. 30
+5.16 Smoothed absolute prediction error over normalized test life. . . . . . . . 31
+5.17 Signed prediction error distribution. Positive error means the model over-
+estimated normalized RUL. . . . . . . . . . . . . . . . . . . . . . . . . . 32
+viii
+
+--- PAGE 11 ---
+List of Tables
+3.1 Bearing runs used in the nal experiments. . . . . . . . . . . . . . . . . . 12
+3.2 Extracted features used by the neural models. . . . . . . . . . . . . . . . 14
+3.3 Bearing fault frequencies used for envelope spectral-energy extraction. . . 14
+3.4 PCA health-indicator monotonicity. . . . . . . . . . . . . . . . . . . . . . 16
+3.5 Model denitions and roles in the experiment. . . . . . . . . . . . . . . . 17
+3.6 Train-validation-test split for each experiment. . . . . . . . . . . . . . . . 18
+5.1 Final prediction metrics for all models and experiments. . . . . . . . . . . 24
+5.2 A verage model performance across the three experiments. . . . . . . . . . 24
+5.3 Model ranking by RMSE. . . . . . . . . . . . . . . . . . . . . . . . . . . 26
+A.1 Final prediction metrics for all models and experiments. . . . . . . . . . . 41
+ix
+
+--- PAGE 12 ---
+Nomenclature
+Symbol or term Meaning
+ANN Articial neural network
+BPFO Ball pass frequency outer race
+BPFI Ball pass frequency inner race
+BSF Ball spin frequency
+CNN Convolutional neural network
+DeepXDE Python library used for physics-informed neural networks
+FFT Fast Fourier transform
+FNN Feed-forward neural network
+FTF Fundamental train frequency
+HI Health indicator
+IMS Intelligent Maintenance Systems
+LSTM Long short-term memory network
+MAE Mean absolute error
+PCA Principal component analysis
+PHM Prognostics and health management
+PINN Physics-informed neural network
+REB Rolling-element bearing
+RMS Root mean square
+RMSE Root mean squared error
+RUL Remaining useful life
+R2 Coecient of determination
+x
+
+--- PAGE 13 ---
+Chapter 1
+Introduction
+1.1 BACKGROUND AND MOTIV ATION
+Rolling-element bearings are modest in size, but many rotating machines depend on them
+to run smoothly. They support shafts, carry loads, and reduce friction in motors, pumps,
+turbines, gearboxes, fans, compressors, and other industrial equipment. When a defect
+appears on a raceway or rolling element, it usually does not stay as a small local problem.
+Each pass over the defect can create impacts, increase vibration, generate heat, aect
+alignment, damage nearby components, and eventually stop the machine. In practice,
+the bearing itself may be inexpensive compared with the downtime and secondary damage
+caused by its failure.
+Maintenance decisions therefore involve a balance between risk and waste. Reactive
+maintenance waits until a fault becomes serious, which can lead to sudden shutdowns.
+Preventive maintenance reduces some of that risk by replacing parts at scheduled inter-
+vals, but the schedule rarely matches the true condition of every bearing. Some bearings
+may be removed while they are still usable, while others may deteriorate before the
+planned replacement date. Condition-based maintenance is more practical because it
+looks at measured machine condition before making a decision. Prognostics and health
+management takes this further by asking not only whether damage exists, but how much
+useful operating time may still remain [2, 3].
+Predicting remaining useful life is challenging because bearing degradation does not follow
+a clean linear path. For much of a run, the vibration signal may appear almost stable, and
+then it can change quickly as failure approaches. The measured response also depends
+on fault type, speed, load, sensor placement, noise, resonance, lubrication, and bearing
+geometry [4, 5]. As a result, a model trained on one bearing may not transfer well to
+another bearing, even when both were tested on the same rig. Benchmark run-to-failure
+datasets such as the IMS bearing dataset are useful because they give researchers access
+to the same raw measurements and allow methods to be compared under repeatable
+conditions [1].
+Deep learning methods are now widely used in bearing diagnosis and RUL prediction
+1
+
+--- PAGE 14 ---
+because they can learn nonlinear patterns from vibration data. CNNs can capture lo-
+cal patterns in data windows, LSTMs can follow changes over time, and feed-forward
+networks can model relationships in engineered feature vectors [68]. These models can
+perform well when the training and test data are similar. The limitation is that they
+usually learn from the examples they are given, without any built-in understanding of
+how degradation should behave. When run-to-failure data are limited, or when the test
+bearing follows a dierent degradation path from the training bearings, a data-only model
+may produce predictions that look reasonable numerically but are dicult to justify phys-
+ically.
+Physics-informed neural networks oer a way to include prior engineering knowledge in
+the learning process. In their most established form, PINNs train a neural network while
+penalizing violations of governing equations or physical constraints [9]. Bearing RUL
+prediction does not usually provide a complete closed-form degradation equation, but it
+does provide useful partial knowledge. Damage should generally increase with operating
+time, RUL should generally decrease, and bearing geometry gives characteristic fault
+frequencies associated with cage, inner-race, outer-race, and rolling-element defects. This
+thesis studies whether such weak physical information can improve RUL prediction on
+the IMS data.
+1.2 PROBLEM STATEMENT
+The problem studied in this thesis is the prediction of normalized remaining useful life
+for selected bearings in the IMS run-to-failure dataset. The main question is whether a
+physics-informed neural network using time and fault-frequency information can gener-
+alize better across bearing runs than comparable data-driven neural baselines.
+This question is practical as well as methodological. In a real machine, the future failure
+path is unknown. A maintenance engineer may have historical data from one bearing, but
+the next bearing may not degrade in the same way. A useful RUL model must therefore
+do more than memorize one run. It must learn a relationship between measured condition
+and remaining life that transfers, at least partly, across bearings.
+1.3 OBJECTIVES OF THE STUDY
+The objectives of this thesis are:
+1. To extract degradation-relevant vibration features from selected IMS bearing runs
+and construct normalized RUL targets with a PCA-based health indicator for anal-
+ysis.
+2
+
+--- PAGE 15 ---
+2. To design and evaluate a DeepXDE physics-informed neural model that uses weak
+monotonicity and fault-frequency energy priors for bearing RUL prediction.
+3. To compare the proposed physics-informed model with data-only, LSTM, and CNN
+neural baselines under complete held-out bearing splits and interpret where each
+model succeeds or fails.
+1.4 SCOPE
+This study is limited to the IMS bearing data placed locally underdata/raw/1st_test,
+data/raw/2nd_test, anddata/raw/3rd_test. Four bearing runs are used in the nal
+experiment design:ds2_b1,ds1_b3,ds1_b4, andds3_b3. The work uses vibration
+signals only. It does not add temperature, oil debris, acoustic emission, or motor-current
+data.
+The models predict normalized RUL from extracted features. The thesis does not claim
+eld deployment readiness. The data come from a controlled test rig, and the operating
+conditions are much simpler than those in many industrial machines. The physics used
+in the PINN is also modest on purpose. The model does not try to describe full bearing
+contact mechanics, lubrication behavior, crack initiation, or crack growth. Instead, it
+uses two engineering hints: RUL should generally decrease as damage accumulates, and
+energy near bearing fault frequencies should carry useful information.
+1.5 IMPORTANCE OF THE STUDY
+This study is useful because it keeps the full bearing-prognostics chain visible. It starts
+from the local IMS vibration les, extracts features that have a clear vibration meaning,
+builds a health indicator, trains several neural models, and then checks whether those
+models can predict RUL for bearings that were not used during training. In that sense,
+the work is not only a model comparison. It is also a reproducible record of how raw
+vibration measurements were turned into RUL results.
+The study is also important because the result is not forced into a simple success story for
+the proposed PINN. The LSTM baseline performed better on average, while the physics-
+informed model gave the best RMSE in one experiment. This is closer to real modeling
+work than a one-sided claim of improvement. It shows that physics-informed learning
+can be helpful in some transfer cases, but the chosen physical prior must match the
+data well enough to be useful. Reporting this mixed result gives a more honest starting
+point for improving the model than simply claiming that adding physics always improves
+prediction.
+3
+
+--- PAGE 16 ---
+1.6 LIMITATIONS
+The main limitations are:
+1. The IMS dataset is valuable, but it contains only a small number of run-to-failure
+histories. Because of that, the experiment splits have limited evidence to work
+with. The results should be read as ndings for the selected IMS bearing runs,
+not as proof that the same model ranking will hold for every bearing dataset or
+industrial machine.
+2. The physics prior used in this thesis is deliberately simple. It does not describe the
+full mechanics of rolling contact, lubrication, crack initiation, or crack growth. It
+only nudges the model with monotonic RUL behavior and fault-frequency energy,
+so it can help when those assumptions t the held-out bearing and hurt when they
+do not.
+3. The model uses hand-engineered features, not raw vibration waveforms.
+4. The RUL labels are derived from elapsed time to the end of each run, which assumes
+the last available le represents failure or near-failure.
+5. The experiments are run on one local PC, so training time and numerical results
+may vary on other machines.
+1.7 THESIS OUTLINE
+Chapter 2 reviews bearing failure, vibration-based condition monitoring, RUL prediction,
+deep learning baselines, and physics-informed learning. Chapter 3 describes the IMS
+dataset, feature extraction, preprocessing, health indicator construction, model architec-
+tures, and evaluation metrics. Chapter 4 describes the local implementation, experiment
+splits, software environment, and reproducibility setup. Chapter 5 presents the results
+and discusses model behavior across the three experiments. Chapter 6 summarizes the
+ndings, contributions, limitations, and future work.
+4
+
+--- PAGE 17 ---
+Chapter 2
+Literature Review
+2.1 INTRODUCTION
+This chapter reviews the research background for bearing RUL prediction with physics-
+informed neural networks. The discussion follows the structure of the thesis proposal,
+but it is updated to reect the completed experiments. It begins with rolling-element
+bearing failure modes and vibration-based health monitoring, then reviews predictive
+maintenance methods, deep learning for bearing prognosis, general PINN theory, and
+recent physics-informed learning work in bearing condition monitoring. The chapter
+closes by identifying the research gap addressed in this thesis.
+2.2 LITERATURE SUR VEY
+2.2.1 Rolling-Element Bearings: Fundamentals and Failure Modes
+A rolling-element bearing contains an inner race, an outer race, rolling elements, and
+a cage. The rolling elements transfer load through small contact regions, so repeated
+stress cycles can initiate subsurface or surface-initiated fatigue. Defects may also arise
+from lubrication failure, contamination, overload, misalignment, electrical pitting, poor
+installation, or manufacturing variation. Once a defect begins, repeated rolling contact
+can grow it into a spall or crack that changes the vibration response of the machine [1012].
+The vibration signature changes with the part of the bearing that is damaged. An outer-
+race defect produces repeated impacts at a xed damaged region, while an inner-race
+defect moves with the shaft and is aected by the load zone. Defects on the rolling
+elements or cage create their own modulation patterns. This is why bearing monitoring
+often looks at characteristic frequencies calculated from bearing geometry and shaft speed.
+These frequencies should not be treated as exact labels for a fault, because real signals
+include noise, resonance, and operating eects. Still, they give useful places to look in
+the spectrum and envelope spectrum when searching for fault-related energy [4, 13].
+The thesis proposal argued that bearing prognostics should not treat vibration features
+as random columns in a table. That idea remains central in the completed work. RMS
+5
+
+--- PAGE 18 ---
+is related to vibration energy, kurtosis reects impulsive behavior, crest factor captures
+peak-to-average behavior, and envelope energy connects the signal to repeated impacts.
+These features are still simplied summaries of the raw vibration signal, but they are
+summaries with engineering meaning. Keeping that meaning visible makes the model
+results easier to interpret, especially when a model performs well on one held-out bearing
+and poorly on another.
+2.2.2 Traditional Predictive Maintenance Techniques for Bearings
+Predictive maintenance is the practical setting for this work. Instead of waiting for a
+bearing to fail or replacing it only because a xed service interval has passed, the goal
+is to use measured condition data to support a better maintenance decision. Jardine
+et al. [2] describe this broader machinery diagnostics and prognostics framework, and
+Lei et al. [3] review the path from data acquisition to RUL prediction. For bearings,
+that path usually starts with sensor measurements, then moves through preprocessing,
+feature extraction, health indicator construction, fault diagnosis, and nally future-life
+estimation.
+Vibration remains one of the most widely used signals for bearing health monitoring
+because bearing faults generate impacts and modulations in the mechanical response.
+Time-domain features such as RMS and kurtosis summarize energy and impulsiveness.
+Frequency-domain and envelope-domain features can reveal periodic impact patterns
+linked to bearing kinematics. Similarity-based and health-indicator methods then convert
+these features into a degradation measure or RUL estimate [14].
+The IMS bearing dataset is one of the common public run-to-failure datasets used for this
+type of work. It is associated with the wavelet-lter bearing prognostics study of Qiu et
+al. [1]. The PRONOSTIA platform is another well-known accelerated bearing degradation
+benchmark [15]. Public datasets are valuable because they let dierent researchers test
+methods on the same raw measurements. At the same time, public datasets are small
+compared with industrial variability, so the train-test split must be designed carefully.
+Random snapshot splits can overstate performance by allowing information from the same
+run-to-failure trajectory into both training and testing.
+2.2.3 Deep Learning in Predictive Maintenance
+Deep learning has become popular in bearing prognostics because it can t nonlinear
+relationships between sensor measurements and degradation labels. A feed-forward neu-
+ral network can work directly with engineered feature vectors. A CNN can detect local
+6
+
+--- PAGE 19 ---
+patterns from a sequence or transformed signal representation. An LSTM can model tem-
+poral dependence and is therefore naturally suited to degradation trajectories. Babu et
+al. [6] showed early CNN-based RUL regression, and later studies extended deep learning
+for transfer learning, high-quality representation learning, and hybrid sequence architec-
+tures [7, 8, 16].
+Recent studies also combine convolutional, recurrent, and autoencoder structures for
+bearing health monitoring and RUL prediction [1719]. These models are attractive be-
+cause inference is fast after training and because they can learn patterns that are dicult
+to specify manually. However, their performance depends strongly on the similarity be-
+tween the training and test distributions. In bearing RUL prediction, this is a serious
+issue because two bearings under similar nominal conditions may fail at dierent times
+and with dierent feature trajectories.
+For this reason, model evaluation should hold out complete bearing runs when the re-
+search question is transfer across bearings. A random split of individual snapshots may
+measure interpolation within one degradation curve rather than generalization to another
+bearing. The experiment design in this thesis uses complete held-out runs for validation
+and testing.
+2.2.4 Physics-Informed Neural Networks
+Physics-informed neural networks were introduced as a way to train neural networks
+under physical residual constraints [9]. In the usual PINN setting, a neural network
+approximates a eld variable, and automatic dierentiation is used to compute derivatives
+that appear in a governing equation. The training loss combines data mismatch and a
+physics residual. This has made PINNs attractive in uid mechanics, heat transfer, wave
+propagation, and inverse problems where governing equations are available.
+The PINN literature has grown quickly, and reviews by Lawal et al. [20] and Ren et
+al. [21] show how broad the eld has become across scientic computing. However, a
+model is not useful just because it combines a neural network with a physical equation.
+The physical residual has to match the problem, carry enough useful information, and
+be weighted so that it guides the model without overwhelming the data. It also has to
+be trainable in practice. If the constraint is poorly chosen, the model may train more
+slowly, t the data less accurately, or learn a biased solution.
+Bearing RUL prediction is not a textbook PINN problem because the degradation process
+is not governed by a single known partial dierential equation. Rolling contact fatigue,
+lubrication, load distribution, resonance, material variation, and measurement noise in-
+7
+
+--- PAGE 20 ---
+teract in ways that are dicult to reduce to one residual. Crack-growth laws such as
+Paris and Erdogan [22] show how mechanics can describe damage propagation in some
+contexts, but a complete bearing RUL equation for vibration features is rarely available in
+practice. This motivates weaker physics-informed learning: monotonic damage behavior,
+lifetime distributions, fault-frequency consistency, and other engineering priors.
+2.2.5 Physics-Informed Neural Networks for Bearing Predictive Mainte-
+nance
+Recent bearing-related studies have begun to use physics-informed or knowledge-informed
+learning. Chen et al. [23] proposed a physics-informed deep neural network for bearing
+prognosis with multisensory signals. Parziale et al. [24] applied PINNs to condition
+monitoring of rotating shafts. Herwig et al. [25] developed a signal-processing and physics-
+informed network for explainable bearing condition monitoring. Zhong et al. [26] used a
+multi-source physics-informed SincNet structure for rolling bearing fault diagnosis. von
+Hahn and Mechefske [27] investigated a knowledge-informed loss based on Weibull lifetime
+behavior.
+These studies show why the approach is promising. Physics can improve interpretabil-
+ity, guide learning when data are limited, and discourage predictions that conict with
+engineering expectations. They also show why the approach must be tested carefully.
+A physical prior only helps when it matches the measured data closely enough. If the
+prior is too weak, the model may behave like a data-only network. If it is too strong or
+mismatched, it may prevent the model from tting valid degradation patterns.
+2.3 RESEARCH GAP
+The literature shows three gaps that motivate this thesis. First, many bearing RUL
+studies report strong results, but their preprocessing, RUL labeling, train-test split, and
+evaluation protocol dier. This makes comparisons dicult. Second, some studies use
+random sample splits that can leak run-specic degradation information into both training
+and testing. Third, physics-informed learning for bearing prognosis is still developing,
+and there is no guarantee that a weak physical prior improves prediction on complete
+held-out bearing runs.
+This thesis addresses a narrower and reproducible question: how does a weak physics-
+informed RUL model behave when compared with common neural baselines on complete
+held-out IMS bearing runs? The study uses a local project structure, explicit feature
+extraction, a dened RUL target, saved tables and gures, and three train-validation-test
+splits. The goal is not to claim a universal best model. The goal is to test a specic
+8
+
+--- PAGE 21 ---
+physics-informed formulation and report what the completed experiment shows.
+9
+
+--- PAGE 22 ---
+Chapter 3
+Dataset and Research Methodology
+3.1 INTRODUCTION
+This chapter describes the dataset, signal-processing steps, RUL target construction,
+model denitions, experiment design, and evaluation metrics used in the study. The
+workow begins with raw IMS vibration les and ends with model rankings, prediction
+curves, and error analysis. Figure 3.1 summarizes the local pipeline.
+Local IMS data
+Read extracted run-to-failure vibration folders from data/raw.
+Feature extraction
+Compute time-domain and envelope fault-frequency energy features.
+Preprocessing
+Normalize features by each run's early healthy baseline and build RUL labels.
+Health indicator
+Fit PCA-HI and compare it with normalized damage.
+Model comparison
+Train data-only, physics-informed, LSTM, and CNN RUL models.
+Thesis outputs
+Write reproducible tables, figures, manifests, and LaTeX assets.
+Figure 3.1: End-to-end local workow used for IMS bearing RUL prediction.
+10
+
+--- PAGE 23 ---
+3.2 EXPERIMENTAL SETUP
+The IMS bearing data were generated by the NSF I/UCR Center for Intelligent Mainte-
+nance Systems with support from Rexnord Corporation. The test rig used four Rexnord
+ZA-2115 double-row bearings mounted on a common shaft. An AC motor kept the shaft
+speed constant at 2000 RPM, and a spring loading mechanism applied a radial load of
+6000 lb to the shaft and bearings. The bearings were force lubricated throughout the
+run-to-failure tests. The IMS README also notes that the observed failures occurred
+after the bearings exceeded their designed lifetime of more than 100 million revolutions.
+Vibration was measured at the bearing housings using PCB 353B33 High Sensitivity
+Quartz ICP accelerometers. The rst data set used two accelerometers per bearing, placed
+in the x- and y-axis directions. The second and third data sets used one accelerometer
+per bearing. Data collection was performed with an NI DAQ Card 6062E. Figure 3.2
+shows the bearing test rig and sensor placement used for the IMS experiments.
+Figure 3.2: IMS bearing test rig and sensor placement used for run-to-failure data collec-
+tion, adapted from the IMS Bearing Data README and Qiu et al. [1].
+11
+
+--- PAGE 24 ---
+3.3 DATASET DESCRIPTION
+The IMS bearing dataset contains run-to-failure vibration measurements collected from
+the setup described above. The raw data are stored as timestamped ASCII text les. Each
+le contains a nominal one-second vibration snapshot with 20,480 data points sampled
+at 20 kHz. The lename records the collection time, and larger gaps between timestamps
+indicate that the experiment resumed on the next working day. In this project, the
+extracted dataset folders are stored locally underdata/raw.
+The local pipeline uses three IMS folders:1st_test,2nd_test, and3rd_test. The rst
+test contains eight columns because two accelerometer channels are available for each of
+four bearings. The second and third tests contain four columns, one for each bearing.
+The implementation maps each selected column to a bearing and averages two axes when
+the rst test provides x and y directions for the target bearing.
+Table 3.1: Bearing runs used in the nal experiments.
+Run ID IMS dataset Bearing number Number of samples Used in experiments
+ds2_b1 2nd_test 1 984 Exp 1 Train; Exp 2 Train;
+Exp 3 Train
+ds1_b3 1st_test 3 2156 Exp 1 Train; Exp 2
+Validation; Exp 3 Test
+ds1_b4 1st_test 4 2156 Exp 1 Validation; Exp 2
+Train; Exp 3 Validation
+ds3_b3 3rd_test 3 6324 Exp 1 Test; Exp 2 Test; Exp
+3 Train
+Figure 3.3 shows the number of snapshots available for each selected run. The dierence
+in run length is large. The third dataset bearing run has 6324 samples, while the second
+dataset bearing run has 984 samples. This imbalance aects model training and is one
+reason why Experiment 3 uses balanced sampling for its training runs.
+12
+
+--- PAGE 25 ---
+ds2_b1 ds1_b3 ds1_b4 ds3_b3
+Bearing run
+0
+1000
+2000
+3000
+4000
+5000
+6000Number of vibration snapshots
+984
+2,156 2,156
+6,324
+Figure 3.3: Snapshot coverage for the four bearing runs used in the nal experiments.
+3.4 FEATURE EXTRACTION
+Each vibration snapshot is converted into a feature vector. The time-domain features are
+RMS, standard deviation, peak-to-peak value, kurtosis, crest factor, and mean absolute
+value. These features summarize amplitude, spread, impulsiveness, and peak behavior.
+They are widely used in bearing condition monitoring because they are simple and phys-
+ically interpretable.
+The physics-related features are calculated from envelope spectral energy near bearing
+fault frequencies. The signal is centered, transformed with the Hilbert transform to obtain
+the envelope, centered again, windowed with a Hann window, and transformed with a
+real FFT. For each fault frequency, the pipeline sums spectral energy in a 5 Hz band
+around the rst four harmonics. The four energy features areE F T F,E BP F O,E BP F I, and
+EBSF . Their sum is stored asE kin.
+The fault-frequency equations used by the implementation are
+F T F=fr
+2
+
+1− d
+D cosθ
+
+,(3.1)
+BP F O=nfr
+2
+
+1− d
+D cosθ
+
+,(3.2)
+BP F I=nfr
+2
+
+1 + d
+D cosθ
+
+,(3.3)
+13
+
+--- PAGE 26 ---
+BSF= Dfr
+2d
+ 
+1−
+ d
+D cosθ
+2!
+,(3.4)
+wheref r is shaft frequency,nis the number of rolling elements,dis rolling-element
+diameter,Dis pitch diameter, andθis contact angle.
+Table 3.2: Extracted features used by the neural models.
+Feature name Domain Physical meaning Used by models
+elapsed_scaled time feature Normalized elapsed operating time used as
+temporal input
+yes
+rms time-domain Signal energy amplitude through root mean
+square vibration
+yes
+std time-domain Vibration dispersion around the mean yes
+ptp time-domain Peak-to-peak vibration range yes
+kurtosis time-domain Impulsiveness of vibration signal yes
+crest_factor time-domain Peak amplitude relative to RMS yes
+mean_abs time-domain Mean absolute vibration amplitude yes
+E_FTF physics-informed frequency feature Envelope spectral energy around cage fault
+train frequency harmonics
+yes
+E_BPFO physics-informed frequency feature Envelope spectral energy around outer-race
+fault frequency harmonics
+yes
+E_BPFI physics-informed frequency feature Envelope spectral energy around inner-race
+fault frequency harmonics
+yes
+E_BSF physics-informed frequency feature Envelope spectral energy around
+rolling-element fault frequency harmonics
+yes
+E_kin physics-informed frequency feature Combined bearing kinematic fault-frequency
+spectral energy
+yes
+sigma_H_norm auxiliary placeholder Constant placeholder; not a Hertzian contact
+stress calculation
+yes
+Table 3.3: Bearing fault frequencies used for envelope spectral-energy extraction.
+Frequency name Symbol Value in Hz Related bearing component Extracted feature
+FTF FTF 14.78 Cage / fundamental train E_FTF
+BPFO BPFO 236.40 Outer race E_BPFO
+BPFI BPFI 296.93 Inner race E_BPFI
+BSF BSF 139.92 Rolling element E_BSF
+14
+
+--- PAGE 27 ---
+FTF BPFO BPFI BSF
+Fault-frequency symbol
+0
+50
+100
+150
+200
+250
+300Frequency (Hz)
+14.8
+236.4
+296.9
+139.9
+Figure 3.4: Bearing fault-frequency values used as markers for envelope spectral-energy
+extraction.
+3.5 RUL TARGET LABELING
+For each selected bearing run, elapsed time is computed from the timestamp of the rst
+snapshot. RUL is computed by subtracting the current timestamp from the timestamp
+of the nal snapshot. The model target is normalized RUL:
+RU Lnorm(t) = RU L(t)
+max(RU L).(3.5)
+This gives a target near 1 at the beginning of the run and near 0 at the end. The
+normalization makes results comparable across runs with dierent durations. It also
+means that the model predicts relative life fraction, not absolute hours.
+3.6 PREPROCESSING
+Feature values can dier greatly between bearing runs. To reduce the eect of run-specic
+scale, each run is normalized using its early healthy baseline. The rst 5 percent of sam-
+ples, with a minimum of 20 samples, are treated as the healthy baseline. For each model
+feature, the median baseline value is used. The feature is converted to a nonnegative
+relative increase, transformed withlog1p, and smoothed with a rolling median of 15
+samples.
+Elapsed time is converted toelapsed_scaledby dividing elapsed hours by 1200.
+The model input vector containselapsed_scaled, the normalized feature set, and
+sigma_H_norm. The nal variable is a constant placeholder kept for compatibility with
+15
+
+--- PAGE 28 ---
+the original notebook structure. It is not treated as a real Hertzian contact stress calcu-
+lation in the nal interpretation.
+3.7 PCA HEALTH INDICATOR
+A PCA-based health indicator is built to inspect whether the extracted features contain
+a monotonic degradation signal. The model feature matrix is standardized and projected
+onto the rst principal component. The resulting component is scaled between 0 and
+1. If the indicator direction is inverted, it is ipped so that higher values correspond to
+greater damage.
+The health indicator is not used as the nal RUL target. It is used as an explanatory
+tool. It helps show whether the engineered features broadly track degradation.
+Table 3.4: PCA health-indicator monotonicity.
+Bearing run Monotonicity score Interpretation
+ds1_b3 0.766 Strongly degradation-consistent PCA-HI behavior
+ds3_b3 0.864 Strongly degradation-consistent PCA-HI behavior
+0.0 0.2 0.4 0.6 0.8 1.0
+Normalized lifetime
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0Normalized value
+ds1_b3 PCA-HI
+ds1_b3 damage = 1 - RUL
+ds3_b3 PCA-HI
+ds3_b3 damage = 1 - RUL
+Figure 3.5: Smoothed PCA health indicator compared with normalized damage on held-
+out test runs.
+3.8 MODEL DEFINITIONS
+Four models are evaluated. The data-only neural baseline is a feed-forward neural network
+implemented in DeepXDE [28]. It uses three hidden layers with 64 neurons per layer and
+16
+
+--- PAGE 29 ---
+tanh activation. A sigmoid output transform constrains predictions between 0 and 1. It
+is trained with mean squared error.
+The proposed physics-informed model uses the same basic feed-forward architecture but
+adds weak physical residuals. The rst residual penalizes positive RUL slope with respect
+to time beyond a small tolerance, because RUL should generally decrease as life is con-
+sumed. The second residual connects highE kin to damage by encouraging the predicted
+damage term1−RU Lto be consistent with fault-frequency energy. The model loss can
+be written as
+L=L data +λ mLmono +λ eLenergy ,(3.6)
+whereL data is the supervised RUL loss,L mono is the monotonicity residual,L energy is the
+fault-energy residual, andλ m andλ e are small regularization weights.
+The LSTM baseline uses sliding windows of feature vectors. It reads a sequence of length
+20 and predicts the RUL at the end of the sequence. The architecture has one LSTM
+layer with 64 hidden units followed by a small dense head and a sigmoid output. The
+CNN baseline uses the same sequence windows but applies 1D convolutions across the
+time axis.
+Table 3.5: Model denitions and roles in the experiment.
+Model Model type Input format Role in thesis Target
+Data-only neural
+baseline
+Feed-forward neural
+network
+Single snapshot
+feature vector
+Data-only baseline Normalized RUL
+Proposed DeepXDE
+Physics-Informed RUL
+Model
+DeepXDE
+physics-informed
+neural network
+Single snapshot
+feature vector with
+time and
+fault-frequency energy
+features
+Proposed model Normalized RUL
+LSTM baseline Recurrent neural
+network
+Sliding-window
+sequence of feature
+vectors
+Sequence baseline Normalized RUL
+CNN baseline 1D convolutional
+neural network
+Sliding-window
+sequence of feature
+vectors
+Sequence baseline Normalized RUL
+3.9 EXPERIMENT DESIGN
+The three experiments hold out complete bearing runs for validation and testing. This is
+stricter than randomly splitting snapshots because the model must transfer across bearing
+runs. Table 3.6 and Figure 3.6 show the split design.
+17
+
+--- PAGE 30 ---
+Table 3.6: Train-validation-test split for each experiment.
+Experiment Train runs Validation run Test run Purpose
+Exp 1 ds2_b1 + ds1_b3 ds1_b4 ds3_b3 Cross-dataset/cross-bearing transfer with ds3_b3 held
+out for testing
+Exp 2 ds2_b1 + ds1_b4 ds1_b3 ds3_b3 Alternative training-bearing combination with the same
+ds3_b3 test run
+Exp 3 ds2_b1 + ds3_b3 ds1_b4 ds1_b3 Cross-dataset transfer to ds1_b3 with balanced
+training runs
+ds2_b1 ds1_b3 ds1_b4 ds3_b3
+Bearing run
+Exp 1
+Exp 2
+Exp 3 Experiment
+T rain T rain V alidation T est
+T rain V alidation T rain T est
+T rain T est V alidation T rain
+Train Validation Test
+Figure 3.6: Experiment split matrix showing how each bearing run is used.
+3.10 EV ALUATION METRICS
+The models are evaluated with MAE, RMSE, andR 2. MAE gives the average size of the
+prediction error, so it is the easiest metric to read as a typical RUL mistake. RMSE looks
+at the same errors but gives more weight to large misses. This matters in maintenance
+planning because a few large RUL errors can be more damaging than many small ones.
+R2 gives a broader check on whether the model is actually following the target trend.
+WhenR 2 is negative, the model is doing worse than a very simple prediction that always
+uses the mean target value.
+RMSE is used as the main ranking metric in this thesis because the study is concerned
+with avoiding large RUL errors on held-out bearings. MAE is reported alongside it to
+show the average error level, andR 2 is included to show how well each model follows the
+overall RUL variation. Using all three metrics gives a more balanced view than relying on
+a single score. The metric denitions follow common prognostics evaluation practice [29].
+18
+
+--- PAGE 31 ---
+Chapter 4
+Local Implementation and Experimental Setup
+4.1 LOCAL PROJECT STRUCTURE
+The rst version of this work was developed in a Google Colab notebook, which was
+useful during exploration but not ideal for a nal thesis experiment. A notebook can
+hide dependencies, mix trial code with nal code, and make it dicult to repeat the
+same run later. For the completed thesis, the workow was moved into a local Python
+project. The code now reads the IMS les directly fromdata/raw, stores extracted
+feature tables indata/processed_features, and writes the nal tables and gures to
+outputs. This removes the need to mount Google Drive and keeps the data, code, and
+generated results in one project folder.
+The main source code is placed undersrc/thesis_work. The package separates the work
+into focused modules for conguration, IMS data loading, feature extraction, preprocess-
+ing, model training, metric calculation, report generation, and command-line execution.
+This organization makes the experiment easier to inspect than a long notebook. It also
+makes rerunning one part of the workow more practical, for example validating the
+data, regenerating gures, or rebuilding the nal result tables without manually stepping
+through notebook cells.
+4.2 REPRODUCIBILITY COMMANDS
+The project usesuvfor dependency management. The main commands are:
+uv sync --extra dev
+uv run thesis-work validate-data
+uv run thesis-work extract-features
+uv run thesis-work run
+uv run thesis-work regenerate-figures
+uv run pytest -q
+The full run trains all four models for all three experiments. The command can
+take a long time on CPU, so the project also supports shorter smoke-test argu-
+19
+
+--- PAGE 32 ---
+ments. The nal results in this thesis come from the completed full run saved in
+outputs/tables/final_results_table.csv.
+4.3 SOFTW ARE ENVIRONMENT
+The implementation uses Python 3.11 and the following main libraries: NumPy, pandas,
+SciPy, scikit-learn, matplotlib, seaborn, DeepXDE, PyTorch, and tqdm. The LaTeX
+thesis is compiled with MiKTeX using the Windows batch script included in the thesis
+source folder.
+The local PC used for the completed run had an AMD Ryzen 7 5800H CPU with 8
+cores and 16 logical processors, 16 GB RAM, Windows 11 Home Single Language, and
+an NVIDIA GeForce RTX 3060 Laptop GPU with 4 GB VRAM. Training and inference
+wall time is machine-specic and should be reported together with this hardware context.
+4.4 DATA V ALIDATION
+The validation command checks that the expected folders are present and that the rst
+snapshot in each dataset can be read with the correct number of columns. This step
+matters because the IMS text les may be stored either as extracted folders or zip les.
+The local loader supports both, but the nal run used extracted folders underdata/raw.
+4.5 FEATURE CACHE
+Feature extraction is the slowest preprocessing step because every vibration snapshot
+must be read and transformed. The pipeline therefore caches per-run feature tables and
+a combinedall_runs_features.csv. Cached features make it possible to regenerate
+gures and tables without reprocessing the raw data or retraining the models.
+4.6 VISUAL REPORTING
+The nal gures were generated with matplotlib and seaborn using a consistent color
+palette. Models use the same colors across all plots: gray for the data-only baseline, blue
+for the proposed PINN, green for LSTM, and orange-red for CNN. Bearing runs also use
+xed colors. In the LaTeX thesis, plot les avoid embedded chart titles where possible
+because gure captions and labels provide the formal titles in the document.
+20
+
+--- PAGE 33 ---
+Chapter 5
+Results and Discussion
+5.1 FEATURE BEHA VIOR OVER BEARING LIFE
+The extracted features do not evolve identically across bearing runs. This is expected
+because dierent bearings can have dierent fault initiation times and degradation rates.
+RMS and peak-to-peak values capture energy growth. Kurtosis and crest factor are
+more sensitive to impulsive behavior.E kin summarizes energy near the calculated fault-
+frequency harmonics.
+Figures 5.1 to 5.4 show representative feature evolution over normalized lifetime. The
+plotted feature values are normalized for visualization so that their trends can be com-
+pared across bearings.
+0.0 0.2 0.4 0.6 0.8 1.0
+Normalized lifetime
+0.00
+0.25
+0.50
+0.75
+1.00
+1.25
+1.50
+1.75RMS
+ds2_b1 ds1_b3 ds1_b4 ds3_b3
+Figure 5.1: RMS evolution over normalized bearing life.
+21
+
+--- PAGE 34 ---
+0.0 0.2 0.4 0.6 0.8 1.0
+Normalized lifetime
+0.00
+0.25
+0.50
+0.75
+1.00
+1.25
+1.50
+1.75Kurtosis
+ds2_b1 ds1_b3 ds1_b4 ds3_b3
+Figure 5.2: Kurtosis evolution over normalized bearing life.
+0.0 0.2 0.4 0.6 0.8 1.0
+Normalized lifetime
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+1.2Crest factor
+ds2_b1 ds1_b3 ds1_b4 ds3_b3
+Figure 5.3: Crest factor evolution over normalized bearing life.
+22
+
+--- PAGE 35 ---
+0.0 0.2 0.4 0.6 0.8 1.0
+Normalized lifetime
+0
+1
+2
+3
+4
+5Combined fault-frequency energy E_kin
+ds2_b1 ds1_b3 ds1_b4 ds3_b3
+Figure 5.4: Combined fault-frequency envelope energy evolution over normalized bearing
+life.
+The plots show why cross-bearing RUL prediction is dicult. Some features rise smoothly
+in one run and irregularly in another. A model trained on one degradation shape may
+misread a dierent shape. This is the central challenge behind the results that follow.
+5.2 MAIN PREDICTION RESULTS
+Table 5.1 gives the full model results for all three experiments.
+23
+
+--- PAGE 36 ---
+Table 5.1: Final prediction metrics for all models and experiments.
+Experiment Model MAE RMSE R2
+Exp 1 Data-only FNN 0.083 0.128 0.801
+Exp 1 Proposed PINN 0.147 0.173 0.638
+Exp 1 LSTM 0.101 0.112 0.848
+Exp 1 CNN 0.244 0.266 0.146
+Exp 2 Data-only FNN 0.104 0.148 0.738
+Exp 2 Proposed PINN 0.114 0.144 0.751
+Exp 2 LSTM 0.141 0.155 0.708
+Exp 2 CNN 0.200 0.235 0.334
+Exp 3 Data-only FNN 0.156 0.280 0.032
+Exp 3 Proposed PINN 0.262 0.351 -0.530
+Exp 3 LSTM 0.176 0.219 0.382
+Exp 3 CNN 0.183 0.204 0.463
+The average performance across the three experiments is shown in Table 5.2. On average,
+the LSTM baseline is the strongest model. It has the lowest average RMSE at 0.162 and
+the highest averageR 2 at 0.646. The data-only feed-forward baseline is second by average
+RMSE at 0.185. The proposed physics-informed model has an average RMSE of 0.223.
+The CNN baseline has the weakest average RMSE at 0.235, although it performs best in
+Experiment 3.
+Table 5.2: A verage model performance across the three experiments.
+Model A verage MAE A verage RMSE A verage R2
+CNN 0.209 0.235 0.314
+Data-only FNN 0.114 0.185 0.524
+LSTM 0.139 0.162 0.646
+Proposed PINN 0.175 0.223 0.286
+24
+
+--- PAGE 37 ---
+0.00 0.05 0.10 0.15 0.20
+Average RMSE
+LSTM baseline
+Data-only neural baseline
+Proposed DeepXDE Physics-Informed RUL Model
+CNN baseline
+0.162
+0.185
+0.223
+0.235
+Figure 5.5: A verage RMSE by model across the three experiments.
+0.000 0.025 0.050 0.075 0.100 0.125 0.150 0.175 0.200
+Average MAE
+Data-only neural baseline
+LSTM baseline
+Proposed DeepXDE Physics-Informed RUL Model
+CNN baseline
+0.114
+0.139
+0.175
+0.209
+Figure 5.6: A verage MAE by model across the three experiments.
+0.0 0.1 0.2 0.3 0.4 0.5 0.6
+Average R2
+LSTM baseline
+Data-only neural baseline
+CNN baseline
+Proposed DeepXDE Physics-Informed RUL Model
+0.646
+0.524
+0.314
+0.286
+Figure 5.7: A verageR 2 by model across the three experiments.
+25
+
+--- PAGE 38 ---
+These results do not support the original expectation that the proposed PINN would
+dominate the baselines. They show a more specic conclusion: the weak physics-informed
+formulation can help in one split, but it is not robustly better across all held-out bearing
+runs.
+5.3 EXPERIMENT-WISE COMPARISON
+The model ranking by RMSE is given in Table 5.3 and Figure 5.8. The ranking gure is
+oriented so that ranks increase upward: rank 1 is at the bottom and rank 4 is at the top.
+Table 5.3: Model ranking by RMSE.
+Experiment Model RMSE Rank by RMSE
+Exp 1 LSTM 0.112 1
+Exp 1 Data-only FNN 0.128 2
+Exp 1 Proposed PINN 0.173 3
+Exp 1 CNN 0.266 4
+Exp 2 Proposed PINN 0.144 1
+Exp 2 Data-only FNN 0.148 2
+Exp 2 LSTM 0.155 3
+Exp 2 CNN 0.235 4
+Exp 3 CNN 0.204 1
+Exp 3 LSTM 0.219 2
+Exp 3 Data-only FNN 0.280 3
+Exp 3 Proposed PINN 0.351 4
+Exp 1 Exp 2 Exp 3
+Experiment
+1
+2
+3
+4Rank by RMSE
+Data-only neural baseline
+Proposed DeepXDE Physics-Informed RUL Model
+LSTM baseline
+CNN baseline
+Figure 5.8: Model ranking by RMSE for each experiment. Lower rank is better.
+The ranking changes from experiment to experiment. In Experiment 1, the LSTM base-
+26
+
+--- PAGE 39 ---
+line performs best with RMSE 0.112. In Experiment 2, the proposed PINN performs best
+with RMSE 0.144, narrowly ahead of the data-only baseline. In Experiment 3, the CNN
+baseline performs best with RMSE 0.204, followed by the LSTM. The proposed PINN
+performs worst in Experiment 3, with negativeR 2.
+Figure 5.9 makes this instability clear by showing only the lowest-RMSE model in each
+experiment. A single model does not win every split. The metric comparison plots in
+Figures 5.10 to 5.12 show the same pattern from dierent viewpoints.
+Exp 1 Exp 2 Exp 3
+Experiment
+0.000
+0.025
+0.050
+0.075
+0.100
+0.125
+0.150
+0.175
+0.200Lowest RMSE
+LSTM
+0.112
+Proposed PINN
+0.144
+CNN
+0.204
+Proposed DeepXDE Physics-Informed RUL Model LSTM baseline CNN baseline
+Figure 5.9: Lowest-RMSE model in each experiment.
+Exp 1 Exp 2 Exp 3
+Experiment
+0.00
+0.05
+0.10
+0.15
+0.20
+0.25
+0.30
+0.35RMSE
+Data-only neural baseline
+Proposed DeepXDE Physics-Informed RUL Model
+LSTM baseline
+CNN baseline
+Figure 5.10: RMSE by model and experiment.
+27
+
+--- PAGE 40 ---
+Exp 1 Exp 2 Exp 3
+Experiment
+0.00
+0.05
+0.10
+0.15
+0.20
+0.25MAE
+Data-only neural baseline
+Proposed DeepXDE Physics-Informed RUL Model
+LSTM baseline
+CNN baseline
+Figure 5.11: MAE by model and experiment.
+Exp 1 Exp 2 Exp 3
+Experiment
+−0.4
+−0.2
+0.0
+0.2
+0.4
+0.6
+0.8
+R2
+Data-only neural baseline
+Proposed DeepXDE Physics-Informed RUL Model
+LSTM baseline
+CNN baseline
+Figure 5.12:R 2 by model and experiment.
+28
+
+--- PAGE 41 ---
+5.4 TRUE VERSUS PREDICTED RUL
+Figures 5.13 to 5.15 compare the true normalized RUL curve with model predictions on
+the held-out test runs.
+0.0 0.2 0.4 0.6 0.8 1.0
+Normalized test-life index
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0Normalized RUL
+True normalized RUL
+Data-only neural baseline
+Proposed DeepXDE Physics-Informed RUL Model
+LSTM baseline
+CNN baseline
+Figure 5.13: Experiment 1 true and predicted normalized RUL on the held-out test run.
+29
+
+--- PAGE 42 ---
+0.0 0.2 0.4 0.6 0.8 1.0
+Normalized test-life index
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0Normalized RUL
+True normalized RUL
+Data-only neural baseline
+Proposed DeepXDE Physics-Informed RUL Model
+LSTM baseline
+CNN baseline
+Figure 5.14: Experiment 2 true and predicted normalized RUL on the held-out test run.
+0.0 0.2 0.4 0.6 0.8 1.0
+Normalized test-life index
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0Normalized RUL
+True normalized RUL
+Data-only neural baseline
+Proposed DeepXDE Physics-Informed RUL Model
+LSTM baseline
+CNN baseline
+Figure 5.15: Experiment 3 true and predicted normalized RUL on the held-out test run.
+30
+
+--- PAGE 43 ---
+In Experiment 1, the LSTM follows the decreasing RUL trend more closely than the
+other models. The proposed PINN is smoother, but it does not match the test curve as
+well. In Experiment 2, the PINN is more competitive and gives the lowest RMSE. This
+suggests that the physics prior can help when the training bearings give a degradation
+pattern compatible with the held-out test bearing. In Experiment 3, the PINN struggles
+onds1_b3, while the CNN and LSTM sequence models handle the test run better.
+5.5 ERROR ANALYSIS
+Figure 5.16 shows smoothed absolute prediction error over normalized test life. The
+largest errors tend to appear when the degradation curve changes more sharply or when
+a model predicts RUL too conservatively near the end of life.
+0.0
+0.1
+0.2
+0.3
+0.4
+0.5Absolute error
+Exp 1
+Data-only neural baseline
+Proposed DeepXDE Physics-Informed RUL Model
+LSTM baseline
+CNN baseline
+0.0
+0.1
+0.2
+0.3
+0.4Absolute error
+Exp 2
+0.0 0.2 0.4 0.6 0.8 1.0
+Normalized test-life index
+0.0
+0.2
+0.4
+0.6Absolute error
+Exp 3
+Figure 5.16: Smoothed absolute prediction error over normalized test life.
+31
+
+--- PAGE 44 ---
+−0.6 −0.4 −0.2 0.0 0.2
+Predicted RUL - true RUL
+Data-only FNN
+Proposed PINN
+LSTM
+CNN
+Figure 5.17: Signed prediction error distribution. Positive error means the model overes-
+timated normalized RUL.
+The distribution conrms that the sequence models do not merely improve the average
+score. They also reduce the spread of errors in several cases. The proposed PINN has a
+wider error distribution because its weak physical prior does not fully capture the dierent
+degradation paths of the test bearings.
+5.6 DISCUSSION OF THE PHYSICS-INFORMED MODEL
+The proposed PINN was built around two simple engineering ideas. The rst idea is that
+RUL should generally move downward as operating time is consumed. The second idea
+is that energy near bearing fault-frequency harmonics should contain useful information
+about damage. Both ideas are reasonable, but they are still only partial descriptions of
+how a real bearing fails.
+The monotonicity residual is correct in principle because the true remaining life of a
+bearing should not increase as the test continues. The diculty is that the model does
+not see the true damage process directly. It sees vibration features that can be noisy,
+delayed, or irregular. If a held-out bearing develops a dierent feature pattern from the
+training bearings, the monotonicity term can pull the prediction toward a smoother curve
+than the data support. The implementation uses a tolerance and a small weight to reduce
+this problem, but the eect still depends on the train-test split.
+The spectral prior has the same limitation. Higher combined fault-frequency energy is a
+sensible sign of bearing degradation, but it is not the same thing as damage. Envelope
+energy can change because of resonance, noise, sensor direction, load-zone eects, and
+the stage at which a fault becomes visible in the signal. IfE kin rises late in one bearing
+32
+
+--- PAGE 45 ---
+run but earlier in another, a model trained on one pattern may apply the prior at the
+wrong part of the life cycle.
+The main lesson is that physics-informed learning is not automatically better just because
+engineering terms are included in the loss function. The physical prior has to match the
+measured data closely enough to guide the model in the right direction. In this thesis, the
+prior helped in Experiment 2, but it was not strong or complete enough to outperform
+sequence modeling overall.
+5.7 WHY THE LSTM PERFORMED WELL
+The LSTM performed well mainly because it used recent history instead of judging each
+snapshot by itself. Bearing degradation is a process, so the meaning of one feature value
+depends on what happened before it. A moderate RMS value, for example, could belong
+to an early healthy stage in one run or to a temporary plateau after fault growth in
+another. A short sequence gives the model more context for making that distinction.
+The LSTM also does not require a xed assumption about the exact relationship be-
+tweenE kin and damage. Instead, it learns from the shape and timing of the feature
+sequence. This exibility is likely why it achieved the best average RMSE andR 2 across
+the completed experiments.
+5.8 WHY THE CNN WON EXPERIMENT 3
+The CNN result is more split-specic. It had the weakest average RMSE, but it was the
+best model in Experiment 3. This shows why the individual experiment results matter
+and not only the average table. A 1D CNN can detect local patterns inside a sliding
+feature window. In Experiment 3, those local patterns transferred well to the held-out
+ds1_b3run. In the other experiments, the same local-pattern approach did not transfer
+as strongly.
+This does not make the CNN the best overall model. It means that dierent held-out
+bearings can favor dierent model behaviors. For this reason, the split-wise analysis is
+important. A single average score is useful, but it can hide cases where a model succeeds
+for one bearing and fails for another.
+5.9 PRACTICAL IMPLICATIONS
+For maintenance use, the safest conclusion is cautious. The current PINN formulation
+should not be treated as a ready eld predictor. The LSTM baseline was stronger in the
+completed experiments, but it also should not be deployed without more validation. A
+33
+
+--- PAGE 46 ---
+practical RUL system would need more run-to-failure data, tests under multiple operating
+conditions, uncertainty estimates, and a clear rule for how a prediction is converted into
+a maintenance decision.
+The results still give a useful direction. Physics-informed features remain valuable because
+they help connect the model output back to vibration behavior. The PINN framework
+is also still worth developing, but the physical part of the model needs to be more in-
+formative than the weak priors used here. The next step is to improve the degradation
+constraint, test stronger physics-based losses, and evaluate the models on more bearing
+runs and datasets.
+34
+
+--- PAGE 47 ---
+Chapter 6
+Conclusion
+6.1 SUMMARY
+This thesis studied remaining useful life prediction for rolling-element bearings using the
+IMS run-to-failure dataset. The work started from a notebook, but the nal version was
+converted into a local Python project so the experiment could be run and checked more
+reliably. The completed pipeline reads the raw IMS folders, extracts time-domain and
+envelope spectral features, builds normalized RUL labels, creates a PCA-based health
+indicator, trains the neural models, and saves the nal tables and gures.
+The proposed model was a DeepXDE physics-informed neural network. Its physical part
+was intentionally simple: it encouraged RUL to decrease with operating time and used
+fault-frequency energy as a weak indication of damage. The model was compared with
+three baselines: a data-only feed-forward network, an LSTM sequence model, and a
+CNN sequence model. The experiments used complete held-out bearing runs so that the
+comparison tested transfer across bearings rather than only interpolation within the same
+run.
+The results were mixed, which is an important outcome of the study. The proposed
+PINN achieved the best RMSE in Experiment 2, but it did not perform best overall. The
+LSTM baseline gave the strongest average result, with average RMSE 0.162 and average
+R2 0.646. The data-only baseline was second by average RMSE. The proposed PINN
+ranked third, and the CNN ranked fourth on average, although the CNN was the best
+model in Experiment 3. These results show that adding a weak physical prior can help in
+some cases, but it does not guarantee better RUL prediction across all held-out bearings.
+6.2 CONTRIBUTIONS
+The main contributions of this thesis are:
+1. A complete local workow for IMS bearing RUL prediction, converted from the
+original notebook into a project that can be rerun from the command line.
+2. A documented feature extraction process that combines common time-domain vi-
+35
+
+--- PAGE 48 ---
+bration features with envelope spectral energy near bearing fault frequencies.
+3. A PCA-based health indicator analysis used to check whether the extracted features
+show a meaningful degradation trend.
+4. A DeepXDE physics-informed RUL model that adds monotonicity and fault-
+frequency energy priors to a supervised neural model.
+5. A comparison against feed-forward, LSTM, and CNN baselines using complete held-
+out bearing splits, which gives a stricter test of cross-bearing generalization.
+6. An honest interpretation of the nal evidence, including the cases where the pro-
+posed PINN helped and the cases where it did not outperform the baselines.
+6.3 LIMITATIONS
+The study has several limitations. The IMS data provide only a small number of complete
+failure runs. The RUL target is normalized by the nal timestamp, so it does not represent
+an independently measured failure threshold. The physical prior is weak and does not
+include a full contact fatigue model, lubrication model, temperature eect, or uncertainty
+estimate. The model is trained on engineered features rather than raw waveforms. Finally,
+the results are from one local implementation and one set of hyperparameters.
+6.4 FUTURE WORK
+Future work should test stronger physics-informed formulations. Possible directions in-
+clude a learned degradation state constrained by monotonic damage growth, uncertainty-
+aware RUL prediction, Weibull or crack-growth inspired lifetime priors, and multi-task
+learning that predicts both health indicator and RUL. The experiments should also be
+repeated on PRONOSTIA and other bearing datasets so that conclusions do not depend
+on one benchmark.
+The feature pipeline can also be improved. Time-frequency representations, adaptive
+envelope bands, bearing-specic resonance selection, and raw waveform sequence models
+may capture information lost by the current feature set. More careful hyperparameter
+tuning and repeated random seeds would make the comparison more statistically reliable.
+6.5 FINAL CONCLUSION
+The completed experiments show that physics-informed bearing RUL prediction is
+promising but not automatic. In this thesis, the proposed PINN improved the result
+in one experiment but did not beat the LSTM baseline overall. The best model was the
+36
+
+--- PAGE 49 ---
+one that used temporal context most eectively. A practical bearing prognostics system
+should therefore combine physical interpretation with sequence-aware learning, and it
+should be tested under complete run-level splits before strong claims are made.
+37
+
+--- PAGE 50 ---
+References
+[1] H. Qiu, J. Lee, J. Lin, and G. Yu, Wavelet lter-based weak signature detection
+method and its application on rolling element bearing prognostics,Journal of Sound
+and Vibration, vol. 289, no. 45, pp. 10661090, 2006.
+[2] A. K. S. Jardine, D. Lin, and D. Banjevic, A review on machinery diagnostics and
+prognostics implementing condition-based maintenance,Mechanical Systems and
+Signal Processing, vol. 20, no. 7, pp. 14831510, 2006.
+[3] Y. Lei, N. Li, L. Guo, N. Li, T. Yan, and J. Lin, Machinery health prognostics:
+A systematic review from data acquisition to RUL prediction,Mechanical Systems
+and Signal Processing, vol. 104, pp. 799834, 2018.
+[4] G. Wu, T. Yan, G. Yang, H. Chai, and C. Cao, A review on rolling bearing fault
+signal detection methods based on dierent sensors,Sensors, vol. 22, no. 21, p.
+8330, 2022.
+[5] V. Kannan, T. Zhang, and H. Li, A review of the intelligent condition monitoring
+of rolling element bearings,Machines, vol. 12, no. 7, p. 484, 2024.
+[6] G. Sateesh Babu, P. Zhao, and X.-L. Li, Deep convolutional neural network based
+regression approach for estimation of remaining useful life, inDatabase Systems for
+Advanced Applications, 2016, pp. 214228.
+[7] T. Berghout, L.-H. Mouss, T. Bentrcia, and M. Benbouzid, A semi-supervised deep
+transfer learning approach for rolling-element bearing remaining useful life predic-
+tion,IEEE Transactions on Energy Conversion, vol. 37, no. 2, pp. 12001210, 2022.
+[8] A. Ayman, A. Onsy, O. Attallah, H. Brooks, and I. Morsi, Feature learning for
+bearing prognostics: A comprehensive review of machine/deep learning methods,
+challenges, and opportunities,Measurement, vol. 245, p. 116589, 2025.
+[9] M. Raissi, P. Perdikaris, and G. E. Karniadakis, Physics-informed neural networks:
+A deep learning framework for solving forward and inverse problems involving non-
+linear partial dierential equations,Journal of Computational Physics, vol. 378, pp.
+686707, 2019.
+[10] P. Rycerz, A. Olver, and A. Kadiric, Propagation of surface initiated rolling contact
+fatigue cracks in bearing steel,International Journal of Fatigue, vol. 97, pp. 2938,
+2017.
+38
+
+--- PAGE 51 ---
+[11] F. Sadeghi, B. Jalalahmadi, T. S. Slack, N. Raje, and N. K. Arakere, A review of
+rolling contact fatigue,Journal of Tribology, vol. 131, no. 4, 2009.
+[12] F. Xu, N. Ding, N. Li, L. Liu, N. Hou, N. Xu, W. Guo, L. Tian, H. Xu, C.-M. L. Wu,
+X. Wu, and X. Chen, A review of bearing failure modes, mechanisms and causes,
+Engineering Failure Analysis, vol. 152, p. 107518, 2023.
+[13] Y. Li, C. Zhang, T. R. Kurfess, S. Danyluk, and S. Y. Liang, Diagnostics and
+prognostics of a single surface defect on roller bearings,Proceedings of the Institution
+of Mechanical Engineers, Part C: Journal of Mechanical Engineering Science, vol.
+214, no. 9, pp. 11731185, 2000.
+[14] W. Huang, A. Farahat, and C. Gupta, Similarity-based feature extraction from
+vibration data for prognostics,Annual Conference of the PHM Society, vol. 12,
+no. 1, 2020.
+[15] P. Nectoux, R. Gouriveau, K. Medjaher, E. Ramasso, B. Chebel-Morello,
+N. Zerhouni, and C. Varnier, PRONOSTIA: An experimental platform for
+bearings accelerated degradation tests, inIEEE International Conference
+on Prognostics and Health Management, 2012, pp. 18. [Online]. A vailable:
+https://hal.science/hal-00719503
+[16] C. Wang, W. Jiang, L. Shi, and L. Zhang, Rolling bearing remaining useful life pre-
+diction using deep learning based on high-quality representation,Scientic Reports,
+vol. 15, no. 1, 2025.
+[17] U. Farooq, M. Ademola, and A. Shaalan, Comparative analysis of machine learning
+models for predictive maintenance of ball bearing systems,Electronics, vol. 13,
+no. 2, p. 438, 2024.
+[18] K. Han, W. Wang, and J. Guo, Research on a bearing fault diagnosis method based
+on a CNN-LSTM-GRU model,Machines, vol. 12, no. 12, p. 927, 2024.
+[19] L. Yang, Y. Jiang, K. Zeng, and T. Peng, Rolling bearing remaining useful life
+prediction based on CNN-V AE-MBiLSTM,Sensors, vol. 24, no. 10, p. 2992, 2024.
+[20] Z. K. Lawal, H. Yassin, D. T. C. Lai, and A. Che Idris, Physics-informed neural net-
+work (PINN) evolution and beyond: A systematic literature review and bibliometric
+analysis,Big Data and Cognitive Computing, vol. 6, no. 4, p. 140, 2022.
+[21] Z. Ren, S. Zhou, D. Liu, and Q. Liu, Physics-informed neural networks: A review
+of methodological evolution, theoretical foundations, and interdisciplinary frontiers
+toward next-generation scientic computing,Applied Sciences, vol. 15, no. 14, p.
+8092, 2025.
+39
+
+--- PAGE 52 ---
+[22] P. Paris and F. Erdogan, A critical analysis of crack propagation laws,Journal of
+Basic Engineering, vol. 85, no. 4, pp. 528533, 1963.
+[23] X. Chen, M. Ma, Z. Zhao, Z. Zhai, and Z. Mao, Physics-informed deep neural net-
+work for bearing prognosis with multisensory signals,Journal of Dynamics, Moni-
+toring and Diagnostics, pp. 200207, 2022.
+[24] M. Parziale, L. Lomazzi, M. Giglio, and F. Cadini, Physics-informed neural networks
+for the condition monitoring of rotating shafts,Sensors, vol. 24, no. 1, p. 207, 2023.
+[25] N. Herwig, P. Borghesani, W. Smith, and Z. Peng, Signal processing- and physics-
+informed neural network for explainable bearing condition monitoring,Mechanical
+Systems and Signal Processing, vol. 235, p. 112925, 2025.
+[26] J. Zhong, Y. Zheng, C. Ruan, L. Chen, X. Bao, and L. Lyu, M-IPISincNet: An ex-
+plainable multi-source physics-informed neural network based on improved SincNet
+for rolling bearings fault diagnosis,Information Fusion, vol. 115, p. 102761, 2025.
+[27] T. von Hahn and C. K. Mechefske, Knowledge informed machine learning using a
+Weibull-based loss function,arXiv preprint arXiv:2201.01769, 2022.
+[28] L. Lu, X. Meng, Z. Mao, and G. E. Karniadakis, DeepXDE: A deep learning library
+for solving dierential equations,SIAM Review, vol. 63, no. 1, pp. 208228, 2021.
+[29] A. Saxena, J. Celaya, E. Balaban, K. Goebel, B. Saha, S. Saha, and M. Schwabacher,
+Metrics for evaluating performance of prognostic techniques, in2008 International
+Conference on Prognostics and Health Management, 2008, pp. 117.
+40
+
+--- PAGE 53 ---
+Chapter A
+Reproducibility Notes
+A.1 FINAL RESULT TABLE
+The main result table is repeated here for quick reference.
+Table A.1: Final prediction metrics for all models and experiments.
+Experiment Model MAE RMSE R2
+Exp 1 Data-only FNN 0.083 0.128 0.801
+Exp 1 Proposed PINN 0.147 0.173 0.638
+Exp 1 LSTM 0.101 0.112 0.848
+Exp 1 CNN 0.244 0.266 0.146
+Exp 2 Data-only FNN 0.104 0.148 0.738
+Exp 2 Proposed PINN 0.114 0.144 0.751
+Exp 2 LSTM 0.141 0.155 0.708
+Exp 2 CNN 0.200 0.235 0.334
+Exp 3 Data-only FNN 0.156 0.280 0.032
+Exp 3 Proposed PINN 0.262 0.351 -0.530
+Exp 3 LSTM 0.176 0.219 0.382
+Exp 3 CNN 0.183 0.204 0.463
+A.2 COMMANDS USED FOR THE LOCAL PIPELINE
+uv sync --extra dev
+uv run thesis-work validate-data
+uv run thesis-work extract-features
+uv run thesis-work run
+uv run thesis-work regenerate-figures
+uv run pytest -q
+A.3 RA W DATA LOCATION
+The raw IMS folders are expected in:
+41
+
+--- PAGE 54 ---
+data/raw/
+1st_test/
+2nd_test/
+3rd_test/
+These folders are intentionally not part of the LaTeX source because they contain the
+local raw dataset.
+A.4 LATEX BUILD
+The LaTeX source is stored underthesis/latex. The lebuild_pdf.batcompiles the
+document intophysics_informed_bearing_rul_thesis.pdfusing MiKTeX.
+42

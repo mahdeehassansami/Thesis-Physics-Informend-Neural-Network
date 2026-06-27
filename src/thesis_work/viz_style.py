@@ -102,10 +102,8 @@ def new_figure(width: float = 9.5, height: float = 5.2):
 
 
 def add_header(fig, title: str, subtitle: str | None = None) -> None:
-    fig.subplots_adjust(top=0.82)
-    fig.text(0.08, 0.965, title, ha="left", va="top", fontsize=14.2, weight="bold", color=COLORS["ink"])
-    if subtitle:
-        fig.text(0.08, 0.922, subtitle, ha="left", va="top", fontsize=9.6, color=COLORS["muted"])
+    _ = (title, subtitle)
+    fig.subplots_adjust(top=0.90)
 
 
 def polish_axes(ax, xlabel: str | None = None, ylabel: str | None = None, grid_axis: str = "y") -> None:
