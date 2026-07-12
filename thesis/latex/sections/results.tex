@@ -3,31 +3,31 @@
 
 \section{Feature Behavior Over Bearing Life}
 
-The extracted features do not evolve identically across bearing runs. This is expected because different bearings can have different fault initiation times and degradation rates. RMS and peak-to-peak values capture energy growth. Kurtosis and crest factor are more sensitive to impulsive behavior. $E_{kin}$ summarizes energy near the calculated fault-frequency harmonics.
+The extracted features do not vary uniformly over the bearing runs. This is to be expected as fault initiation times and degradation rates of different bearings can be different. The RMS and the peak-to-peak values reflect an energy growth. Kurtosis and crest factor are more reflective of impulsive behavior, and $E_{kin}$ is a summary of energy at fault-frequency harmonics calculated.
 
-Figures~\ref{fig:feature_rms} to \ref{fig:feature_ekin} show representative feature evolution over normalized lifetime. The plotted feature values are normalized for visualization so that their trends can be compared across bearings.
+In figures~\ref{fig:feature_rms} to \ref{fig:feature_ekin} the representative feature evolution is plotted over the normalized lifetime. The feature values plotted are scaled to visualize the trends and make them comparable to the other trend plots for each of the bearings.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{feature_evolution_rms.pdf}
+    \includegraphics[width=0.98\textwidth]{feature_evolution_rms.pdf}
     \caption{RMS evolution over normalized bearing life.}
     \label{fig:feature_rms}
 \end{figure}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{feature_evolution_kurtosis.pdf}
+    \includegraphics[width=0.98\textwidth]{feature_evolution_kurtosis.pdf}
     \caption{Kurtosis evolution over normalized bearing life.}
     \label{fig:feature_kurtosis}
 \end{figure}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{feature_evolution_crest_factor.pdf}
+    \includegraphics[width=0.98\textwidth]{feature_evolution_crest_factor.pdf}
     \caption{Crest factor evolution over normalized bearing life.}
     \label{fig:feature_crest}
 \end{figure}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{feature_evolution_e_kin.pdf}
+    \includegraphics[width=0.98\textwidth]{feature_evolution_e_kin.pdf}
     \caption{Combined fault-frequency envelope energy evolution over normalized bearing life.}
     \label{fig:feature_ekin}
 \end{figure}
@@ -37,213 +37,215 @@ The plots show why cross-bearing RUL prediction is difficult. Some features rise
 
 \section{Main Prediction Results}
 
-Table~\ref{tab:final_results} gives the full model results for all three experiments.
+Table~\ref{tab:final_results} gives the repeated-seed summary for the final evaluation. The 12 split configurations are trained three times with different random seeds, giving 36 evaluated runs per model. The table reports mean \(\pm\) standard deviation across those runs.
 
 \begin{table}[htbp]
     \centering
     \small
     \renewcommand{\arraystretch}{1.25}
-    \caption{Final prediction metrics for all models and experiments.}
+    \caption{Repeated-seed model performance across 12 split configurations and three seeds per split.}
     \label{tab:final_results}
-    \begin{tabularx}{\textwidth}{@{}l l c c c@{}}
+    \begin{tabular}{@{}l c c c@{}}
         \toprule
-        Experiment & Model & MAE & RMSE & R2 \\
+        Model & MAE \(\pm\) SD & RMSE \(\pm\) SD & $R^2$ \(\pm\) SD \\
         \midrule
-        Exp 1 & Data-only FNN & 0.083 & 0.128 & 0.801 \\
-        Exp 1 & Proposed PINN & 0.147 & 0.173 & 0.638 \\
-        Exp 1 & LSTM & 0.101 & 0.112 & 0.848 \\
-        Exp 1 & CNN & 0.244 & 0.266 & 0.146 \\
-        Exp 2 & Data-only FNN & 0.104 & 0.148 & 0.738 \\
-        Exp 2 & Proposed PINN & 0.114 & 0.144 & 0.751 \\
-        Exp 2 & LSTM & 0.141 & 0.155 & 0.708 \\
-        Exp 2 & CNN & 0.200 & 0.235 & 0.334 \\
-        Exp 3 & Data-only FNN & 0.156 & 0.280 & 0.032 \\
-        Exp 3 & Proposed PINN & 0.262 & 0.351 & -0.530 \\
-        Exp 3 & LSTM & 0.176 & 0.219 & 0.382 \\
-        Exp 3 & CNN & 0.183 & 0.204 & 0.463 \\
+        Data-only FNN & \(0.168 \pm 0.136\) & \(0.209 \pm 0.156\) & \(0.184 \pm 0.885\) \\
+        Proposed PINN & \(0.178 \pm 0.148\) & \(0.216 \pm 0.170\) & \(0.095 \pm 0.998\) \\
+        LSTM & \(0.188 \pm 0.072\) & \(0.230 \pm 0.078\) & \(0.256 \pm 0.474\) \\
+        CNN & \(0.203 \pm 0.089\) & \(0.235 \pm 0.095\) & \(0.199 \pm 0.632\) \\
         \bottomrule
-    \end{tabularx}
+    \end{tabular}
 \end{table}
 \FloatBarrier
 
-The average performance across the three experiments is shown in Table~\ref{tab:average_results}. On average, the LSTM baseline is the strongest model. It has the lowest average RMSE at 0.162 and the highest average $R^2$ at 0.646. The data-only feed-forward baseline is second by average RMSE at 0.185. The proposed physics-informed model has an average RMSE of 0.223. The CNN baseline has the weakest average RMSE at 0.235, although it performs best in Experiment 3.
+The data-only feed-forward baseline has the lowest mean RMSE, followed closely by the proposed PINN. However, the standard deviations are large compared with the differences between model means. The LSTM baseline has the highest mean $R^2$, but it does not have the lowest mean RMSE. These results support a conservative interpretation: no model is statistically dominant under the available four bearing trajectories.
 
-\begin{table}[htbp]
+\begin{figure}[htbp]
     \centering
-    \small
-    \renewcommand{\arraystretch}{1.25}
-    \caption{Average model performance across the three experiments.}
-    \label{tab:average_results}
-    \begin{tabularx}{\textwidth}{@{}l c c c@{}}
-        \toprule
-        Model & Average MAE & Average RMSE & Average R2 \\
-        \midrule
-        CNN & 0.209 & 0.235 & 0.314 \\
-        Data-only FNN & 0.114 & 0.185 & 0.524 \\
-        LSTM & 0.139 & 0.162 & 0.646 \\
-        Proposed PINN & 0.175 & 0.223 & 0.286 \\
-        \bottomrule
-    \end{tabularx}
-\end{table}
-\FloatBarrier\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.82\textwidth]{average_rmse_by_model.pdf}
-    \caption{Average RMSE by model across the three experiments.}
+    \includegraphics[width=0.98\textwidth]{average_rmse_by_model.pdf}
+    \caption{Average RMSE by model across 12 split configurations and three random seeds per split.}
     \label{fig:average_rmse}
 \end{figure}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.82\textwidth]{average_mae_by_model.pdf}
-    \caption{Average MAE by model across the three experiments.}
+    \includegraphics[width=0.98\textwidth]{average_mae_by_model.pdf}
+    \caption{Average MAE by model across 12 split configurations and three random seeds per split.}
     \label{fig:average_mae}
 \end{figure}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.82\textwidth]{average_r2_by_model.pdf}
-    \caption{Average $R^2$ by model across the three experiments.}
+    \includegraphics[width=0.98\textwidth]{average_r2_by_model.pdf}
+    \caption{Average $R^2$ by model across 12 split configurations and three random seeds per split.}
     \label{fig:average_r2}
 \end{figure}
 \FloatBarrier
 
-These results do not support the original expectation that the proposed PINN would dominate the baselines. They show a more specific conclusion: the weak physics-informed formulation can help in one split, but it is not robustly better across all held-out bearing runs.
+\section{Statistical Validation and Uncertainty}
 
-\section{Experiment-Wise Comparison}
-
-The model ranking by RMSE is given in Table~\ref{tab:ranking} and Figure~\ref{fig:model_ranking}. The ranking figure is oriented so that ranks increase upward: rank 1 is at the bottom and rank 4 is at the top.
+There are still only four full bearing runs in the final data set. This is due to the fact that the snapshots from the same run are not independent of each other and are therefore not formally statistically significant as bearing failures. To overcome this as much as possible in the available data, 12 settings of all the combinations of complete runs of trains, validation and test are enumerated and each train run is repeated with 3 random seeds. This provides 36 rated runs per model, but doesn't provide any more independent bearing failures.
 
 \begin{table}[htbp]
     \centering
-    \small
-    \renewcommand{\arraystretch}{1.25}
-    \caption{Model ranking by RMSE.}
-    \label{tab:ranking}
-    \begin{tabularx}{\textwidth}{@{}l l c c@{}}
+    \scriptsize
+    \renewcommand{\arraystretch}{1.2}
+    \caption{Statistical validation across 12 split configurations and three repeated seeds.}
+    \label{tab:stat_validation}
+    \begin{tabular}{@{}l c c c c c c c@{}}
         \toprule
-        Experiment & Model & RMSE & Rank by RMSE \\
+        Model & Splits & Seeds & Runs & Mean RMSE & SD RMSE & Min RMSE & Max RMSE \\
         \midrule
-        Exp 1 & LSTM & 0.112 & 1 \\
-        Exp 1 & Data-only FNN & 0.128 & 2 \\
-        Exp 1 & Proposed PINN & 0.173 & 3 \\
-        Exp 1 & CNN & 0.266 & 4 \\
-        Exp 2 & Proposed PINN & 0.144 & 1 \\
-        Exp 2 & Data-only FNN & 0.148 & 2 \\
-        Exp 2 & LSTM & 0.155 & 3 \\
-        Exp 2 & CNN & 0.235 & 4 \\
-        Exp 3 & CNN & 0.204 & 1 \\
-        Exp 3 & LSTM & 0.219 & 2 \\
-        Exp 3 & Data-only FNN & 0.280 & 3 \\
-        Exp 3 & Proposed PINN & 0.351 & 4 \\
+        Data-only FNN & 12 & 3 & 36 & 0.209 & 0.156 & 0.024 & 0.468 \\
+        Proposed PINN & 12 & 3 & 36 & 0.216 & 0.170 & 0.022 & 0.484 \\
+        LSTM & 12 & 3 & 36 & 0.230 & 0.078 & 0.117 & 0.355 \\
+        CNN & 12 & 3 & 36 & 0.235 & 0.095 & 0.125 & 0.406 \\
         \bottomrule
-    \end{tabularx}
+    \end{tabular}
 \end{table}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.82\textwidth]{model_ranking_by_rmse.pdf}
-    \caption{Model ranking by RMSE for each experiment. Lower rank is better.}
+    \includegraphics[width=0.98\textwidth]{statistical_validation_rmse_sensitivity.pdf}
+    \caption{Mean RMSE with standard deviation across 12 split configurations and three repeated seeds.}
+    \label{fig:stat_validation_rmse}
+\end{figure}
+\FloatBarrier
+
+The high standard deviations show that the conclusion depends strongly on both the held-out bearing run and the validation choice. The added validation addresses the earlier lack of repeated-seed reporting, but it also confirms that strong claims of model superiority cannot be made from four bearing trajectories alone.
+
+\section{Experiment-Wise Comparison}
+
+The model ranking by RMSE is given in Table~\ref{tab:ranking} and Figure~\ref{fig:model_ranking}. The ranking chart uses the mean RMSE over the three repeated seeds within each split configuration. A single model does not win every split.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \renewcommand{\arraystretch}{1.18}
+    \caption{Lowest-RMSE model in each split configuration.}
+    \label{tab:ranking}
+    \begin{tabular}{@{}l l l c@{}}
+        \toprule
+        Split & Test run & Best model & RMSE \(\pm\) SD \\
+        \midrule
+        S01 & ds2\_b1 & LSTM & \(0.339 \pm 0.004\) \\
+        S02 & ds2\_b1 & LSTM & \(0.339 \pm 0.006\) \\
+        S03 & ds2\_b1 & LSTM & \(0.316 \pm 0.027\) \\
+        S04 & ds1\_b3 & Data-only FNN & \(0.026 \pm 0.003\) \\
+        S05 & ds1\_b3 & CNN & \(0.204 \pm 0.011\) \\
+        S06 & ds1\_b3 & Proposed PINN & \(0.023 \pm 0.001\) \\
+        S07 & ds1\_b4 & Data-only FNN & \(0.035 \pm 0.006\) \\
+        S08 & ds1\_b4 & CNN & \(0.178 \pm 0.005\) \\
+        S09 & ds1\_b4 & Proposed PINN & \(0.045 \pm 0.011\) \\
+        S10 & ds3\_b3 & CNN & \(0.134 \pm 0.009\) \\
+        S11 & ds3\_b3 & Data-only FNN & \(0.146 \pm 0.004\) \\
+        S12 & ds3\_b3 & LSTM & \(0.128 \pm 0.017\) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth]{model_ranking_by_rmse.pdf}
+    \caption{Model ranking by mean RMSE for each split configuration. Lower rank is better.}
     \label{fig:model_ranking}
 \end{figure}
 \FloatBarrier
 
-The ranking changes from experiment to experiment. In Experiment 1, the LSTM baseline performs best with RMSE 0.112. In Experiment 2, the proposed PINN performs best with RMSE 0.144, narrowly ahead of the data-only baseline. In Experiment 3, the CNN baseline performs best with RMSE 0.204, followed by the LSTM. The proposed PINN performs worst in Experiment 3, with negative $R^2$.
-
-Figure~\ref{fig:best_model} makes this instability clear by showing only the lowest-RMSE model in each experiment. A single model does not win every split. The metric comparison plots in Figures~\ref{fig:metric_rmse} to \ref{fig:metric_r2} show the same pattern from different viewpoints.
+The metric comparison charts in Figures~\ref{fig:metric_rmse} to \ref{fig:metric_r2} show the same split sensitivity from the three evaluation metrics.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.78\textwidth]{best_model_by_experiment.pdf}
-    \caption{Lowest-RMSE model in each experiment.}
-    \label{fig:best_model}
-\end{figure}
-\FloatBarrier\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.92\textwidth]{metric_comparison_rmse.pdf}
-    \caption{RMSE by model and experiment.}
+    \includegraphics[width=0.98\textwidth]{metric_comparison_rmse.pdf}
+    \caption{RMSE by model and split configuration.}
     \label{fig:metric_rmse}
 \end{figure}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{metric_comparison_mae.pdf}
-    \caption{MAE by model and experiment.}
+    \includegraphics[width=0.98\textwidth]{metric_comparison_mae.pdf}
+    \caption{MAE by model and split configuration.}
     \label{fig:metric_mae}
 \end{figure}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{metric_comparison_r2.pdf}
-    \caption{$R^2$ by model and experiment.}
+    \includegraphics[width=0.98\textwidth]{metric_comparison_r2.pdf}
+    \caption{$R^2$ by model and split configuration.}
     \label{fig:metric_r2}
 \end{figure}
 \FloatBarrier
 
 \section{True Versus Predicted RUL}
 
-Figures~\ref{fig:exp1_predictions} to \ref{fig:exp3_predictions} compare the true normalized RUL curve with model predictions on the held-out test runs.
+Figures~\ref{fig:s01_predictions} to \ref{fig:s12_predictions} show representative true-versus-predicted RUL curves from the first seed repeat. Four split configurations are shown so that each selected test bearing appears once.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{exp_1_true_vs_predicted_rul.pdf}
-    \caption{Experiment 1 true and predicted normalized RUL on the held-out test run.}
-    \label{fig:exp1_predictions}
+    \includegraphics[width=0.98\textwidth]{s01_true_vs_predicted_rul.pdf}
+    \caption{True and predicted normalized RUL for split S01 with held-out \texttt{ds2\_b1}.}
+    \label{fig:s01_predictions}
 \end{figure}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{exp_2_true_vs_predicted_rul.pdf}
-    \caption{Experiment 2 true and predicted normalized RUL on the held-out test run.}
-    \label{fig:exp2_predictions}
+    \includegraphics[width=0.98\textwidth]{s04_true_vs_predicted_rul.pdf}
+    \caption{True and predicted normalized RUL for split S04 with held-out \texttt{ds1\_b3}.}
+    \label{fig:s04_predictions}
 \end{figure}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{exp_3_true_vs_predicted_rul.pdf}
-    \caption{Experiment 3 true and predicted normalized RUL on the held-out test run.}
-    \label{fig:exp3_predictions}
+    \includegraphics[width=0.98\textwidth]{s08_true_vs_predicted_rul.pdf}
+    \caption{True and predicted normalized RUL for split S08 with held-out \texttt{ds1\_b4}.}
+    \label{fig:s08_predictions}
+\end{figure}
+\FloatBarrier\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth]{s12_true_vs_predicted_rul.pdf}
+    \caption{True and predicted normalized RUL for split S12 with held-out \texttt{ds3\_b3}.}
+    \label{fig:s12_predictions}
 \end{figure}
 \FloatBarrier
 
-In Experiment 1, the LSTM follows the decreasing RUL trend more closely than the other models. The proposed PINN is smoother, but it does not match the test curve as well. In Experiment 2, the PINN is more competitive and gives the lowest RMSE. This suggests that the physics prior can help when the training bearings give a degradation pattern compatible with the held-out test bearing. In Experiment 3, the PINN struggles on \texttt{ds1\_b3}, while the CNN and LSTM sequence models handle the test run better.
+Split choice can influence the model's behavior significantly, as indicated by the prediction curves. This is consistent with the repeated-seed tables: uncertainty is generated by the limited number of independent bearing trajectories, and by assignment of the remaining bearing trajectories to validation and training.
 
 \section{Error Analysis}
 
-Figure~\ref{fig:absolute_error} shows smoothed absolute prediction error over normalized test life. The largest errors tend to appear when the degradation curve changes more sharply or when a model predicts RUL too conservatively near the end of life.
+Figure~\ref{fig:absolute_error} shows mean smoothed absolute prediction error over normalized test life across the 12 split configurations. Figure~\ref{fig:error_distribution} shows the signed error distribution, and Figure~\ref{fig:uncertainty_rmse} shows 95\% block-bootstrap RMSE intervals by split configuration.
 
+\clearpage
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{absolute_error_over_life.pdf}
-    \caption{Smoothed absolute prediction error over normalized test life.}
+    \includegraphics[width=0.98\textwidth]{absolute_error_over_life.pdf}
+    \caption{Mean smoothed absolute prediction error over normalized test life across the 12 split configurations.}
     \label{fig:absolute_error}
 \end{figure}
-\FloatBarrier\begin{figure}[htbp]
+\FloatBarrier
+\clearpage
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.92\textwidth]{prediction_error_distribution.pdf}
+    \includegraphics[width=0.98\textwidth]{prediction_error_distribution.pdf}
     \caption{Signed prediction error distribution. Positive error means the model overestimated normalized RUL.}
     \label{fig:error_distribution}
 \end{figure}
 \FloatBarrier
+\clearpage
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth]{prediction_uncertainty_rmse_intervals.pdf}
+    \caption{RMSE uncertainty intervals by split configuration from block-bootstrap resampling of contiguous prediction-error blocks.}
+    \label{fig:uncertainty_rmse}
+\end{figure}
+\FloatBarrier
 
-The distribution confirms that the sequence models do not merely improve the average score. They also reduce the spread of errors in several cases. The proposed PINN has a wider error distribution because its weak physical prior does not fully capture the different degradation paths of the test bearings.
+The uncertainty intervals are not to replace further run to failure bearings. They reveal the level of prediction error confidence of test trajectories within the available ones. The large gap between the different intervals in the challenging split settings underscore the lack of statistical significance that can be drawn from 4 bearing runs.
 
 \section{Discussion of the Physics-Informed Model}
 
-The proposed PINN includes two forms of physical regularization: a monotonicity residual and a spectral prior based on fault-frequency energy. Both are reasonable engineering assumptions, but both are incomplete.
+There are two types of physical regularisation in the PINN: monotonicity residual and spectral prior with fault-frequency energy. The two assumptions are reasonable engineering, but neither is complete.
 
-The monotonicity residual assumes RUL should not increase with elapsed life. That is correct at the life-label level, but the model sees noisy features. If the feature pattern of a held-out bearing differs from the training bearings, a strict preference for smooth monotonic behavior can prevent the model from adapting to local signal changes. The implementation uses a tolerance and small weight to reduce this issue, but the result still depends on the split.
+The monotonicity residual is based on the premise that RUL should not grow as life goes on. That's right at the life-level, but the model observes noisy features. A strong focus on smooth monotonic behavior may not allow the model to learn local changes in the signal, if the feature pattern of a held out bearing is different than the training bearings. This is minimized by implementing a tolerance and a small weight, but still depends on the split.
 
-The spectral prior assumes that higher combined fault-frequency energy should correspond to greater damage. This is a plausible thing physically, but envelope energy is not an actual damage type. It may be detected by resonance, noise, axis direction and load-zone behavior as well as the occurrence of fault development. Because $E_(kin)$ growth is late or late sporadically in one run, a model learned from another run could use the previous on the wrong time.
+The spectral prior makes the assumption that the more severe combined fault-frequency energy the more damage. This has been physically possible but not a measure of actual damages. It can also be influenced by the timing of fault development, the load-zone behavior, the direction of the sensor, and resonance, noise. If $E_{kin}$ increases in one run at the wrong time or not at all, then a model that was learned in a different run may be applied at the wrong time in the first run.
 
-The take-away message from the strongest lesson is that physics-informed learning is not necessarily superior just because it uses engineering terminology. The previous one must be close enough to the data generation process to assist. In this thesis the former is helpful in the case of Experiment 2 but not sufficient to overcome sequence modeling on the whole.
-
-\section{Why the LSTM Performed Well}
-
-While the LSTM baseline is based on recent history, not a single snapshot. This is significant as degradation is a process. The trend of a feature value provides additional information; a single value may be ambiguous. Some examples of moderate RMS may be early healthy operation in one run, or a temporary plateau upon fault growth in another. A brief sentence is provided to make this distinction.
-
-The LSTM also contains much less assumptions regarding the exact physical link between $E_(kin)$ and damage. It directly learns temporal patterns from the feature sequences. This is likely to be the reason for its best average RMSE and $R^2$.
-
-\section{Why the CNN Won Experiment 3}
-
-The CNN baseline is the least successful overall, while it is the most successful in Experiment 3. This outcome indicates that the choice of the model is affected by the pairing of the train and test sets. A 1D CNN is able to recognize the temporal patterns within the sliding feature window. Those local patterns also worked well for \texttt{ds1\_b3} in Experiment 3. In the other experiments, the same model was not as generalized.
-
-This is not to say the CNN is the best overall. It means that there may be behaviour in a single average metric that is not present in the split. The split-wise analysis is, therefore, as significant as the average table in the case of a thesis.
+The key idea is that physics-informed learning does not necessarily produce better learning due to the inclusion of engineering information. The previous should be in the vicinity of the actual degradation process to be of assistance. This thesis examines the investigated weak prior in some splits and finds that the prior is not stable enough to be clearly superior in the 12-configuration repeated-seed evaluation.
 
 \section{Practical Implications}
 
-In case of an engineering maintenance system, the best and safest conclusion is the conservative one. The current PINN formulation should not be deployed as a final RUL predictor. The LSTM baseline is stronger in the completed experiments. But it also needs more validation before field use. A practical system is going to need more run-to-failure data, multiple operating conditions, uncertainty estimates along with a clear maintenance decision rule.
+When it comes to engineering maintenance, the best option is to err on the side of caution. From these results none of the tested models should be used as ultimate RUL predictors. The data-only baseline shows the smallest mean RMSE, and the proposed PINN and sequence baselines are comparable and are dependent on the sequence. For a practical system, there would be more data needed for run-to-failure, more operating conditions, uncertainty estimates and a clear maintenance decision rule.
 
-The work still provides a useful direction. Physics-informed features are important for interpretation, and the PINN framework is promising. The future work to be done is not to abandon physics and improve the physical model, use better degradation constraints, and evaluate on more splits and datasets.
+The work is still helpful in providing a direction. Interpretability is crucial via physics-informed features, and the PINN framework is still promising. Future work should focus on enhancing the physical model, provide more stringent degradation constraints, optimize the physics-loss weights and test on additional bearing runs and datasets.
+

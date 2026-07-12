@@ -33,26 +33,25 @@ The objectives of this thesis are:
 
 This study is limited to the IMS bearing data placed locally under \texttt{data/raw/1st\_test}, \texttt{data/raw/2nd\_test}, and \texttt{data/raw/3rd\_test}. Four bearing runs are used in the final experiment design: \texttt{ds2\_b1}, \texttt{ds1\_b3}, \texttt{ds1\_b4}, and \texttt{ds3\_b3}. The work uses vibration signals only. It does not add temperature, oil debris, acoustic emission, or motor-current data.
 
-The models predict normalized RUL from extracted features. The thesis does not claim field deployment readiness. The data come from a controlled test rig, and the operational conditions are much simpler than many industrial machines. There is also an intentional weak physical information from PINN. It relies on monotonicity and energy priors for fault frequency, instead of a full energy balance contact mechanics or crack growth model.
+The models predict normalized RUL from extracted features. The thesis does not claim field deployment readiness. The data come from a controlled test rig, and the operational conditions are much simpler than many industrial machines. The physics-informed part is intentionally weak: it relies on monotonicity and fault-frequency energy priors rather than a full bearing degradation law or crack growth model.
 
 \section{Importance of the Study}
 
-This work is the integration of three parts of the bearing prognostics problem in one local workflow: Signal processing, machine learning and physical interpretation. The feature extraction step maintains the links with vibration analysis of RMS, kurtosis, crest factor, and envelope spectral energies. The neural models investigate if those features can contribute to Predicting RULs over bearing runs. The physics-informed model is used to test if simple Priorities can be regularized in the learning process through physical priors.
-The final result isn't just a success story for the proposed model. That is important. A thesis result should state what happens during the experiment, not what is expected to happen in the proposal. The final run indicates that LSTM sequence modeling was able to capture the degradation .The proposed weakly physics-informed feed-forward model is less consistent in their trend. Meanwhile, the PINN was competitive in Experiment 2 and ranked first in Experiment 2 (RMSE).This mixed behavior is more clearly specified for future work than an overconfident
-positive claim would.
+This work brings together the three aspects of the bearing prognostics problem – signal processing, machine learning, and physical interpretation – in a single local workflow. Links with vibration analysis remain with RMS, Kurtosis, Crest factor and Envelope spectral-energy features at the feature extraction step. The neural models demonstrate the ability of those features to predict NRUL for all bearing runs. The physics-informed model attempts to see if simple monotonicity and fault-frequency priors offer a benefit when running to failure data is limited.
 
+The actual figure is likely to be higher, but is intentionally conservative. The data-only feed-forward baseline achieves the lowest mean RMSE in the 12 configuration repeated-seed evaluation, and the proposed weakly physics-informed model is not quite as consistent and close to the data-only baseline. This is still useful since it will help determine where the current physical prior is inadequate and what the reasons are for the need for additional run-level prior validation before making strong claims.
 \section{Limitations}
 
 The main limitations are:
 
 \begin{enumerate}[label=\arabic*.]
-    \item The IMS dataset has small number of total run-to-failure records which creates a experiment design constraint.
-    \item The physics selected prior is not a full bearing degradation law. It is a regularizer based on monotonic RUL behavior and fault-frequency energy.
-    \item The model uses hand-engineered features, not raw vibration waveform.
-    \item The RUL labels are derived from elapsed time to the end of each run, which assumes the last available file represents failure or near-failure.
+    \item The IMS dataset has a small number of total run-to-failure records, which constraints the experiment design.
+    \item The selected physics prior is weaker than a full bearing degradation law. It is a regularizer based on monotonic RUL behavior and fault-frequency energy envelope.
+    \item The model uses extracted and processed features, not raw vibration waveform.
     \item The experiments are run on one local PC, so training time and numerical results may vary on other machines.
 \end{enumerate}
 
 \section{Thesis Outline}
 
-Chapter~\ref{chapter:literature} reviews bearing failure, vibration-based condition monitoring, RUL prediction, deep learning baselines, and physics-informed learning. Chapter~\ref{chapter:methodology} describes the IMS dataset, feature extraction, preprocessing, health indicator construction, model architectures, and evaluation metrics. Chapter~\ref{chapter:implementation} describes the local implementation, experiment splits, software environment, and reproducibility setup. Chapter~\ref{chapter:results} presents the results and discusses model behavior across the three experiments. Chapter~\ref{chapter:conclusion} summarizes the findings, contributions, limitations, and future work.
+Chapter~\ref{chapter:literature} reviews bearing failure, vibration-based condition monitoring, RUL prediction, deep learning baselines, and physics-informed learning. Chapter~\ref{chapter:methodology} describes the IMS dataset, feature extraction, preprocessing, health indicator construction, model architectures, and evaluation metrics. Chapter~\ref{chapter:implementation} describes the local implementation, experiment splits, software environment, and reproducibility setup. Chapter~\ref{chapter:results} presents the results and discusses model behavior across the 12 split configurations and repeated random seeds. Chapter~\ref{chapter:conclusion} summarizes the findings, contributions, limitations, and future work.
+

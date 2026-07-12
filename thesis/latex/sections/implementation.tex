@@ -1,4 +1,4 @@
-\chapter{Local Implementation and Experimental Setup}
+﻿\chapter{Local Implementation and Experimental Setup}
 \label{chapter:implementation}
 
 \section{Local Project Structure}
@@ -19,7 +19,7 @@ uv run thesis-work regenerate-figures
 uv run pytest -q
 \end{verbatim}
 
-The full run trains all four models for all three experiments. The command can take a long time on CPU, so the project also supports shorter smoke-test arguments. The final results in this thesis come from the completed full run saved in \texttt{outputs/tables/final\_results\_table.csv}.
+The full run trains all four models for 12 split configurations and three random seeds per split. The command can take a long time on CPU, so the project also supports shorter smoke-test arguments. The final repeated-seed rows are saved in \texttt{outputs/tables/split\_seed\_results\_table.csv}, and the per-split mean results are saved in \texttt{outputs/tables/final\_results\_table.csv}.
 
 \section{Software Environment}
 
@@ -37,4 +37,5 @@ Feature extraction is the slowest preprocessing step because every vibration sna
 
 \section{Visual Reporting}
 
-The final figures were generated with matplotlib and seaborn using a consistent color palette. Models use the same colors across all plots: gray for the data-only baseline, blue for the proposed PINN, green for LSTM, and orange-red for CNN. Bearing runs also use fixed colors. In the LaTeX thesis, plot files avoid embedded chart titles where possible because figure captions and labels provide the formal titles in the document.
+The final figures were generated with matplotlib and seaborn using a consistent color palette. All graph labels, tick labels, legends, colorbar labels, and annotations use black text for visibility in the thesis PDF and printed copies. Models use the same colors across all plots: gray for the data-only baseline, blue for the proposed PINN, green for LSTM, and orange-red for CNN. Bearing runs also use fixed colors. In the LaTeX thesis, plot files avoid embedded chart titles where possible because figure captions and labels provide the formal titles in the document.
+

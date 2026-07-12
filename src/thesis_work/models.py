@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import os
 import random
@@ -17,6 +17,7 @@ from thesis_work.config import (
     LSTM_SEED,
     LSTM_BASELINE_NAME,
     PINN_SEED,
+    SEED_REPEAT_STRIDE,
     PROPOSED_MODEL_NAME,
     TARGET_COL,
     TIME_COL,
@@ -304,12 +305,15 @@ def train_all_models(
     pinn_seed: int = PINN_SEED,
     lstm_seed: int = LSTM_SEED,
     cnn_seed: int = CNN_SEED,
+    seed_repeats: int = 1,
+    seed_repeat_stride: int = SEED_REPEAT_STRIDE,
 ) -> tuple[object, dict[str, dict[str, object]], dict[str, dict[str, object]]]:
     import pandas as pd
 
-    core_rows = []
-    lstm_rows = []
-    cnn_rows = []
+    if seed_repeats < 1:
+        raise ValueError("seed_repeats must be at least 1.")
+
+    rows = []
     prediction_store: dict[str, dict[str, object]] = {}
     trained_models: dict[str, dict[str, object]] = {}
 
@@ -323,48 +327,65 @@ def train_all_models(
         }
         trained_models[spec["name"]] = {}
 
-        print(f'\n=== {spec["name"]} data-only baseline ===')
-        baseline_model = train_data_only_baseline(ctx, baseline_iterations, seed=data_baseline_seed)
-        baseline_pred = predict_dde_model(baseline_model, ctx["X_test"])
-        print(f"{DATA_BASELINE_NAME}: {regression_metrics(ctx['y_test'], baseline_pred)}")
-        core_rows.append(evaluation_row(spec, DATA_BASELINE_NAME, ctx["y_test"], baseline_pred))
-        prediction_store[spec["name"]][DATA_BASELINE_NAME] = baseline_pred
-        prediction_store[spec["name"]]["x_by_model"][DATA_BASELINE_NAME] = full_x
-        trained_models[spec["name"]][DATA_BASELINE_NAME] = baseline_model
+        for repeat_idx in range(seed_repeats):
+            repeat_no = repeat_idx + 1
+            seed_offset = repeat_idx * seed_repeat_stride
+            current_data_seed = data_baseline_seed + seed_offset
+            current_pinn_seed = pinn_seed + seed_offset
+            current_lstm_seed = lstm_seed + seed_offset
+            current_cnn_seed = cnn_seed + seed_offset
 
-        print(f'\n=== {spec["name"]} proposed DeepXDE model ===')
-        proposed_model = train_proposed_deepxde_model(ctx, pinn_iterations, seed=pinn_seed)
-        proposed_pred = predict_dde_model(proposed_model, ctx["X_test"])
-        print(f"{PROPOSED_MODEL_NAME}: {regression_metrics(ctx['y_test'], proposed_pred)}")
-        core_rows.append(evaluation_row(spec, PROPOSED_MODEL_NAME, ctx["y_test"], proposed_pred))
-        prediction_store[spec["name"]][PROPOSED_MODEL_NAME] = proposed_pred
-        prediction_store[spec["name"]]["x_by_model"][PROPOSED_MODEL_NAME] = full_x
-        trained_models[spec["name"]][PROPOSED_MODEL_NAME] = proposed_model
+            print(f'\n=== {spec["name"]} seed repeat {repeat_no}/{seed_repeats} data-only baseline ===')
+            baseline_model = train_data_only_baseline(ctx, baseline_iterations, seed=current_data_seed)
+            baseline_pred = predict_dde_model(baseline_model, ctx["X_test"])
+            print(f"{DATA_BASELINE_NAME}: {regression_metrics(ctx['y_test'], baseline_pred)}")
+            row = evaluation_row(spec, DATA_BASELINE_NAME, ctx["y_test"], baseline_pred)
+            row["Seed repeat"] = repeat_no
+            row["Seed"] = current_data_seed
+            rows.append(row)
+            if repeat_idx == 0:
+                prediction_store[spec["name"]][DATA_BASELINE_NAME] = baseline_pred
+                prediction_store[spec["name"]]["x_by_model"][DATA_BASELINE_NAME] = full_x
+                trained_models[spec["name"]][DATA_BASELINE_NAME] = baseline_model
 
-        for model_name, builder, seed, rows in [
-            (LSTM_BASELINE_NAME, build_lstm_regressor, lstm_seed, lstm_rows),
-            (CNN_BASELINE_NAME, build_cnn_regressor, cnn_seed, cnn_rows),
-        ]:
-            print(f'\n=== {spec["name"]} {model_name} ===')
-            model, y_seq, pred_seq, x_seq = train_torch_sequence_model(
-                builder,
-                ctx,
-                spec,
-                model_name,
-                seed=seed,
-                epochs=sequence_epochs,
-                patience=sequence_patience,
-                batch_size=sequence_batch_size,
-                sequence_length=sequence_length,
-            )
-            print(f"{model_name}: {regression_metrics(y_seq, pred_seq)}")
-            rows.append(evaluation_row(spec, model_name, y_seq, pred_seq))
-            prediction_store[spec["name"]][model_name] = pred_seq
-            prediction_store[spec["name"]]["x_by_model"][model_name] = x_seq
-            trained_models[spec["name"]][model_name] = model
+            print(f'\n=== {spec["name"]} seed repeat {repeat_no}/{seed_repeats} proposed DeepXDE model ===')
+            proposed_model = train_proposed_deepxde_model(ctx, pinn_iterations, seed=current_pinn_seed)
+            proposed_pred = predict_dde_model(proposed_model, ctx["X_test"])
+            print(f"{PROPOSED_MODEL_NAME}: {regression_metrics(ctx['y_test'], proposed_pred)}")
+            row = evaluation_row(spec, PROPOSED_MODEL_NAME, ctx["y_test"], proposed_pred)
+            row["Seed repeat"] = repeat_no
+            row["Seed"] = current_pinn_seed
+            rows.append(row)
+            if repeat_idx == 0:
+                prediction_store[spec["name"]][PROPOSED_MODEL_NAME] = proposed_pred
+                prediction_store[spec["name"]]["x_by_model"][PROPOSED_MODEL_NAME] = full_x
+                trained_models[spec["name"]][PROPOSED_MODEL_NAME] = proposed_model
 
-    final_results = pd.concat(
-        [pd.DataFrame(core_rows), pd.DataFrame(lstm_rows), pd.DataFrame(cnn_rows)],
-        ignore_index=True,
-    )
+            for model_name, builder, seed in [
+                (LSTM_BASELINE_NAME, build_lstm_regressor, current_lstm_seed),
+                (CNN_BASELINE_NAME, build_cnn_regressor, current_cnn_seed),
+            ]:
+                print(f'\n=== {spec["name"]} seed repeat {repeat_no}/{seed_repeats} {model_name} ===')
+                model, y_seq, pred_seq, x_seq = train_torch_sequence_model(
+                    builder,
+                    ctx,
+                    spec,
+                    model_name,
+                    seed=seed,
+                    epochs=sequence_epochs,
+                    patience=sequence_patience,
+                    batch_size=sequence_batch_size,
+                    sequence_length=sequence_length,
+                )
+                print(f"{model_name}: {regression_metrics(y_seq, pred_seq)}")
+                row = evaluation_row(spec, model_name, y_seq, pred_seq)
+                row["Seed repeat"] = repeat_no
+                row["Seed"] = seed
+                rows.append(row)
+                if repeat_idx == 0:
+                    prediction_store[spec["name"]][model_name] = pred_seq
+                    prediction_store[spec["name"]]["x_by_model"][model_name] = x_seq
+                    trained_models[spec["name"]][model_name] = model
+
+    final_results = pd.DataFrame(rows)
     return final_results, prediction_store, trained_models

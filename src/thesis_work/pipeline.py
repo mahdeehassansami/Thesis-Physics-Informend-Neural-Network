@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import os
 import random
@@ -16,6 +16,8 @@ from thesis_work.config import (
     LSTM_SEED,
     MODEL_ORDER,
     PINN_SEED,
+    SEED_REPEATS,
+    SEED_REPEAT_STRIDE,
     TARGET_RUNS,
     ProjectPaths,
     default_paths,
@@ -96,6 +98,8 @@ def run_pipeline(
     pinn_seed: int = PINN_SEED,
     lstm_seed: int = LSTM_SEED,
     cnn_seed: int = CNN_SEED,
+    seed_repeats: int = SEED_REPEATS,
+    seed_repeat_stride: int = SEED_REPEAT_STRIDE,
 ) -> dict[str, object]:
     paths = paths or default_paths()
     random.seed(global_seed)
@@ -125,11 +129,18 @@ def run_pipeline(
             pinn_seed=pinn_seed,
             lstm_seed=lstm_seed,
             cnn_seed=cnn_seed,
+            seed_repeats=seed_repeats,
+            seed_repeat_stride=seed_repeat_stride,
         )
         final_results["Model"] = pd.Categorical(final_results["Model"], categories=MODEL_ORDER, ordered=True)
-        final_results = final_results.sort_values(["Experiment", "Model"]).reset_index(drop=True)
+        sort_cols = ["Experiment", "Seed repeat", "Model"] if "Seed repeat" in final_results.columns else ["Experiment", "Model"]
+        final_results = final_results.sort_values(sort_cols).reset_index(drop=True)
         final_results["Model"] = final_results["Model"].astype(str)
-        final_results = final_results[["Experiment", "Train runs", "Validation run", "Test run", "Model", "MAE", "RMSE", "R2"]]
+        result_cols = ["Experiment", "Train runs", "Validation run", "Test run"]
+        if "Seed repeat" in final_results.columns:
+            result_cols.extend(["Seed repeat", "Seed"])
+        result_cols.extend(["Model", "MAE", "RMSE", "R2"])
+        final_results = final_results[result_cols]
         prediction_table = prediction_store_to_table(prediction_store)
         prediction_table.to_csv(paths.tables / "prediction_series.csv", index=False)
 
@@ -155,6 +166,8 @@ def run_pipeline(
             "sequence_patience": sequence_patience,
             "sequence_batch_size": sequence_batch_size,
             "sequence_length": sequence_length,
+            "seed_repeats": seed_repeats,
+            "seed_repeat_stride": seed_repeat_stride,
             "source_of_truth": "python_project",
         },
         seeds={
@@ -188,7 +201,8 @@ def regenerate_figures_from_cache(paths: ProjectPaths | None = None) -> dict[str
     proc_df = preprocess_features(multi_df)
     pca_hi_df, pca_hi_summary = compute_pca_hi(proc_df)
 
-    final_results_path = paths.tables / "final_results_table.csv"
+    split_seed_results_path = paths.tables / "split_seed_results_table.csv"
+    final_results_path = split_seed_results_path if split_seed_results_path.exists() else paths.tables / "final_results_table.csv"
     final_results = pd.read_csv(final_results_path) if final_results_path.exists() else None
     if final_results is not None and "R²" in final_results.columns and "R2" not in final_results.columns:
         final_results = final_results.rename(columns={"R²": "R2"})
@@ -232,3 +246,5 @@ def regenerate_figures_from_cache(paths: ProjectPaths | None = None) -> dict[str
         "pca_hi_summary": pca_hi_summary,
         "final_results": final_results,
     }
+
+

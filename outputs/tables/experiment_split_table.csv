@@ -1,4 +1,13 @@
 Experiment,Train runs,Validation run,Test run,Purpose
-Exp 1,ds2_b1 + ds1_b3,ds1_b4,ds3_b3,Cross-dataset/cross-bearing transfer with ds3_b3 held out for testing
-Exp 2,ds2_b1 + ds1_b4,ds1_b3,ds3_b3,Alternative training-bearing combination with the same ds3_b3 test run
-Exp 3,ds2_b1 + ds3_b3,ds1_b4,ds1_b3,Cross-dataset transfer to ds1_b3 with balanced training runs
+S01,ds1_b4 + ds3_b3,ds1_b3,ds2_b1,Test ds2_b1; validation ds1_b3
+S02,ds1_b3 + ds3_b3,ds1_b4,ds2_b1,Test ds2_b1; validation ds1_b4
+S03,ds1_b3 + ds1_b4,ds3_b3,ds2_b1,Test ds2_b1; validation ds3_b3
+S04,ds1_b4 + ds3_b3,ds2_b1,ds1_b3,Test ds1_b3; validation ds2_b1
+S05,ds2_b1 + ds3_b3,ds1_b4,ds1_b3,Test ds1_b3; validation ds1_b4
+S06,ds2_b1 + ds1_b4,ds3_b3,ds1_b3,Test ds1_b3; validation ds3_b3
+S07,ds1_b3 + ds3_b3,ds2_b1,ds1_b4,Test ds1_b4; validation ds2_b1
+S08,ds2_b1 + ds3_b3,ds1_b3,ds1_b4,Test ds1_b4; validation ds1_b3
+S09,ds2_b1 + ds1_b3,ds3_b3,ds1_b4,Test ds1_b4; validation ds3_b3
+S10,ds1_b3 + ds1_b4,ds2_b1,ds3_b3,Test ds3_b3; validation ds2_b1
+S11,ds2_b1 + ds1_b4,ds1_b3,ds3_b3,Test ds3_b3; validation ds1_b3
+S12,ds2_b1 + ds1_b3,ds1_b4,ds3_b3,Test ds3_b3; validation ds1_b4

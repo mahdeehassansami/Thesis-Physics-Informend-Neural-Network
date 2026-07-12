@@ -1,0 +1,134 @@
+﻿\documentclass[12pt,a4paper]{report}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{pdfpages}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{placeins}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage[nottoc]{tocbibind}
+\usepackage{cite}
+\usepackage[normalem]{ulem}
+
+\graphicspath{{assets/images/}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\titleformat{\chapter}[display]
+{\centering\bfseries\fontsize{18pt}{22pt}\selectfont}
+{Chapter \thechapter}
+{0pt}
+{\fontsize{18pt}{22pt}\selectfont}
+[\vspace{1em}]
+
+\titlespacing*{\chapter}{0pt}{6pt}{8pt}
+
+\titleformat{\section}
+{\normalfont\fontsize{12pt}{14pt}\selectfont}
+{\thesection}
+{1em}
+{\MakeUppercase}
+
+\titlespacing*{\section}{0pt}{6pt}{6pt}
+
+\titleformat{\subsection}
+{\bfseries\fontsize{12pt}{14pt}\selectfont}
+{\thesubsection}
+{1em}
+{}
+
+\titleformat{\subsubsection}
+{\itshape\fontsize{12pt}{14pt}\selectfont}
+{\thesubsubsection}
+{1em}
+{}
+
+\titleformat{\paragraph}
+{\normalfont\fontsize{12pt}{14pt}\selectfont}
+{\theparagraph}
+{1em}
+{\uline}
+
+\setlength{\parskip}{12pt}
+\setlength{\parindent}{0pt}
+
+\geometry{
+    a4paper,
+    portrait,
+    left=30mm,
+    right=20mm,
+    top=25mm,
+    bottom=20mm
+}
+
+\onehalfspacing
+\pagestyle{plain}
+\sloppy
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,
+    urlcolor=black,
+    citecolor=black,
+    pdftitle={Physics-Informed Neural Networks for Remaining-Useful-Life Prediction of Rolling-Element Bearings},
+    pdfauthor={Mahdee Hassan Sami}
+}
+
+\begin{document}
+
+\pagenumbering{gobble}
+
+\input{sections/cover}
+\input{sections/information}
+
+\clearpage
+\pagenumbering{roman}
+
+\phantomsection
+\input{sections/abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+\phantomsection
+\input{sections/acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+
+\tableofcontents
+\addcontentsline{toc}{chapter}{\contentsname}
+\listoffigures
+\listoftables
+
+\phantomsection
+\input{sections/nomenclature}
+\addcontentsline{toc}{chapter}{Nomenclature}
+
+\newpage
+\pagenumbering{arabic}
+\renewcommand{\thechapter}{\arabic{chapter}}
+\renewcommand{\thesection}{\thechapter.\arabic{section}}
+\setcounter{chapter}{0}
+
+\input{sections/introduction}
+\input{sections/literature_review}
+\input{sections/methodology}
+\input{sections/implementation}
+\input{sections/results}
+\input{sections/conclusion}
+
+\renewcommand{\bibname}{References}
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\input{sections/appendices}
+
+\end{document}

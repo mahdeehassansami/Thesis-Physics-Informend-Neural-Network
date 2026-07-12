@@ -1,5 +1,5 @@
 Run ID,IMS dataset,Bearing number,Failure type if available,Number of samples,Used in experiments,Notes
-ds2_b1,2nd_test,1,Not specified in cleaned notebook,984,Exp 1 Train; Exp 2 Train; Exp 3 Train,Run-to-failure IMS bearing run used in cross-bearing experiments
-ds1_b3,1st_test,3,Not specified in cleaned notebook,2156,Exp 1 Train; Exp 2 Validation; Exp 3 Test,Run-to-failure IMS bearing run used in cross-bearing experiments
-ds1_b4,1st_test,4,Not specified in cleaned notebook,2156,Exp 1 Validation; Exp 2 Train; Exp 3 Validation,Run-to-failure IMS bearing run used in cross-bearing experiments
-ds3_b3,3rd_test,3,Not specified in cleaned notebook,6324,Exp 1 Test; Exp 2 Test; Exp 3 Train,Run-to-failure IMS bearing run used in cross-bearing experiments
+ds2_b1,2nd_test,1,Not specified in cleaned notebook,984,S01 Test; S02 Test; S03 Test; S04 Validation; S05 Train; S06 Train; S07 Validation; S08 Train; S09 Train; S10 Validation; S11 Train; S12 Train,Run-to-failure IMS bearing run used in cross-bearing experiments
+ds1_b3,1st_test,3,Not specified in cleaned notebook,2156,S01 Validation; S02 Train; S03 Train; S04 Test; S05 Test; S06 Test; S07 Train; S08 Validation; S09 Train; S10 Train; S11 Validation; S12 Train,Run-to-failure IMS bearing run used in cross-bearing experiments
+ds1_b4,1st_test,4,Not specified in cleaned notebook,2156,S01 Train; S02 Validation; S03 Train; S04 Train; S05 Validation; S06 Train; S07 Test; S08 Test; S09 Test; S10 Train; S11 Train; S12 Validation,Run-to-failure IMS bearing run used in cross-bearing experiments
+ds3_b3,3rd_test,3,Not specified in cleaned notebook,6324,S01 Train; S02 Train; S03 Validation; S04 Train; S05 Train; S06 Validation; S07 Train; S08 Train; S09 Validation; S10 Test; S11 Test; S12 Test,Run-to-failure IMS bearing run used in cross-bearing experiments

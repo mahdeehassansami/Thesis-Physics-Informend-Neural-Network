@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -59,27 +59,92 @@ DATA_BASELINE_SEED = 42
 PINN_SEED = 42
 LSTM_SEED = 42
 CNN_SEED = 123
+SEED_REPEATS = 3
+SEED_REPEAT_STRIDE = 100
 
 EXPERIMENTS = [
     {
-        "name": "Exp 1",
-        "train_runs": ["ds2_b1", "ds1_b3"],
-        "validation_runs": ["ds1_b4"],
-        "test_runs": ["ds3_b3"],
-        "balanced_train": False,
-    },
-    {
-        "name": "Exp 2",
-        "train_runs": ["ds2_b1", "ds1_b4"],
+        "name": "S01",
+        "train_runs": ["ds1_b4", "ds3_b3"],
         "validation_runs": ["ds1_b3"],
-        "test_runs": ["ds3_b3"],
-        "balanced_train": False,
+        "test_runs": ["ds2_b1"],
+        "balanced_train": True,
     },
     {
-        "name": "Exp 3",
+        "name": "S02",
+        "train_runs": ["ds1_b3", "ds3_b3"],
+        "validation_runs": ["ds1_b4"],
+        "test_runs": ["ds2_b1"],
+        "balanced_train": True,
+    },
+    {
+        "name": "S03",
+        "train_runs": ["ds1_b3", "ds1_b4"],
+        "validation_runs": ["ds3_b3"],
+        "test_runs": ["ds2_b1"],
+        "balanced_train": True,
+    },
+    {
+        "name": "S04",
+        "train_runs": ["ds1_b4", "ds3_b3"],
+        "validation_runs": ["ds2_b1"],
+        "test_runs": ["ds1_b3"],
+        "balanced_train": True,
+    },
+    {
+        "name": "S05",
         "train_runs": ["ds2_b1", "ds3_b3"],
         "validation_runs": ["ds1_b4"],
         "test_runs": ["ds1_b3"],
+        "balanced_train": True,
+    },
+    {
+        "name": "S06",
+        "train_runs": ["ds2_b1", "ds1_b4"],
+        "validation_runs": ["ds3_b3"],
+        "test_runs": ["ds1_b3"],
+        "balanced_train": True,
+    },
+    {
+        "name": "S07",
+        "train_runs": ["ds1_b3", "ds3_b3"],
+        "validation_runs": ["ds2_b1"],
+        "test_runs": ["ds1_b4"],
+        "balanced_train": True,
+    },
+    {
+        "name": "S08",
+        "train_runs": ["ds2_b1", "ds3_b3"],
+        "validation_runs": ["ds1_b3"],
+        "test_runs": ["ds1_b4"],
+        "balanced_train": True,
+    },
+    {
+        "name": "S09",
+        "train_runs": ["ds2_b1", "ds1_b3"],
+        "validation_runs": ["ds3_b3"],
+        "test_runs": ["ds1_b4"],
+        "balanced_train": True,
+    },
+    {
+        "name": "S10",
+        "train_runs": ["ds1_b3", "ds1_b4"],
+        "validation_runs": ["ds2_b1"],
+        "test_runs": ["ds3_b3"],
+        "balanced_train": True,
+    },
+    {
+        "name": "S11",
+        "train_runs": ["ds2_b1", "ds1_b4"],
+        "validation_runs": ["ds1_b3"],
+        "test_runs": ["ds3_b3"],
+        "balanced_train": True,
+    },
+    {
+        "name": "S12",
+        "train_runs": ["ds2_b1", "ds1_b3"],
+        "validation_runs": ["ds1_b4"],
+        "test_runs": ["ds3_b3"],
         "balanced_train": True,
     },
 ]

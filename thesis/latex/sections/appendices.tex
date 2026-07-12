@@ -1,61 +1,39 @@
-\appendix
-\chapter{Reproducibility Notes}
+\clearpage
+\hypersetup{pageanchor=false}
+\setcounter{page}{41}
 
-\section{Final Result Table}
+\includepdf[
+    pages=1,
+    pagecommand={\thispagestyle{empty}\phantomsection\addcontentsline{toc}{chapter}{Appendices}\phantomsection\addcontentsline{toc}{section}{Appendix A: Cost estimation of the project}}
+]{assets/add_pages.pdf}
 
-The main result table is repeated here for quick reference.
+\includepdf[
+    pages=2,
+    pagecommand={\thispagestyle{empty}\phantomsection\addcontentsline{toc}{section}{Appendix B: Gantt chart of the project}}
+]{assets/add_pages.pdf}
 
-\begin{table}[htbp]
-    \centering
-    \small
-    \renewcommand{\arraystretch}{1.25}
-    \caption{Final prediction metrics for all models and experiments.}
-    \label{tab:appendix_final_results}
-    \begin{tabularx}{\textwidth}{@{}l l c c c@{}}
-        \toprule
-        Experiment & Model & MAE & RMSE & R2 \\
-        \midrule
-        Exp 1 & Data-only FNN & 0.083 & 0.128 & 0.801 \\
-        Exp 1 & Proposed PINN & 0.147 & 0.173 & 0.638 \\
-        Exp 1 & LSTM & 0.101 & 0.112 & 0.848 \\
-        Exp 1 & CNN & 0.244 & 0.266 & 0.146 \\
-        Exp 2 & Data-only FNN & 0.104 & 0.148 & 0.738 \\
-        Exp 2 & Proposed PINN & 0.114 & 0.144 & 0.751 \\
-        Exp 2 & LSTM & 0.141 & 0.155 & 0.708 \\
-        Exp 2 & CNN & 0.200 & 0.235 & 0.334 \\
-        Exp 3 & Data-only FNN & 0.156 & 0.280 & 0.032 \\
-        Exp 3 & Proposed PINN & 0.262 & 0.351 & -0.530 \\
-        Exp 3 & LSTM & 0.176 & 0.219 & 0.382 \\
-        Exp 3 & CNN & 0.183 & 0.204 & 0.463 \\
-        \bottomrule
-    \end{tabularx}
-\end{table}
-\FloatBarrier
+\includepdf[
+    pages=3,
+    pagecommand={\thispagestyle{empty}\phantomsection\addcontentsline{toc}{section}{Appendix C: Originality and AI reports}}
+]{assets/add_pages.pdf}
 
-\section{Commands Used for the Local Pipeline}
+\includepdf[
+    pages=4,
+    pagecommand={\thispagestyle{empty}}
+]{assets/add_pages.pdf}
 
-\begin{verbatim}
-uv sync --extra dev
-uv run thesis-work validate-data
-uv run thesis-work extract-features
-uv run thesis-work run
-uv run thesis-work regenerate-figures
-uv run pytest -q
-\end{verbatim}
+\includepdf[
+    pages=5,
+    pagecommand={\thispagestyle{empty}\phantomsection\addcontentsline{toc}{section}{Appendix D: CO-PO-K-P-A Mapping}}
+]{assets/add_pages.pdf}
 
-\section{Raw Data Location}
+\includepdf[
+    pages=6,
+    pagecommand={\thispagestyle{empty}}
+]{assets/add_pages.pdf}
 
-The raw IMS folders are expected in:
-
-\begin{verbatim}
-data/raw/
-  1st_test/
-  2nd_test/
-  3rd_test/
-\end{verbatim}
-
-These folders are intentionally not part of the LaTeX source because they contain the local raw dataset.
-
-\section{LaTeX Build}
-
-The LaTeX source is stored under \texttt{thesis/latex}. The file \texttt{build\_pdf.bat} compiles the document into \texttt{physics\_informed\_bearing\_rul\_thesis.pdf} using MiKTeX.
+\includepdf[
+    pages=7,
+    fitpaper=true,
+    pagecommand={\thispagestyle{empty}}
+]{assets/add_pages.pdf}

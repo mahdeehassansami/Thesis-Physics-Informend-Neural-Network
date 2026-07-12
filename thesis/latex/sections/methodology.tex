@@ -43,16 +43,16 @@ The local pipeline uses three IMS folders: \texttt{1st\_test}, \texttt{2nd\_test
         \toprule
         Run ID & IMS dataset & Bearing number & Number of samples & Used in experiments \\
         \midrule
-        ds2\_b1 & 2nd\_test & 1 & 984 & Exp 1 Train; Exp 2 Train; Exp 3 Train \\
-        ds1\_b3 & 1st\_test & 3 & 2156 & Exp 1 Train; Exp 2 Validation; Exp 3 Test \\
-        ds1\_b4 & 1st\_test & 4 & 2156 & Exp 1 Validation; Exp 2 Train; Exp 3 Validation \\
-        ds3\_b3 & 3rd\_test & 3 & 6324 & Exp 1 Test; Exp 2 Test; Exp 3 Train \\
+        ds2\_b1 & 2nd\_test & 1 & 984 & Used as test, validation, and training run across the 12 split configurations \\
+        ds1\_b3 & 1st\_test & 3 & 2156 & Used as test, validation, and training run across the 12 split configurations \\
+        ds1\_b4 & 1st\_test & 4 & 2156 & Used as test, validation, and training run across the 12 split configurations \\
+        ds3\_b3 & 3rd\_test & 3 & 6324 & Used as test, validation, and training run across the 12 split configurations \\
         \bottomrule
     \end{tabularx}
 \end{table}
 \FloatBarrier
 
-Figure~\ref{fig:dataset_sample_counts} shows the number of snapshots available for each selected run. The difference in run length is large. The third dataset bearing run has 6324 samples, while the second dataset bearing run has 984 samples. This imbalance affects model training and is one reason why Experiment 3 uses balanced sampling for its training runs.
+Figure~\ref{fig:dataset_sample_counts} shows the number of snapshots available for each selected run. The difference in run length is large. The third dataset bearing run has 6324 samples, while the second dataset bearing run has 984 samples. This imbalance affects model training. The final 12-configuration split design therefore uses balanced sampling within the training runs so that the longest run does not dominate the training set.
 
 \begin{figure}[htbp]
     \centering
@@ -105,7 +105,6 @@ where $f_r$ is shaft frequency, $n$ is the number of rolling elements, $d$ is ro
         E\_BPFI & physics-informed frequency feature & Envelope spectral energy around inner-race fault frequency harmonics & yes \\
         E\_BSF & physics-informed frequency feature & Envelope spectral energy around rolling-element fault frequency harmonics & yes \\
         E\_kin & physics-informed frequency feature & Combined bearing kinematic fault-frequency spectral energy & yes \\
-        sigma\_H\_norm & auxiliary placeholder & Constant placeholder; not a Hertzian contact stress calculation & yes \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -146,7 +145,7 @@ This gives a target near 1 at the beginning of the run and near 0 at the end. Th
 
 Feature values can differ greatly between bearing runs. To reduce the effect of run-specific scale, each run is normalized using its early healthy baseline. The first 5 percent of samples, with a minimum of 20 samples, are treated as the healthy baseline. For each model feature, the median baseline value is used. The feature is converted to a nonnegative relative increase, transformed with \texttt{log1p}, and smoothed with a rolling median of 15 samples.
 
-Elapsed time is converted to \texttt{elapsed\_scaled} by dividing elapsed hours by 1200. The model input vector contains \texttt{elapsed\_scaled}, the normalized feature set, and \texttt{sigma\_H\_norm}. The final variable is a constant placeholder kept for compatibility with the original notebook structure. It is not treated as a real Hertzian contact stress calculation in the final interpretation.
+Elapsed time is converted to \texttt{elapsed\_scaled} by dividing elapsed hours by 1200. The model input vector contains \texttt{elapsed\_scaled} and the normalized feature set, including the fault-frequency energy features.
 
 \section{PCA Health Indicator}
 
@@ -165,6 +164,8 @@ The health indicator is not used as the final RUL target. It is used as an expla
         Bearing run & Monotonicity score & Interpretation \\
         \midrule
         ds1\_b3 & 0.766 & Strongly degradation-consistent PCA-HI behavior \\
+        ds1\_b4 & 0.691 & Moderately or weakly degradation-consistent PCA-HI behavior \\
+        ds2\_b1 & 0.803 & Strongly degradation-consistent PCA-HI behavior \\
         ds3\_b3 & 0.864 & Strongly degradation-consistent PCA-HI behavior \\
         \bottomrule
     \end{tabularx}
@@ -210,34 +211,45 @@ The LSTM baseline uses sliding windows of feature vectors. It reads a sequence o
 
 \section{Experiment Design}
 
-The three experiments hold out complete bearing runs for validation and testing. This is stricter than randomly splitting snapshots because the model must transfer across bearing runs. Table~\ref{tab:experiment_split} and Figure~\ref{fig:experiment_split_matrix} show the split design.
+The final evaluation uses 12 complete-run train-validation-test configurations. In each configuration, one bearing run is held out for testing, one different run is used for validation, and the remaining two runs are used for training. This covers all choices of test run and validation run among the four selected bearing trajectories. The design is stricter than randomly splitting snapshots because the model must transfer across complete bearing degradation trajectories. Each model is trained three times per split using different random seeds. Therefore, each model has 36 evaluated runs in the final statistical summary.
+
+Table~\ref{tab:experiment_split} and Figure~\ref{fig:experiment_split_matrix} show the split design.
 
 \begin{table}[htbp]
     \centering
     \scriptsize
-    \renewcommand{\arraystretch}{1.25}
-    \caption{Train-validation-test split for each experiment.}
+    \renewcommand{\arraystretch}{1.18}
+    \caption{Twelve complete-run train-validation-test split configurations.}
     \label{tab:experiment_split}
-    \begin{tabularx}{\textwidth}{@{}l l l l Y@{}}
+    \begin{tabular}{@{}l l l l@{}}
         \toprule
-        Experiment & Train runs & Validation run & Test run & Purpose \\
+        Split & Train runs & Validation run & Test run \\
         \midrule
-        Exp 1 & ds2\_b1 + ds1\_b3 & ds1\_b4 & ds3\_b3 & Cross-dataset/cross-bearing transfer with ds3\_b3 held out for testing \\
-        Exp 2 & ds2\_b1 + ds1\_b4 & ds1\_b3 & ds3\_b3 & Alternative training-bearing combination with the same ds3\_b3 test run \\
-        Exp 3 & ds2\_b1 + ds3\_b3 & ds1\_b4 & ds1\_b3 & Cross-dataset transfer to ds1\_b3 with balanced training runs \\
+        S01 & ds1\_b4 + ds3\_b3 & ds1\_b3 & ds2\_b1 \\
+        S02 & ds1\_b3 + ds3\_b3 & ds1\_b4 & ds2\_b1 \\
+        S03 & ds1\_b3 + ds1\_b4 & ds3\_b3 & ds2\_b1 \\
+        S04 & ds1\_b4 + ds3\_b3 & ds2\_b1 & ds1\_b3 \\
+        S05 & ds2\_b1 + ds3\_b3 & ds1\_b4 & ds1\_b3 \\
+        S06 & ds2\_b1 + ds1\_b4 & ds3\_b3 & ds1\_b3 \\
+        S07 & ds1\_b3 + ds3\_b3 & ds2\_b1 & ds1\_b4 \\
+        S08 & ds2\_b1 + ds3\_b3 & ds1\_b3 & ds1\_b4 \\
+        S09 & ds2\_b1 + ds1\_b3 & ds3\_b3 & ds1\_b4 \\
+        S10 & ds1\_b3 + ds1\_b4 & ds2\_b1 & ds3\_b3 \\
+        S11 & ds2\_b1 + ds1\_b4 & ds1\_b3 & ds3\_b3 \\
+        S12 & ds2\_b1 + ds1\_b3 & ds1\_b4 & ds3\_b3 \\
         \bottomrule
-    \end{tabularx}
+    \end{tabular}
 \end{table}
 \FloatBarrier\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.82\textwidth]{experiment_split_matrix.pdf}
-    \caption{Experiment split matrix showing how each bearing run is used.}
+    \includegraphics[width=0.88\textwidth]{experiment_split_matrix.pdf}
+    \caption{Experiment split matrix showing how each bearing run is used in the 12 configurations.}
     \label{fig:experiment_split_matrix}
 \end{figure}
 \FloatBarrier
-
 \section{Evaluation Metrics}
 
 Evaluation of the models is carried out using MAE, RMSE and $R^2$. MAE is the mean of absolute prediction errors. $R^2$ allows for larger errors to have a greater impact, since the error is squared before being averaged. The negative $R^2$ indicates that the model is worse at predicting the target than predicting the mean value of the target.
 
-The thesis employs the RMSE as the primary ranking criterion since the errors in RUL are particularly undesirable when making decisions in maintenance planning, as RUL errors of large magnitudes are highly undesirable. Still, MAE and $R^2$ are reported to provide a complete picture of the model's behavior. The metric definitions are taken from the common practice in prognosis evaluation using the metrics described in \cite{saxena2008}.
+The thesis employs RMSE as the primary ranking criterion because large RUL errors are undesirable for maintenance planning. Still, MAE and $R^2$ are reported to provide a complete picture of model behavior. The metric definitions follow common practice in prognostics evaluation \cite{saxena2008}. Statistical validation is reported as the mean and standard deviation across 12 split configurations and three repeated seeds per split. Prediction uncertainty is also estimated with 95\% block-bootstrap intervals over contiguous prediction-error blocks within each held-out test trajectory.
+

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from pathlib import Path
 
@@ -26,9 +26,9 @@ register_latin_modern()
 FONT_FAMILY = ["Latin Modern Roman", "DejaVu Serif", "Times New Roman"]
 
 COLORS = {
-    "ink": "#18202A",
-    "muted": "#667085",
-    "grid": "#E4EAF2",
+    "ink": "#000000",
+    "muted": "#000000",
+    "grid": "#D9DDE3",
     "panel": "#FFFFFF",
     "blue": "#0072B2",
     "blue_dark": "#00466E",
@@ -77,18 +77,20 @@ def apply_theme() -> None:
             "axes.facecolor": COLORS["panel"],
             "figure.facecolor": COLORS["panel"],
             "savefig.facecolor": COLORS["panel"],
+            "text.color": COLORS["ink"],
             "axes.edgecolor": COLORS["ink"],
             "axes.labelcolor": COLORS["ink"],
             "axes.titlecolor": COLORS["ink"],
-            "xtick.color": COLORS["muted"],
-            "ytick.color": COLORS["muted"],
+            "xtick.color": COLORS["ink"],
+            "ytick.color": COLORS["ink"],
             "grid.color": COLORS["grid"],
-            "grid.linewidth": 0.8,
-            "axes.linewidth": 0.9,
+            "grid.linewidth": 0.85,
+            "axes.linewidth": 1.05,
             "axes.titlesize": 16,
-            "axes.labelsize": 11.5,
-            "xtick.labelsize": 10,
-            "ytick.labelsize": 10,
+            "axes.labelsize": 12,
+            "xtick.labelsize": 10.5,
+            "ytick.labelsize": 10.5,
+            "legend.labelcolor": COLORS["ink"],
             "legend.fontsize": 9.5,
             "legend.title_fontsize": 10,
         },
@@ -116,8 +118,8 @@ def polish_axes(ax, xlabel: str | None = None, ylabel: str | None = None, grid_a
         ax.yaxis.grid(True)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_color(COLORS["grid"])
-    ax.spines["bottom"].set_color(COLORS["grid"])
+    ax.spines["left"].set_color(COLORS["ink"])
+    ax.spines["bottom"].set_color(COLORS["ink"])
     ax.tick_params(length=0)
 
 
@@ -125,7 +127,7 @@ def top_legend(ax, ncol: int = 4, title: str | None = None) -> None:
     handles, labels = ax.get_legend_handles_labels()
     if not handles:
         return
-    ax.legend(
+    legend = ax.legend(
         handles,
         labels,
         title=title,
@@ -137,6 +139,10 @@ def top_legend(ax, ncol: int = 4, title: str | None = None) -> None:
         handlelength=2.2,
         columnspacing=1.2,
     )
+    for text in legend.get_texts():
+        text.set_color(COLORS["ink"])
+    if legend.get_title() is not None:
+        legend.get_title().set_color(COLORS["ink"])
 
 
 def model_handles(models: list[str]) -> list[Patch]:

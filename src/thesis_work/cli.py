@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 
@@ -8,6 +8,8 @@ from thesis_work.config import (
     GLOBAL_SEED,
     LSTM_SEED,
     PINN_SEED,
+    SEED_REPEATS,
+    SEED_REPEAT_STRIDE,
     default_paths,
 )
 from thesis_work.pipeline import (
@@ -43,6 +45,8 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--pinn-seed", type=int, default=PINN_SEED)
     run.add_argument("--lstm-seed", type=int, default=LSTM_SEED)
     run.add_argument("--cnn-seed", type=int, default=CNN_SEED)
+    run.add_argument("--seed-repeats", type=int, default=SEED_REPEATS)
+    run.add_argument("--seed-repeat-stride", type=int, default=SEED_REPEAT_STRIDE)
 
     subparsers.add_parser(
         "regenerate-figures",
@@ -81,6 +85,8 @@ def main(argv: list[str] | None = None) -> None:
             pinn_seed=args.pinn_seed,
             lstm_seed=args.lstm_seed,
             cnn_seed=args.cnn_seed,
+            seed_repeats=args.seed_repeats,
+            seed_repeat_stride=args.seed_repeat_stride,
         )
         final_results = results["final_results"]
         if final_results is not None:
@@ -98,3 +104,4 @@ def main(argv: list[str] | None = None) -> None:
 
 if __name__ == "__main__":
     main()
+
