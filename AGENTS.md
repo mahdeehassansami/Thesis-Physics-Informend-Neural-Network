@@ -876,6 +876,30 @@ Do not automatically commit or push unless the user explicitly requests it.
 Do not stage raw datasets, papers, large outputs, result bundles, or
 checkpoints unintentionally.
 
+### 17.1 Standing automatic handoff authorization
+
+As explicitly authorized by the user on 2026-07-21, future validated Colab-run
+preparations should complete the Git and Upload handoff automatically. After local
+validation succeeds, Codex should:
+
+1. Stage only the intended source, configuration, notebook, documentation, test, and
+   lightweight analysis-utility changes.
+2. Exclude raw datasets, papers, saved result bundles, generated outputs, caches, and
+   checkpoints unless the user separately and explicitly requests them.
+3. Commit with an experiment-specific message and push the current branch normally.
+4. Verify that the remote branch resolves to the same full 40-character commit SHA.
+5. Rebuild the disposable local `Upload/` package from that committed revision.
+6. Pin every Upload notebook to the verified pushed SHA automatically.
+7. Refresh and verify `UPLOAD_PACKAGE_MANIFEST.json`, confirm the run output directory is
+   empty, and confirm no placeholder SHA remains in executable notebook cells.
+8. Report the final SHA and tell the user that the package is ready to upload and run
+   without manual SHA editing.
+
+This is standing authorization for normal commits and pushes that finish an in-scope
+experiment-preparation workflow. It does not authorize force-pushing, rewriting history,
+committing unrelated user changes, adding large excluded artifacts, or publishing results
+outside the configured Git remote.
+
 The notebook must record the exact checked-out commit in:
 
 - `git_commit.txt`.
