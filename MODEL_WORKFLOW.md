@@ -33,9 +33,9 @@ All data extraction is cached. Scaling is fit only on the training split. Run-le
 are used when multiple bearings exist; the one-run vibration/temperature dataset uses an
 explicit temporal split and must not be presented as cross-bearing validation.
 
-The exact Run 2 configuration is preserved in
-`configs/colab_experiments_run_02.json`. The active EXP-003/Run 3 configuration is stored in
-both `configs/colab_experiments_run_03.json` and `configs/colab_experiments.json`.
+The exact Run 2, Run 3, and Run 4 configurations are preserved in their numbered files.
+The active configuration is EXP-005/Run 5 and is stored in both
+`configs/colab_experiments_run_05.json` and `configs/colab_experiments.json`.
 
 Run 3 is an IMS-only, feature-based calibration experiment. LSTM and Weak-PINN/high are
 predeclared references. Strong-PINN candidates cross Paris weights `[0.003, 0.01, 0.03]`
@@ -54,10 +54,14 @@ future runs must not depend on remnants of a previous Drive package.
 
 
 
-## EXP-004 Run 4 preparation
+## EXP-004 Run 4 result
 
-Run 4 is prepared as a four-fold IMS held-out-bearing robustness experiment. The exact fold map, frozen model profiles, frozen Strong-PINN weights, cache hash, seeds, and success criterion are in `configs/colab_experiments_run_04.json`. The active `configs/colab_experiments.json` now points to EXP-004.
+Run 4 completed as a four-fold IMS held-out-bearing robustness experiment. Weak-PINN/high had the lowest equal-bearing macro RMSE at 0.314238, but every model had negative macro R2 and large between-bearing variation. The independently verified evidence and analysis are preserved under `saved results/run_04/`.
 
-The fresh Upload package contains only the compact IMS cache and writes to `experiment_outputs_run_04`. It requires the user to commit/push the prepared repository and paste that exact SHA into the notebook before execution. This avoids treating an uncommitted Upload copy as thesis evidence.
+## EXP-005 Run 5 preparation
 
-Run 4 produces 36 jobs, resumable job artifacts, best-validation and final-epoch metrics, per-bearing summaries, a manifest, and `codex_results_bundle.zip`.
+Run 5 repeats the exact Run 4 folds, models, weights, seeds, sequence construction, optimizer, and evaluation. Its single experimental change is robust baseline-relative normalization of vibration features using the first eight unlabeled snapshots of each physical bearing, followed by the unchanged training-only StandardScaler. Because eight equals the frozen sequence length, that fixed prefix exists before the first sequence target is predicted.
+
+The prediction schema is corrected: `run_id` and `bearing_run_id` identify the physical trajectory, while `experiment_run_id` records `run_05`. Fold preprocessing artifacts save every per-bearing center and scale plus the training-only global scaler.
+
+The disposable Upload package contains the compact IMS cache and writes to `experiment_outputs_run_05`. It requires the exact committed and pushed EXP-005 SHA before execution. Run 5 produces 36 resumable jobs, best-validation and final-epoch evidence, per-bearing summaries, manifests, and `codex_results_bundle.zip`.

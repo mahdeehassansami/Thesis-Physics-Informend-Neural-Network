@@ -1183,15 +1183,88 @@ been downloaded and verified to exist locally. Full preserved results belong und
 
 
 
-## 28. EXP-004 Run 4 package state
+## 28. EXP-004 Run 4 completed state
 
-The next prepared experiment is EXP-004 / Run 4. Its purpose is fixed IMS cross-bearing robustness, motivated by the severe Run 3 validation/test gap and Strong-PINN high-RUL collapse.
+EXP-004 / Run 4 is complete, archived, and independently verified. Its purpose was fixed
+IMS cross-bearing robustness, motivated by the severe Run 3 validation/test gap and
+Strong-PINN high-RUL collapse.
 
-- Configuration: `configs/colab_experiments_run_04.json` and active `configs/colab_experiments.json`.
-- Models: LSTM/data-only, Weak-PINN/high, frozen Run 3 Strong-PINN `strong_paris_0p003_miner_0p003`.
-- Folds: four predeclared folds; each trajectory is test once and validation once, with the other two used for training.
-- Seeds: 42, 1042, 2042; expected jobs: 36.
-- Primary metric: equal-bearing macro mean normalized RMSE. Test folds are not used to tune models.
-- The local `Upload/` folder has been rebuilt as a fresh EXP-004 package with only the compact IMS cache.
-- Before Colab execution, commit and push the prepared repository, then enter the exact 40-character SHA in the notebook. The notebook clones and verifies that commit.
-- Do not call Run 4 thesis evidence until the manifest reports all 36 jobs completed, no failures, and the metrics are independently reproduced.
+- The complete output is preserved under `saved results/run_04/experiment_outputs/` and
+  the analysis is `saved results/run_04/RUN_04_ANALYSIS.md`.
+- The run used exact clean Git commit
+  `a6e7ada1b41f1374d007304f6ec76f709faf617b`, a Tesla T4, four predeclared folds, and
+  seeds 42, 1042, and 2042. All 36 jobs completed in 53.9 minutes with no failures.
+- All best-checkpoint and final-epoch metrics were independently reproduced from saved
+  predictions. Configuration, split, cache, committed source, executed notebook, and
+  listed artifact hashes verify. The Run 3 split is reproduced exactly as Run 4 fold 3.
+- Weak-PINN/high ranked first by the predeclared equal-bearing macro normalized RMSE
+  (`0.314238`), Strong-PINN ranked second (`0.328065`), and LSTM ranked third
+  (`0.346032`). All three macro R2 values were negative, and between-bearing variation
+  was large, so no model is stable enough for a general cross-bearing claim.
+- Per-bearing winners differed: Strong-PINN won IMS-DS1/B3 and IMS-DS3/B3, Weak-PINN won
+  IMS-DS1/B4, and LSTM won IMS-DS2/B1. This supports the split-dependence hypothesis and
+  rejects the Run 3 ranking as generally portable.
+- Strong-PINN failed its portability criterion because absolute late-life bias was below
+  `0.25` in only two of four folds. Weak-PINN and LSTM met it in three folds, but every
+  model failed badly on IMS-DS3/B3.
+- Artifact defect: best and final prediction CSVs store the experiment label `run_04` in
+  `run_id` rather than the physical bearing ID. Bearing identity is reconstructable from
+  `fold_id`, `data_split.json`, and artifact paths, so the run remains numerically valid.
+  Run 5 must use separate `experiment_run_id` and `bearing_run_id` fields.
+- The next controlled experiment should address domain shift with causal per-bearing
+  baseline-relative feature normalization using only an initial healthy prefix, followed
+  by the same training-only scaler. Hold folds, models, weights, architecture, optimizer,
+  sequence length, seeds, and evaluation constant.
+- Run 5 success requires Weak-PINN to improve macro RMSE `0.314238` and worst-bearing RMSE
+  `0.497089`, improve at least three of four folds, and reduce between-bearing variation
+  without worsening late-life bias. Postpone raw-only versus hybrid encoders until this
+  normalization question is resolved.
+
+## 29. EXP-005 Run 5 prepared state
+
+EXP-005 / Run 5 is the controlled preprocessing experiment justified by the independently
+verified Run 4 domain-shift evidence. Its authoritative configuration is
+`configs/colab_experiments_run_05.json`; the same content is active in
+`configs/colab_experiments.json`.
+
+- The one substantive experimental change is per-bearing robust baseline-relative
+  normalization of the eleven vibration signal features. For each physical run, the first
+  eight chronological, unlabeled snapshots fit a feature-wise median and scale. The scale
+  is `max(abs(median), 1.4826 * MAD, 1e-8)`, and transformed values are
+  `(value - median) / scale`.
+- Eight baseline samples equal the frozen sequence length. The first predicted sequence
+  target therefore occurs only after all eight calibration observations are available.
+  Baseline fitting must not use RUL, health indicator, total trajectory length, failure
+  time, validation metrics, or test metrics.
+- After the per-bearing transform, the existing `StandardScaler` is still fitted only on
+  the two training runs in each fold and then applied unchanged to validation and test.
+  Every fold must save its per-bearing baseline statistics and training-scaler parameters.
+- The Run 4 artifact defect is corrected. Prediction files must keep the physical
+  trajectory in both `run_id` and `bearing_run_id`; `experiment_run_id` separately records
+  `run_05`. Do not overwrite physical identity with the experiment label.
+- Held constant from Run 4: IMS feature-cache hash and RUL labels, all four folds, test
+  population, feature set and feature-only representation, sequence length 8, model
+  architecture, LSTM/data-only, Weak-PINN/high, frozen Strong-PINN
+  `strong_paris_0p003_miner_0p003`, seeds 42/1042/2042, optimizer, learning rate, batch
+  size, early stopping, physics equations and weights, checkpoint selection, and metric
+  aggregation. There are 36 expected jobs.
+- The predeclared Weak-PINN success criterion is: macro normalized RMSE below `0.314238`,
+  worst-bearing RMSE below `0.497089`, improvement in at least three of four folds,
+  between-bearing RMSE standard deviation below `0.186672`, and no worsening of absolute
+  late-life bias.
+- Run 5 code lives in `src/thesis_work/run5_baseline_normalization.py`; the preprocessing
+  implementation remains in the shared `src/thesis_work/multi_dataset.py`. The notebook is
+  a thin controller generated by `scripts/build_run5_colab_notebook.py`.
+- Local verification includes syntax checks, all repository tests, a four-fold
+  preprocessing/controller validation without optimization, a one-epoch one-seed
+  synthetic runner smoke test whose metrics are discarded, Upload-package validation,
+  source/import checks, and notebook structural validation. Full neural training remains
+  reserved for Colab.
+- A label-free preflight check on the fixed cache reduced mean train/test Wasserstein
+  feature shift from `1.4482` to `0.9342` (35.5%) across the four folds, with reduction in
+  every fold. This verifies that the transform acts on the observed covariate-shift
+  problem; it is not model-performance evidence and does not replace the Colab run.
+- The disposable local `Upload/` package writes only to an empty
+  `experiment_outputs_run_05/` directory. The notebook intentionally retains
+  `PASTE_40_CHARACTER_COMMIT_SHA` until the prepared changes are committed and pushed.
+  Do not run the real experiment from an unidentified or dirty revision.

@@ -83,10 +83,15 @@ def _models(config):
 
 def _annotate(path, config, fold, model, profile, repeat, seed, role):
     f=pd.read_csv(path)
-    meta={"experiment_id":config["experiment"]["id"],"run_id":config["run_label"],"dataset":"ims","fold_id":fold["fold_id"],"model":model,"weight_profile":profile,"seed_repeat":repeat,"seed":seed,"checkpoint_role":role}
+    if "run_id" not in f.columns:
+        raise ValueError(f"Prediction file has no physical run_id: {path}")
+    physical_run_ids=f["run_id"].astype(str)
+    meta={"experiment_id":config["experiment"]["id"],"experiment_run_id":config["run_label"],"dataset":"ims","fold_id":fold["fold_id"],"model":model,"weight_profile":profile,"seed_repeat":repeat,"seed":seed,"checkpoint_role":role}
     for k,v in reversed(list(meta.items())):
         if k in f.columns: f[k]=v
         else: f.insert(0,k,v)
+    if "bearing_run_id" in f.columns: f["bearing_run_id"]=physical_run_ids
+    else: f.insert(f.columns.get_loc("run_id")+1,"bearing_run_id",physical_run_ids)
     f["absolute_error"]=(f["target_rul"]-f["predicted_rul"]).abs()
     f["absolute_error_seconds"]=(f["target_rul_seconds"]-f["predicted_rul_seconds"]).abs()
     f.to_csv(path,index=False); return f

@@ -506,6 +506,7 @@ class PreparedDataset:
     name: str
     feature_columns: list[str]
     scaler: StandardScaler
+    preprocessing_metadata: dict[str, Any]
     train: SequenceFrameDataset
     validation: SequenceFrameDataset
     test: SequenceFrameDataset
@@ -513,12 +514,142 @@ class PreparedDataset:
     time_scale_seconds: float
 
 
+def apply_initial_baseline_normalization(
+    frame: pd.DataFrame,
+    preprocessing_config: dict[str, Any] | None,
+    sequence_length: int,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Normalize each run against a fixed, label-free commissioning prefix.
+
+    The transform is intentionally fitted independently for every physical run so a
+    test bearing uses only its own initial observations.  With ``prefix_samples`` no
+    larger than ``sequence_length``, the complete baseline is available before the
+    first sequence target is predicted.  RUL, elapsed-time, health-indicator, and
+    physics metadata columns are never used to fit the transform.
+    """
+
+    config = dict(preprocessing_config or {})
+    strategy = config.get("strategy", "none")
+    if strategy in {None, "none"}:
+        return frame.copy(), {"strategy": "none"}
+    if strategy != "per_run_initial_robust_relative":
+        raise ValueError(f"Unsupported preprocessing strategy: {strategy}")
+    if config.get("center", "median") != "median":
+        raise ValueError("Baseline normalization currently supports median centering only.")
+    if config.get("scale", "max_abs_median_scaled_mad_floor") != (
+        "max_abs_median_scaled_mad_floor"
+    ):
+        raise ValueError("Unsupported baseline scale definition.")
+    if config.get("uses_targets", False) is not False or config.get(
+        "uses_failure_time", False
+    ) is not False:
+        raise ValueError("Baseline normalization must remain target- and failure-time-free.")
+
+    prefix_samples = int(config.get("prefix_samples", sequence_length))
+    if prefix_samples < 2:
+        raise ValueError("Baseline normalization requires at least two prefix samples.")
+    if config.get("require_prefix_before_first_prediction", True) and (
+        prefix_samples > sequence_length
+    ):
+        raise ValueError(
+            "prefix_samples cannot exceed sequence_length when the baseline must be "
+            "available before the first prediction."
+        )
+
+    feature_columns = list(config.get("feature_columns", SIGNAL_FEATURES))
+    if len(feature_columns) != len(set(feature_columns)):
+        raise ValueError("Baseline-normalization feature columns must be unique.")
+    unknown = sorted(set(feature_columns) - set(SIGNAL_FEATURES))
+    if unknown:
+        raise ValueError(
+            "Baseline normalization is restricted to vibration signal features; "
+            f"unsupported columns: {unknown}"
+        )
+    missing = [column for column in feature_columns if column not in frame]
+    if missing:
+        raise ValueError(f"Missing baseline-normalization features: {missing}")
+
+    mad_constant = float(config.get("mad_consistency_constant", 1.4826))
+    absolute_floor = float(config.get("absolute_scale_floor", 1e-8))
+    if mad_constant <= 0.0 or absolute_floor <= 0.0:
+        raise ValueError("Baseline scale constants must be positive.")
+
+    transformed = frame.copy()
+    run_metadata: dict[str, Any] = {}
+    for run_id, run in transformed.groupby("run_id", sort=True):
+        ordered = run.sort_values("sample_index")
+        if ordered["sample_index"].duplicated().any():
+            raise ValueError(f"Run {run_id} contains duplicate sample_index values.")
+        if len(ordered) < prefix_samples:
+            raise ValueError(
+                f"Run {run_id} has {len(ordered)} rows; {prefix_samples} baseline "
+                "samples are required."
+            )
+        prefix = (
+            ordered.iloc[:prefix_samples][feature_columns]
+            .replace([np.inf, -np.inf], np.nan)
+            .fillna(0.0)
+            .astype(float)
+        )
+        center = prefix.median(axis=0)
+        scaled_mad = (prefix - center).abs().median(axis=0) * mad_constant
+        scale = pd.Series(
+            np.maximum.reduce(
+                [
+                    center.abs().to_numpy(dtype=float),
+                    scaled_mad.to_numpy(dtype=float),
+                    np.full(len(feature_columns), absolute_floor, dtype=float),
+                ]
+            ),
+            index=feature_columns,
+        )
+        values = (
+            transformed.loc[ordered.index, feature_columns]
+            .replace([np.inf, -np.inf], np.nan)
+            .fillna(0.0)
+            .astype(float)
+        )
+        transformed.loc[ordered.index, feature_columns] = (values - center) / scale
+        run_metadata[str(run_id)] = {
+            "prefix_sample_indices": [
+                int(value) for value in ordered.iloc[:prefix_samples]["sample_index"]
+            ],
+            "center": {key: float(value) for key, value in center.items()},
+            "scale": {key: float(value) for key, value in scale.items()},
+        }
+
+    metadata = {
+        "strategy": strategy,
+        "fit_scope": "each physical run independently",
+        "uses_targets": False,
+        "uses_failure_time": False,
+        "prefix_samples": prefix_samples,
+        "feature_columns": feature_columns,
+        "center": "median of the fixed initial prefix",
+        "scale": (
+            f"max(abs(prefix median), {mad_constant:g} * prefix MAD, absolute floor)"
+        ),
+        "mad_consistency_constant": mad_constant,
+        "absolute_scale_floor": absolute_floor,
+        "require_prefix_before_first_prediction": bool(
+            config.get("require_prefix_before_first_prediction", True)
+        ),
+        "run_statistics": run_metadata,
+    }
+    return transformed, metadata
+
+
 def prepare_sequence_dataset(
     frame: pd.DataFrame,
     dataset_config: dict[str, Any],
     sequence_length: int,
+    preprocessing_config: dict[str, Any] | None = None,
 ) -> PreparedDataset:
-    frame = frame.copy()
+    frame, preprocessing_metadata = apply_initial_baseline_normalization(
+        frame,
+        preprocessing_config=preprocessing_config,
+        sequence_length=sequence_length,
+    )
     frame["run_duration_seconds"] = frame.groupby("run_id")[
         "elapsed_seconds"
     ].transform(lambda values: float(values.max() - values.min()))
@@ -550,6 +681,7 @@ def prepare_sequence_dataset(
         name=dataset_config["name"],
         feature_columns=list(MODEL_FEATURES),
         scaler=scaler,
+        preprocessing_metadata=preprocessing_metadata,
         train=SequenceFrameDataset(train_frame, train_features, sequence_length),
         validation=SequenceFrameDataset(
             validation_frame, validation_features, sequence_length
