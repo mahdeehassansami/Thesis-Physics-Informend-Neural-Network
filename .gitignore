@@ -20,3 +20,21 @@ outputs/tables/*
 !data/processed_features/.gitkeep
 !outputs/figures/.gitkeep
 !outputs/tables/.gitkeep
+
+# Large local research inputs, reference repositories, and disposable Colab state.
+Datasets/
+papers/
+Upload/
+saved results/
+tmp/
+AttnPINN-for-RUL-Estimation-English/
+Bearing_Simulation_Model-main/
+physics-informed-neural-network-main/
+rul-datasets-master/
+Instructions.pdf
+add pages.pdf
+
+# Local long-running process logs and recovery markers.
+outputs/*.log
+outputs/*.pid
+outputs/*.exitcode

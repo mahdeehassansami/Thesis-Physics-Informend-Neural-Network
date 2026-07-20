@@ -1,0 +1,454 @@
+{
+  "schema_version": 2,
+  "seed": 42,
+  "datasets": [
+    {
+      "name": "ims",
+      "kind": "ims",
+      "enabled": true,
+      "path": "Datasets/IMS",
+      "sampling_hz": 20000,
+      "runs": [
+        {
+          "run_id": "ims_ds1_b3",
+          "folder": "1st_test",
+          "bearing": 3
+        },
+        {
+          "run_id": "ims_ds1_b4",
+          "folder": "1st_test",
+          "bearing": 4
+        },
+        {
+          "run_id": "ims_ds2_b1",
+          "folder": "2nd_test",
+          "bearing": 1
+        },
+        {
+          "run_id": "ims_ds3_b3",
+          "folder": "3rd_test/txt",
+          "bearing": 3
+        }
+      ],
+      "split": {
+        "strategy": "run_ids",
+        "train_runs": [
+          "ims_ds1_b4",
+          "ims_ds3_b3"
+        ],
+        "validation_runs": [
+          "ims_ds1_b3"
+        ],
+        "test_runs": [
+          "ims_ds2_b1"
+        ]
+      },
+      "operating_conditions": {
+        "load_n": 26689.0,
+        "speed_rpm": 2000.0,
+        "contact_pressure_mpa": 200.0,
+        "dynamic_capacity_n": 50000.0,
+        "fatigue_limit_n": 3000.0,
+        "viscosity_ref_cst": 100.0,
+        "viscosity_required_cst": 30.0,
+        "contamination_factor": 0.7
+      },
+      "physics_assumptions": [
+        "The approximately 6000 lbf radial load and 2000 rpm are test-rig conditions; verify them against the IMS documentation used in the thesis.",
+        "Contact pressure, dynamic capacity, fatigue limit, and lubricant properties are explicit calibration assumptions because they are not measured in the raw vibration snapshots.",
+        "Strong-physics results must be reported with a sensitivity range over these assumed quantities."
+      ]
+    },
+    {
+      "name": "pronostia",
+      "kind": "pronostia",
+      "enabled": false,
+      "path": "Datasets/Pronostia/Pronostia dataset",
+      "sampling_hz": 25600,
+      "snapshot_interval_seconds": 10,
+      "runs": [
+        {
+          "run_id": "Bearing1_1",
+          "relative_path": "Learning_set/Bearing1_1"
+        },
+        {
+          "run_id": "Bearing1_2",
+          "relative_path": "Learning_set/Bearing1_2"
+        },
+        {
+          "run_id": "Bearing2_1",
+          "relative_path": "Learning_set/Bearing2_1"
+        },
+        {
+          "run_id": "Bearing2_2",
+          "relative_path": "Learning_set/Bearing2_2"
+        },
+        {
+          "run_id": "Bearing3_1",
+          "relative_path": "Learning_set/Bearing3_1"
+        },
+        {
+          "run_id": "Bearing3_2",
+          "relative_path": "Learning_set/Bearing3_2"
+        },
+        {
+          "run_id": "Bearing1_3",
+          "relative_path": "Full_Test_Set/Bearing1_3"
+        },
+        {
+          "run_id": "Bearing2_3",
+          "relative_path": "Full_Test_Set/Bearing2_3"
+        },
+        {
+          "run_id": "Bearing3_3",
+          "relative_path": "Full_Test_Set/Bearing3_3"
+        }
+      ],
+      "split": {
+        "strategy": "run_ids",
+        "train_runs": [
+          "Bearing1_1",
+          "Bearing2_1",
+          "Bearing3_1"
+        ],
+        "validation_runs": [
+          "Bearing1_2",
+          "Bearing2_2",
+          "Bearing3_2"
+        ],
+        "test_runs": [
+          "Bearing1_3",
+          "Bearing2_3",
+          "Bearing3_3"
+        ]
+      },
+      "operating_conditions": {
+        "load_n": 4200.0,
+        "speed_rpm": 1800.0,
+        "contact_pressure_mpa": 200.0,
+        "dynamic_capacity_n": 30000.0,
+        "fatigue_limit_n": 1800.0,
+        "viscosity_ref_cst": 80.0,
+        "viscosity_required_cst": 25.0,
+        "contamination_factor": 0.8
+      },
+      "physics_assumptions": [
+        "The three PRONOSTIA operating regimes have different loads; the checked-in global value is an initial effective-load approximation and should be replaced by run-specific metadata for final experiments.",
+        "Contact pressure, bearing capacity, and lubricant properties are calibration assumptions unless verified from the bearing specification.",
+        "Temperature physics is automatically masked because this dataset contains vibration rather than measured bearing temperature."
+      ]
+    },
+    {
+      "name": "kaist_vibration_temperature",
+      "kind": "kaist_temperature",
+      "enabled": false,
+      "path": "Datasets/Ball Bearing Vibration, and Temperature Run-to-Failure Dataset/Vibration_Bearing_RuntoFailure",
+      "run_id": "kaist_run_1",
+      "sampling_hz": 25600,
+      "snapshot_interval_seconds": 3600,
+      "csv_chunksize": 500000,
+      "fft_samples_per_chunk": 4096,
+      "split": {
+        "strategy": "single_run_temporal",
+        "ratios": [
+          0.65,
+          0.15,
+          0.2
+        ]
+      },
+      "operating_conditions": {
+        "load_n": 5880.0,
+        "speed_rpm": 1775.0,
+        "contact_pressure_mpa": 200.0,
+        "dynamic_capacity_n": 30000.0,
+        "fatigue_limit_n": 1800.0,
+        "viscosity_ref_cst": 80.0,
+        "viscosity_required_cst": 25.0,
+        "contamination_factor": 0.8
+      },
+      "physics_assumptions": [
+        "This is one run-to-failure trajectory; its temporal split is a within-run forecasting benchmark, not evidence of cross-bearing generalization.",
+        "The recorded radial load is used as an initial equivalent-load approximation even though the rig also applies axial load.",
+        "Contact pressure, capacity, and lubricant properties require calibration from the bearing geometry/specification."
+      ]
+    },
+    {
+      "name": "synthetic_varying_degradation",
+      "kind": "standardized_csv",
+      "enabled": false,
+      "path": "data/processed_features/synthetic_varying_degradation_features.csv",
+      "split": {
+        "strategy": "run_ids",
+        "train_runs": [],
+        "validation_runs": [],
+        "test_runs": []
+      },
+      "physics_assumptions": [
+        "The supplied Data.mat is MATLAB v7.3/HDF5 and must first be converted to the documented standardized feature-table contract.",
+        "The source documentation describes 28 training and 12 test lives; preserve that official partition during conversion."
+      ]
+    },
+    {
+      "name": "cwru_variants",
+      "kind": "classification_only",
+      "enabled": false,
+      "path": "Datasets/cwru",
+      "physics_assumptions": [
+        "CWRU fault samples are excluded from direct RUL regression because they are not run-to-failure trajectories with defensible RUL labels."
+      ]
+    }
+  ],
+  "training": {
+    "sequence_length": 8,
+    "epochs": 300,
+    "patience": 40,
+    "batch_size": 64,
+    "learning_rate": 0.0005,
+    "weight_decay": 1e-05,
+    "gradient_clip": 5.0,
+    "minimum_improvement": 1e-06,
+    "seed_repeats": 3,
+    "seed_stride": 1000,
+    "seeds": [
+      42,
+      1042,
+      2042
+    ],
+    "gradient_diagnostics_interval": 10
+  },
+  "models": {
+    "fnn": {
+      "enabled": false,
+      "hidden_dim": 128,
+      "profiles": [
+        "data_only"
+      ]
+    },
+    "cnn": {
+      "enabled": false,
+      "hidden_dim": 128,
+      "profiles": [
+        "data_only"
+      ]
+    },
+    "lstm": {
+      "enabled": true,
+      "hidden_dim": 128,
+      "profiles": [
+        "data_only"
+      ]
+    },
+    "attnpinn": {
+      "enabled": false,
+      "hidden_dim": 128,
+      "num_heads": 4,
+      "dropout": 0.1,
+      "profiles": [
+        "attnpinn_low",
+        "attnpinn_medium",
+        "attnpinn_high"
+      ]
+    },
+    "weak_pinn": {
+      "enabled": true,
+      "hidden_dim": 128,
+      "num_heads": 4,
+      "dropout": 0.1,
+      "profiles": [
+        "weak_high"
+      ]
+    },
+    "strong_pinn": {
+      "enabled": false,
+      "hidden_dim": 128,
+      "num_heads": 4,
+      "dropout": 0.1,
+      "profiles": []
+    }
+  },
+  "weight_profiles": {
+    "data_only": {
+      "data": 1.0
+    },
+    "attnpinn_low": {
+      "data": 1.0,
+      "learned_operator": 0.01
+    },
+    "attnpinn_medium": {
+      "data": 1.0,
+      "learned_operator": 0.1
+    },
+    "attnpinn_high": {
+      "data": 1.0,
+      "learned_operator": 1.0
+    },
+    "weak_low": {
+      "data": 1.0,
+      "monotonic": 0.01,
+      "health_indicator": 0.01,
+      "boundary": 0.01,
+      "temperature_prior": 0.005
+    },
+    "weak_medium": {
+      "data": 1.0,
+      "monotonic": 0.1,
+      "health_indicator": 0.05,
+      "boundary": 0.05,
+      "temperature_prior": 0.02
+    },
+    "weak_high": {
+      "data": 1.0,
+      "monotonic": 1.0,
+      "health_indicator": 0.2,
+      "boundary": 0.2,
+      "temperature_prior": 0.1
+    },
+    "strong_low": {
+      "data": 1.0,
+      "monotonic": 0.01,
+      "health_indicator": 0.01,
+      "boundary": 0.01,
+      "temperature_prior": 0.005,
+      "paris_crack_growth": 0.0001,
+      "palmgren_miner": 0.001,
+      "crack_rate_positive": 0.001
+    },
+    "strong_medium": {
+      "data": 1.0,
+      "monotonic": 0.1,
+      "health_indicator": 0.05,
+      "boundary": 0.05,
+      "temperature_prior": 0.02,
+      "paris_crack_growth": 0.001,
+      "palmgren_miner": 0.01,
+      "crack_rate_positive": 0.01
+    },
+    "strong_high": {
+      "data": 1.0,
+      "monotonic": 1.0,
+      "health_indicator": 0.2,
+      "boundary": 0.2,
+      "temperature_prior": 0.1,
+      "paris_crack_growth": 0.01,
+      "palmgren_miner": 0.1,
+      "crack_rate_positive": 0.05
+    }
+  },
+  "physics": {
+    "crack_growth": {
+      "initial_crack_m": 0.0001,
+      "critical_crack_m": 0.01,
+      "paris_coefficient": 5e-12,
+      "paris_exponent": 7.5,
+      "source_note": "Stage-2 rolling-contact-fatigue relation reported in the reviewed RCF crack-propagation paper; units and stress calibration must be verified for each bearing."
+    },
+    "bearing_life": {
+      "life_exponent": 3.0,
+      "reliability_factor": 1.0,
+      "askf_reference": 1.0,
+      "askf_minimum": 0.1,
+      "askf_maximum": 50.0,
+      "kappa_exponent": 0.8,
+      "contamination_exponent": 0.5,
+      "source_note": "L10/Palmgren-Miner structure is physical. The differentiable aSKF expression is a calibratable surrogate for catalog lookup curves."
+    },
+    "thermolubrication": {
+      "reference_temperature_c": 40.0,
+      "viscosity_temperature_beta": 0.035,
+      "poor_lubrication_crack_multiplier": 1.0,
+      "contamination_crack_multiplier": 0.5,
+      "source_note": "Temperature-to-viscosity and contamination modifiers preserve the relationships in the reviewed bearing-fatigue study but require lubricant-specific calibration."
+    }
+  },
+  "sensitivity": {
+    "enabled": false,
+    "dataset": "ims",
+    "model": "strong_pinn",
+    "base_weight_profile": "strong_medium",
+    "epochs": 80,
+    "patience": 15,
+    "parameters": [
+      {
+        "path": "weight_profiles.strong_medium.paris_crack_growth",
+        "values": [
+          0.0001,
+          0.001,
+          0.01
+        ]
+      },
+      {
+        "path": "weight_profiles.strong_medium.palmgren_miner",
+        "values": [
+          0.001,
+          0.01,
+          0.1
+        ]
+      },
+      {
+        "path": "physics.crack_growth.paris_exponent",
+        "values": [
+          6.5,
+          7.5,
+          8.5
+        ]
+      },
+      {
+        "path": "physics.thermolubrication.viscosity_temperature_beta",
+        "values": [
+          0.02,
+          0.035,
+          0.05
+        ]
+      },
+      {
+        "path": "physics.thermolubrication.poor_lubrication_crack_multiplier",
+        "values": [
+          0.5,
+          1.0,
+          2.0
+        ]
+      }
+    ]
+  },
+  "run_label": "run_03",
+  "experiment": {
+    "id": "EXP-003",
+    "name": "IMS validation-only explicit-physics calibration",
+    "goal": "Calibrate Paris and Palmgren-Miner loss weights without using the test split for model selection.",
+    "evidence": "Run 2 found weak-PINN/high best on IMS, while the one-factor Strong-PINN sweep showed large sensitivity to Paris and Miner weights.",
+    "hypothesis": "A validation-selected Paris/Miner combination can improve Strong-PINN generalization without overwhelming the data loss.",
+    "held_constant": [
+      "Run 2 IMS run-level split",
+      "Run 2 feature extraction and training-only scaling",
+      "sequence length 8",
+      "hidden width 128 and attention heads 4",
+      "AdamW learning rate 0.0005 and batch size 64",
+      "three-seed evaluation"
+    ],
+    "primary_selection_metric": "mean validation RMSE across three seeds",
+    "success_criterion": "The frozen validation-selected Strong-PINN should improve mean test RMSE over Run 2 Strong-PINN/low and remain numerically stable across seeds."
+  },
+  "runtime": {
+    "require_cuda": true,
+    "required_gpu_name_contains": "T4"
+  },
+  "calibration": {
+    "enabled": true,
+    "dataset": "ims",
+    "model": "strong_pinn",
+    "base_weight_profile": "strong_medium",
+    "paris_weights": [
+      0.003,
+      0.01,
+      0.03
+    ],
+    "miner_weights": [
+      0.0003,
+      0.001,
+      0.003
+    ],
+    "selection_split": "validation",
+    "selection_metric": "rmse",
+    "test_policy": "Train and rank all 27 candidate/seed runs on validation only; evaluate the test split only for the frozen winning profile."
+  }
+}
