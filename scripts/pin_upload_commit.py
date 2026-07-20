@@ -37,15 +37,23 @@ def main(commit: str) -> None:
         raise RuntimeError(f"Unsafe or missing Upload directory: {UPLOAD.resolve()}")
 
     for notebook in NOTEBOOKS:
-        source = notebook.read_text(encoding="utf-8")
-        updated, replacements = COMMIT_PATTERN.subn(
-            f'EXPECTED_COMMIT = "{commit}"', source
-        )
+        document = json.loads(notebook.read_text(encoding="utf-8"))
+        replacements = 0
+        for cell in document["cells"]:
+            if cell.get("cell_type") != "code":
+                continue
+            source = "".join(cell.get("source", []))
+            updated, cell_replacements = COMMIT_PATTERN.subn(
+                f'EXPECTED_COMMIT = "{commit}"', source
+            )
+            if cell_replacements:
+                cell["source"] = updated.splitlines(keepends=True)
+                replacements += cell_replacements
         if replacements != 1:
             raise RuntimeError(
                 f"Expected one commit assignment in {notebook}; found {replacements}."
             )
-        notebook.write_text(updated, encoding="utf-8")
+        notebook.write_text(json.dumps(document, indent=1) + "\n", encoding="utf-8")
 
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     manifest["expected_commit_state"] = f"Pinned to pushed Git commit {commit}."
