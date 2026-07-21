@@ -1,27 +1,60 @@
-# EXP-005 Run 5 Google Drive upload
+# EXP-007 Google Drive and Colab instructions
 
-Use a fresh Drive package. Download and preserve the previous run first, delete the old `MyDrive/Upload`, then upload this complete local `Upload` folder directly to the root of Google Drive.
+Use a completely fresh Drive package. First preserve any previous experiment output, delete
+the old `MyDrive/Upload`, and upload this complete local `Upload` directory to the root of
+Google Drive.
 
-Run 5 is EXP-005, an IMS-only controlled preprocessing experiment. It evaluates LSTM/data-only, Weak-PINN/high, and the frozen Run 3 Strong-PINN profile `strong_paris_0p003_miner_0p003` with the exact four Run 4 folds and seeds.
+EXP-007 is the controlled synthetic physics-prior credibility decision gate. It is not a new
+fixed-weight PINN sweep and it does not use the supplied-v2 dataset whose progression truth is
+withheld. It uses the 40 official-simulator trajectories qualified in EXP-006 and their frozen
+24 training, 8 validation, and 8 test trajectory split.
 
-The only substantive experimental change is signal-feature preprocessing. For each physical bearing, the first eight unlabeled snapshots define a robust baseline. Each vibration feature becomes `(value - prefix median) / max(abs(prefix median), 1.4826 * prefix MAD, 1e-8)`, followed by the unchanged `StandardScaler` fitted only on the training runs. Eight samples equal the sequence length, so the baseline is available before the first predicted target. No RUL target, health indicator, total life, or failure time fits this transform.
+The experiment performs five common-seed repetitions. Within each seed it:
 
-The prediction metadata correction keeps the physical identifier in both `run_id` and `bearing_run_id`; the experiment execution label is stored separately as `experiment_run_id=run_05`.
+1. cross-fits a small causal LSTM data-only RUL backbone across complete training trajectories;
+2. cross-fits a vibration-to-degradation proxy and training-only empirical progression-family
+   templates;
+3. independently enumerates 20 candidate priors per causal checkpoint—three valid and seventeen
+   deliberately corrupt—without using trajectory truth to select the candidate pool;
+4. fits a logistic credibility estimator on cross-fitted training evidence;
+5. calibrates it, chooses its threshold, and selects the scalar-weight comparator using only
+   validation trajectories; and
+6. evaluates the frozen diagnostic and controls once on the untouched test trajectories.
 
-Each IMS trajectory is held out once as test and once as validation; the other two trajectories train. Every model is trained over seeds 42, 1042, and 2042: 36 jobs total. Validation is used only for early stopping and scheduling. Test-fold metrics do not alter models, weights, or preprocessing.
+The test corruption magnitudes differ from training, and every wrong family is evaluated.
+Validation and test also retain the load, speed, and noise shifts declared before the EXP-006 simulation.
+Operation/noise shift does not turn a correct progression family into corrupt physics.
 
-Before running Colab:
+Before running:
 
-1. Commit and push the prepared repository.
-2. Copy the resulting 40-character commit SHA.
-3. Upload this fresh `Upload` folder to `MyDrive/Upload`.
-4. Open `MyDrive/Upload/Thesis_v3_with_extra_graphs_tables.ipynb`.
-5. Select a T4 GPU runtime.
-6. Verify that the first code cell contains the pushed EXP-005 commit SHA. If it still contains `PASTE_40_CHARACTER_COMMIT_SHA`, replace that placeholder before running.
-7. Run all cells from the beginning.
+1. Upload this fresh folder as `MyDrive/Upload`.
+2. Open `MyDrive/Upload/train_models_colab.ipynb` in Google Colab.
+3. Select `Runtime > Change runtime type > T4 GPU`.
+4. Run all cells from the beginning.
 
-The notebook clones and checks out that exact commit under `/content`. The Upload copy supplies the compact cache at `feature_cache/ims_features.csv` and stores output at `experiment_outputs_run_05`. The controller stops if the experiment identity, commit, working tree, T4 GPU, or cache hash is wrong.
+No SHA editing is required. `expected_commit.txt` already contains the exact pushed commit, and
+the notebook refuses a different or dirty checkout. It also verifies the controlled cache hash
+before training.
 
-The complete output directory contains baseline statistics, checkpoints, histories, predictions, final-epoch evidence, fold summaries, manifests, and logs. The lightweight `codex_results_bundle.zip` excludes checkpoints. Download the complete `experiment_outputs_run_05` directory for recovery and the ZIP for local analysis.
+Training runs primarily under `/content/exp007_work`. Completed fold/seed recovery artifacts
+are synchronized to:
 
-A successful run must report `status: completed`, `completed_jobs: 36`, and `failed_jobs: 0`. Run 4 took about 54 minutes on a T4; budget approximately 60–90 minutes for Run 5, allowing for Colab setup and variability. Do not merge this package with an older Drive Upload.
+```text
+/content/drive/MyDrive/Upload/experiment_outputs_exp007/
+```
+
+Do not add files to that output directory before the run. A compatible interrupted run may be
+resumed by reopening the same fresh notebook and running from the beginning.
+
+The predeclared gate is:
+
+- aggregate held-out trajectory-candidate AUROC at least `0.80`;
+- trajectory/seed bootstrap 95% AUROC lower bound strictly above `0.50`; and
+- neither all-on nor all-off behavior above `90%` without a declared physical explanation.
+
+If the gate fails, preserve the result. Do not tune against the test trajectories or enlarge
+the network to force a pass.
+
+When finished, download the complete `experiment_outputs_exp007` directory and place it under
+`results/incoming/` in this repository. The included `codex_results_bundle.zip` is the compact
+analysis package; the complete directory retains recovery checkpoints.

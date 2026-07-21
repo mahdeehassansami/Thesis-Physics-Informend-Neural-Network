@@ -111,3 +111,28 @@ Every EXP-006 success criterion passed. The exact report is under
 `saved results/run_06/`. No Colab Upload was needed. The next experiment is EXP-007 synthetic
 credibility feasibility; it must not use ANSYS or real test labels to compensate for a failed
 controlled validity diagnostic.
+
+## EXP-007 prepared credibility feasibility workflow
+
+EXP-007 is configured in `configs/experiment.yaml` and implemented in
+`src/thesis_work/exp7_credibility.py`. It uses only the EXP-006 controlled simulator cache and
+the immutable 24/8/8 trajectory split. Five seeds each train three cross-fit causal LSTM
+backbones and one final backbone. The same source-only folds also fit a vibration-to-degradation
+proxy and empirical simulator-family templates.
+
+The credibility estimator never receives target RUL, hidden degradation, true family,
+corruption type, validity label, total life, failure time, or future observations. Validation
+alone fits calibration, threshold, early stopping, and the scalar-weight comparator. The test
+set is evaluated once after freezing. All four families are crossed with five declared scale
+settings independently of trajectory truth, producing three valid and seventeen corrupt
+candidates per causal checkpoint.
+
+The experiment is a diagnostic gate before high-capacity PINN integration. Its primary result
+is held-out trajectory-candidate AUROC with trajectory/seed bootstrap confidence intervals and
+anti-collapse checks. RUL blending and physics regret are secondary feasibility diagnostics,
+not yet a real-bearing PriorCred-RUL claim. If the gate fails, stop and diagnose
+identifiability; do not tune the test corruptions or enlarge the network.
+
+The fresh Drive handoff reads the pushed SHA from `Upload/expected_commit.txt`, so the user does
+not edit notebook source. Results must be downloaded as `experiment_outputs_exp007` and
+verified before EXP-008.

@@ -1404,3 +1404,37 @@ the immutable controlled 24/8/8 split, pair correct priors with predeclared wron
 parameter corruptions, distinguish law mismatch from ordinary covariate shift, and apply the
 AUROC/calibration stop rule in `research/PUBLICATION_PROTOCOL.md` before escalation to real
 bearing experiments.
+
+## 33. EXP-007 prepared state
+
+EXP-007 is implemented and locally validated but has not yet produced a valid Colab result.
+Treat the repository as waiting for the EXP-007 T4 run and result import.
+
+- The single active configuration is `configs/experiment.yaml`.
+- The runner is `src/thesis_work/exp7_credibility.py`; the notebook imports it and contains no
+  duplicate model or credibility implementation.
+- The controlled cache SHA-256 remains
+  `3199282d5abf674538797b41dc97240825cf6ec80853dffb5c9f8ca4f45bfdae`.
+- The immutable 24 training, 8 validation, and 8 test trajectories did not change.
+- Five common seeds are declared. Each seed has three complete-trajectory cross-fit backbones
+  and one final validation-controlled backbone.
+- Cross-fitted evidence also uses a source-only degradation proxy and empirical simulator-
+  family templates. These are adapted synthetic templates, not claimed governing equations.
+- Every causal checkpoint independently enumerates all four families crossed with five scale
+  settings. Truth is used only to label the resulting three valid and seventeen corrupt
+  candidates; it does not select the pool. Train, validation, and test use predeclared
+  different parameter biases. Operation/noise shift alone does not create a corrupt label.
+- Target RUL, hidden degradation, true family, validity, corruption type, total trajectory
+  length, failure time, and future observations are forbidden estimator inputs.
+- Validation alone controls early stopping, calibration, threshold selection, and the scalar
+  comparator. The test set is evaluated once after freezing.
+- The gate is AUROC at least 0.80, trajectory/seed bootstrap lower 95% bound above 0.50, and no
+  unexplained greater-than-90% all-on/all-off collapse.
+- `research/EXP007_RUNBOOK.md` is the reproduction and handoff guide.
+- A fresh ignored `Upload/` must be built only after the implementation commit is pushed. It
+  contains `expected_commit.txt`; the user must not manually edit a SHA.
+- No additional MATLAB run or ANSYS simulation is required for EXP-007.
+
+Do not prepare EXP-008 until the downloaded `experiment_outputs_exp007` artifacts are verified
+and the predeclared gate is evaluated. A failed gate must be preserved and diagnosed without
+test-driven tuning.

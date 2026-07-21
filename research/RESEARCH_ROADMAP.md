@@ -79,7 +79,7 @@ family, hidden degradation, and fault location. The full qualification is under
 EXP-006 required no Colab Upload or neural training. EXP-007 synthetic credibility feasibility
 is now the next implementation milestone.
 
-## Stage 2 — EXP-007: synthetic credibility feasibility
+## Stage 2 — EXP-007: synthetic credibility feasibility — prepared for Colab
 
 ### Goal
 
@@ -99,6 +99,24 @@ Test the diagnostic before integrating it into a high-capacity RUL model.
 
 Stop method escalation if synthetic AUROC is below 0.80 or its 95% interval includes 0.50.
 Diagnose identifiability rather than compensating with a larger network.
+
+### Prepared implementation
+
+The locked controller, configuration, cross-fitted credibility implementation, corruption
+schedule, tests, artifact contract, and Colab handoff are now implemented. The method uses a
+small causal LSTM fallback, a separately cross-fitted vibration-to-degradation proxy, and
+training-only empirical simulator-family templates. The empirical templates are an adaptation
+of the labeled simulator output, not claimed governing equations.
+
+Each causal checkpoint independently enumerates all four families and five scale settings,
+producing three valid and seventeen corrupt candidates without truth-dependent candidate
+selection. Corruption magnitudes change across train, validation, and test, while
+validation/test operation and noise changes retain valid labels for the correct family. PILE is
+recorded as not faithfully applicable to this empirical-template feasibility study rather than
+being mislabeled as reproduced.
+
+EXP-007 remains incomplete until the downloaded Colab artifacts are independently verified.
+Do not begin EXP-008 merely because the implementation is ready.
 
 ## Stage 3 — EXP-008: frozen real-data benchmark qualification
 
