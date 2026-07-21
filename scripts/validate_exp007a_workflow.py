@@ -87,6 +87,17 @@ def main() -> None:
         raise RuntimeError("EXP-007A notebook sections are incomplete or out of order.")
     if "run_exp7a_experiment" not in code or "nvidia-smi" not in code:
         raise RuntimeError("EXP-007A notebook is not a thin complete controller.")
+    install_cells = [
+        "".join(cell.get("source", []))
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code" and '"pip", "install"' in "".join(cell.get("source", []))
+    ]
+    if (
+        len(install_cells) != 1
+        or "cwd=CLONE" not in install_cells[0]
+        or '"pip", "install", "-q"' in install_cells[0]
+    ):
+        raise RuntimeError("EXP-007A pip installation is not visible and clone-relative.")
     if "class " in code or "def " in code:
         raise RuntimeError("Notebook duplicates Python implementation logic.")
 

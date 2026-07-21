@@ -1529,3 +1529,8 @@ EXP-007 test population as confirmation evidence.
 - A duplicate of the qualified compact cache and metadata is preserved under
   `saved results/run_07a/qualified_cache/`; the configured copy under
   `data/processed_features/publication/exp007a/` is authoritative for Upload construction.
+- The first EXP-007A Colab handoff failed at pip installation before configuration loading or
+  training. `requirements-colab.txt` contains `-e .`, while the notebook launched pip from
+  `/content`, causing the editable path to resolve outside the clone. A non-installing pip
+  dry-run reproduced the path failure. The install cell now runs with `cwd=CLONE` and exposes
+  pip output; this execution repair changes no experimental condition.

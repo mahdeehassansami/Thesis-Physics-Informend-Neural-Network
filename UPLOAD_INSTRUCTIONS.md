@@ -23,6 +23,10 @@ Do not edit a Git SHA. `expected_commit.txt` pins the exact pushed version autom
 notebook stops on a dirty or mismatched checkout, wrong GPU, cache mismatch, split mismatch, or
 incompatible recovery directory.
 
+The dependency cell deliberately runs pip from the cloned repository because the requirements
+file contains `-e .`. Do not remove its `cwd=CLONE` setting. Pip output is intentionally visible
+so a package-index or compatibility failure retains the actionable error message.
+
 ## Runtime and recovery
 
 Budget approximately 60-120 minutes on a Colab T4. The experiment schedules four cross-fit

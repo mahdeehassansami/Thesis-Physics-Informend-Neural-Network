@@ -80,6 +80,12 @@ Qualified cache identity:
    0.2.2 reduced sequence length from eight to five before neural training so all 96 frozen
    trajectories remain eligible. No split, feature, target, architecture capacity,
    intervention, seed, or gate changed.
+5. The first Colab handoff stopped during dependency installation before configuration loading
+   or training. The requirements file contains the editable path `-e .`, but pip was launched
+   from `/content`, so it resolved `.` outside the clone. A non-installing local pip dry-run
+   reproduced the failure and succeeded when launched from the repository. The notebook now
+   sets `cwd=CLONE` and does not suppress pip output. No data, model, target, seed, or gate
+   changed, and the failed invocation produced no experiment result.
 
 ## Colab workflow
 

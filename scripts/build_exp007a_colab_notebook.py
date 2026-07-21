@@ -32,7 +32,7 @@ def main() -> None:
             """
 # EXP-007A - counterfactual physics-harm credibility
 
-This thin, restartable controller runs the frozen protocol-v0.2 corrective experiment. Candidate physics models are trained with differentiable progression value/rate/monotonic losses from identical data-only checkpoints. Development counterfactual regret labels must qualify before the fresh sealed test is evaluated.
+This thin, restartable controller runs the frozen protocol-v0.2.2 corrective experiment. Candidate physics models are trained with differentiable progression value/rate/monotonic losses from identical data-only checkpoints. Development counterfactual regret labels must qualify before the fresh sealed test is evaluated.
 """
         ),
         markdown(
@@ -77,7 +77,13 @@ print({"expected_commit": EXPECTED_COMMIT, "actual_commit": actual, "clean": not
         markdown("## 2. Install the committed package and dependencies"),
         code(
             """
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r", str(CLONE / "requirements-colab.txt")], check=True)
+requirements = CLONE / "requirements-colab.txt"
+print({"pip_working_directory": str(CLONE), "requirements": str(requirements)})
+subprocess.run(
+    [sys.executable, "-m", "pip", "install", "-r", str(requirements)],
+    cwd=CLONE,
+    check=True,
+)
 """
         ),
         markdown("## 3. Verify the T4, CUDA, PyTorch, and memory"),
