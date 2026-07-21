@@ -33,6 +33,10 @@ def main() -> None:
     assert cache.is_file()
     assert sha256(cache) == config["data"]["expected_feature_cache_sha256"]
     assert sha256(cache) == manifest["feature_cache_sha256"]
+    metadata = UPLOAD / manifest["metadata"]
+    assert metadata.is_file()
+    assert sha256(metadata) == config["data"]["expected_metadata_sha256"]
+    assert sha256(metadata) == manifest["metadata_sha256"]
     assert (UPLOAD / manifest["empty_output_directory"]).is_dir()
     assert not any((UPLOAD / manifest["empty_output_directory"]).iterdir())
     for record in manifest["files"]:

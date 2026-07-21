@@ -20,7 +20,7 @@ experiment:
   execution: google_colab_t4
   neural_training: true
   protocol: research/EXP007A_PROTOCOL_AMENDMENT.md
-  protocol_version: 0.2.1
+  protocol_version: 0.2.2
   method_scope: corrective_actual_physics_intervention_feasibility
 
 repository:
@@ -31,14 +31,15 @@ data:
   dataset_id: exp007a_multicondition_synthetic
   feature_cache: data/processed_features/publication/exp007a/multicondition_features.csv
   metadata_file: data/processed_features/publication/exp007a/multicondition_metadata.json
-  expected_feature_cache_sha256: PENDING_AFTER_FROZEN_SIMULATION
+  expected_feature_cache_sha256: 050db850cc5dd0177fc6c58cb0efb1227f305254aeae7fa0ac18a79974ac35af
+  expected_metadata_sha256: 81f327a8d73312240d43c571a987770322ab64cb45d480fba5269cd0b3a8ee2b
   scenario_file: configs/exp007a_multicondition_scenarios.csv
   expected_scenario_sha256: 35c8968f392ecaefcb1bacd69aef0db364824b8dd17d88ca1e380e5b67754e48
   split_file: configs/exp007a_data_split.json
   target: normalized_rul
   target_test_access: evaluation_only_after_development_gate
   representation: causal_feature_sequence
-  sequence_length: 8
+  sequence_length: 5
   sequence_stride: 1
   feature_columns:
     - rms

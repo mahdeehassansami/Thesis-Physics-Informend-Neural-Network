@@ -64,8 +64,8 @@ def fixture(config: dict) -> pd.DataFrame:
 def main() -> None:
     config = load_exp7a_config(CONFIG)
     qualification = validate_exp7a_config(config, ROOT)
-    if qualification["status"] != "design_valid_cache_pending":
-        raise RuntimeError("Expected frozen design validation before simulator export.")
+    if qualification["status"] != "qualified":
+        raise RuntimeError("Expected the frozen EXP-007A cache to be qualified.")
     notebook = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
     code = "\n".join(

@@ -1,10 +1,10 @@
 # EXP-007A counterfactual physics-harm runbook
 
-Status: implementation frozen before simulator generation
+Status: simulator and cache qualified; Colab neural run pending
 
 Experiment ID: `EXP-007A`
 
-Protocol: `research/EXP007A_PROTOCOL_AMENDMENT.md`, version 0.2.1
+Protocol: `research/EXP007A_PROTOCOL_AMENDMENT.md`, version 0.2.2
 
 ## Purpose
 
@@ -33,21 +33,31 @@ gates. Use:
 matlab -batch "addpath('scripts/matlab'); exp007a_run_multicondition_simulator( ...
   'Bearing_Simulation_Model-main/Bearing_Simulation_Model-main/Simulation_Model.zip', ...
   'configs/exp007a_multicondition_scenarios.csv', ...
-  'data/processed_features/publication/exp007a/simulator_results', false)"
+  'data/processed_features/publication/exp007a/simulator_results_final', false)"
 ```
 
 Then export the deterministic derived cache:
 
 ```powershell
 matlab -batch "addpath('scripts/matlab'); exp007a_export_multicondition_results( ...
-  'data/processed_features/publication/exp007a/simulator_results', ...
+  'data/processed_features/publication/exp007a/simulator_results_final', ...
   'configs/exp007a_multicondition_scenarios.csv', ...
   'data/processed_features/publication/exp007a/multicondition_features.csv', ...
   'data/processed_features/publication/exp007a/multicondition_metadata.json')"
 ```
 
-Do not modify raw result MAT files. Record the cache hash in the active configuration and copy
-the complete simulator evidence to `saved results/run_07a/simulator/`.
+Do not modify raw result MAT files. The complete simulator evidence is preserved at
+`saved results/run_07a/simulator/`; the compact qualified cache remains at the active configured
+path and is duplicated under `saved results/run_07a/qualified_cache/`.
+
+Qualified cache identity:
+
+- Feature rows: `7,772` across `96` trajectories.
+- Train/validation/test trajectories: `64/16/16`.
+- Feature SHA-256: `050db850cc5dd0177fc6c58cb0efb1227f305254aeae7fa0ac18a79974ac35af`.
+- Metadata SHA-256: `81f327a8d73312240d43c571a987770322ab64cb45d480fba5269cd0b3a8ee2b`.
+- Causal sequence length: `5` under protocol erratum 0.2.2, retaining the two five-snapshot
+  training trajectories; validation/test minima are `9/20` snapshots.
 
 ### Preparation execution failures
 
@@ -66,6 +76,10 @@ the complete simulator evidence to `saved results/run_07a/simulator/`.
    under `saved results/run_07a/export_failure_02/` and cannot be treated as a qualified cache.
    The exporter compatibility repairs select the equivalent default `GroupCount` and change no
    raw data, feature definition, identity mapping, split, model, target, or gate.
+4. Structural qualification found two five-snapshot training trajectories. Protocol erratum
+   0.2.2 reduced sequence length from eight to five before neural training so all 96 frozen
+   trajectories remain eligible. No split, feature, target, architecture capacity,
+   intervention, seed, or gate changed.
 
 ## Colab workflow
 

@@ -1481,7 +1481,7 @@ calibration, or target-alignment failures.
 EXP-007A is the authorized corrective experiment. It is not EXP-008 and must not use the opened
 EXP-007 test population as confirmation evidence.
 
-- Protocol version 0.2.1 is frozen in `research/EXP007A_PROTOCOL_AMENDMENT.md`.
+- Protocol version 0.2.2 is frozen in `research/EXP007A_PROTOCOL_AMENDMENT.md`.
 - The historical EXP-007 configuration and notebook are archived as
   `configs/experiment_exp007.yaml` and `notebooks/train_models_colab_exp007.ipynb`.
 - The active configuration is `configs/experiment.yaml` with experiment ID `EXP-007A`.
@@ -1512,10 +1512,20 @@ EXP-007 test population as confirmation evidence.
   upstream P-code overwrote the wrapper's generic output variable before cleanup. No cache or
   test result survived. The wrapper now isolates the P-code in a separate function workspace;
   this is an execution repair with no scientific-condition change.
-- The final 96-scenario simulator population is retained under the ignored derived-data path
-  `data/processed_features/publication/exp007a/simulator_results_final/`. Its first cache-export
-  first cache-export attempt wrote no output because of an R2023a table-variable-name
+- The final 96-scenario simulator population was generated under the ignored derived-data path
+  and is now preserved at `saved results/run_07a/simulator/`. Its first cache-export
+  attempt wrote no output because of an R2023a table-variable-name
   incompatibility. The second wrote an incomplete feature CSV but no metadata before an R2023a
   `groupsummary` call-form failure; it is preserved under
   `saved results/run_07a/export_failure_02/` and is not a qualified cache. The narrow exporter
   compatibility repairs change no data or experimental condition.
+- The qualified cache has 7,772 rows and SHA-256
+  `050db850cc5dd0177fc6c58cb0efb1227f305254aeae7fa0ac18a79974ac35af`; its metadata SHA-256 is
+  `81f327a8d73312240d43c571a987770322ab64cb45d480fba5269cd0b3a8ee2b`.
+- Two training trajectories have five snapshots; all validation/test trajectories have at least
+  9/20. Erratum 0.2.2 reduces the causal sequence length from eight to five before neural
+  training, retaining all 96 trajectories and changing no split, feature, target, architecture
+  capacity, intervention, seed, or statistical gate.
+- A duplicate of the qualified compact cache and metadata is preserved under
+  `saved results/run_07a/qualified_cache/`; the configured copy under
+  `data/processed_features/publication/exp007a/` is authoritative for Upload construction.

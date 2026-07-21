@@ -181,3 +181,11 @@ code at development scenario 48 after 47 complete signals. The partial populatio
 under `saved results/run_07a/simulation_failure_01/`. Protocol erratum 0.2.1 fixes slip at the
 previously validated 1%; it does not change conditions, membership, seeds, models, targets, or
 gates.
+
+The corrected simulator population is now complete and preserved under
+`saved results/run_07a/simulator/`. Its qualified cache contains 7,772 snapshots from all 96
+trajectories. Structural qualification found two five-snapshot training trajectories, so
+protocol erratum 0.2.2 reduced the causal sequence length from eight to five before neural
+training. The frozen split, feature set, target, architecture capacity, intervention, seeds,
+and gates did not change. The active cache and metadata hashes are pinned in
+`configs/experiment.yaml`.

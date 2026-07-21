@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -58,10 +59,13 @@ def _fixture_frame(config: dict, runs_per_family: int = 2) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def test_frozen_design_is_multicondition_and_cache_pending() -> None:
+def test_frozen_design_is_multicondition_and_cache_qualified() -> None:
     config = load_exp7a_config(ROOT / "configs" / "experiment.yaml")
     qualification = validate_exp7a_config(config, ROOT)
-    assert qualification["status"] == "design_valid_cache_pending"
+    assert qualification["status"] == "qualified"
+    assert qualification["runs"] == 96
+    assert qualification["rows"] == 7772
+    assert qualification["minimum_snapshots_per_run"] == 5
     assert qualification["split_counts"] == {
         "train": 64,
         "validation": 16,
@@ -75,6 +79,18 @@ def test_frozen_design_is_multicondition_and_cache_pending() -> None:
     assert set(
         scenarios.loc[scenarios["publication_split"] == "test", "simulator_seed"]
     ) == {920071}
+
+
+def test_external_cache_uses_sibling_metadata(tmp_path: Path) -> None:
+    config = load_exp7a_config(ROOT / "configs" / "experiment.yaml")
+    source_cache = ROOT / config["data"]["feature_cache"]
+    source_metadata = ROOT / config["data"]["metadata_file"]
+    external_cache = tmp_path / source_cache.name
+    shutil.copy2(source_cache, external_cache)
+    shutil.copy2(source_metadata, tmp_path / source_metadata.name)
+    qualification = validate_exp7a_config(config, ROOT, external_cache)
+    assert qualification["status"] == "qualified"
+    assert Path(qualification["feature_path"]) == external_cache.resolve()
 
 
 def test_candidate_pool_is_truth_independent() -> None:

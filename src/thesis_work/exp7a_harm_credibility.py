@@ -171,8 +171,8 @@ def validate_exp7a_config(
     experiment = config.get("experiment", {})
     if experiment.get("id") != "EXP-007A":
         raise ValueError("The active configuration is not EXP-007A.")
-    if experiment.get("protocol_version") != "0.2.1":
-        raise ValueError("EXP-007A requires protocol version 0.2.1.")
+    if experiment.get("protocol_version") != "0.2.2":
+        raise ValueError("EXP-007A requires protocol version 0.2.2.")
     if config["data"].get("target_test_access") != "evaluation_only_after_development_gate":
         raise ValueError("Test RUL must remain evaluation-only after development qualification.")
     if config["credibility"].get("freeze_before_test") is not True:
@@ -242,6 +242,18 @@ def validate_exp7a_config(
     observed_sha = sha256_file(path)
     if observed_sha != config["data"]["expected_feature_cache_sha256"]:
         raise ValueError("EXP-007A feature-cache hash changed.")
+    metadata_name = Path(config["data"]["metadata_file"]).name
+    metadata_path = (
+        Path(feature_path).with_name(metadata_name)
+        if feature_path is not None
+        else root / config["data"]["metadata_file"]
+    )
+    if not metadata_path.is_file():
+        raise FileNotFoundError(metadata_path)
+    metadata_sha = sha256_file(metadata_path)
+    if metadata_sha != config["data"]["expected_metadata_sha256"]:
+        raise ValueError("EXP-007A feature-cache metadata hash changed.")
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     frame = pd.read_csv(path)
     required = {
         "run_id",
@@ -252,6 +264,8 @@ def validate_exp7a_config(
         "rul_norm",
         "degradation_value",
         "degradation_family",
+        "simulator_seed",
+        "sealed_test",
         *config["data"]["feature_columns"],
     }
     missing = sorted(required - set(frame.columns))
@@ -259,6 +273,21 @@ def validate_exp7a_config(
         raise ValueError(f"EXP-007A feature cache is missing columns: {missing}")
     if frame[["run_id", "sample_index"]].duplicated().any():
         raise ValueError("EXP-007A feature cache has duplicate sample identities.")
+    numeric_columns = [
+        "sample_index",
+        "elapsed_minutes",
+        "rul_norm",
+        "degradation_value",
+        "simulator_seed",
+        *config["data"]["feature_columns"],
+    ]
+    numeric = frame[numeric_columns].apply(pd.to_numeric, errors="coerce")
+    if not np.isfinite(numeric.to_numpy(dtype=float)).all():
+        raise ValueError("EXP-007A feature cache contains non-finite numeric values.")
+    if not numeric["rul_norm"].between(0.0, 1.0).all():
+        raise ValueError("EXP-007A normalized RUL leaves the declared [0, 1] range.")
+    if frame.groupby("run_id")["official_partition"].nunique().max() != 1:
+        raise ValueError("An EXP-007A trajectory spans multiple data partitions.")
     observed = dict(
         frame[["run_id", "official_partition"]].drop_duplicates().itertuples(index=False, name=None)
     )
@@ -269,10 +298,43 @@ def validate_exp7a_config(
         raise ValueError("A trajectory is shorter than the declared causal sequence.")
     if set(frame["degradation_family"].unique()) != set(FAMILIES):
         raise ValueError("Progression families changed in the EXP-007A feature cache.")
+    for run_id, group in frame.groupby("run_id", sort=False):
+        indices = group["sample_index"].to_numpy(dtype=int)
+        if not np.array_equal(indices, np.arange(len(group), dtype=int)):
+            raise ValueError(f"Trajectory {run_id} has non-contiguous or unordered samples.")
+        elapsed = group["elapsed_minutes"].to_numpy(dtype=float)
+        if np.any(np.diff(elapsed) <= 0.0):
+            raise ValueError(f"Trajectory {run_id} has non-increasing causal time.")
+    seeds = numeric["simulator_seed"].astype(int)
+    expected_test = frame["official_partition"].eq("test")
+    if not (seeds[expected_test] == 920071).all() or not (
+        seeds[~expected_test] == 420071
+    ).all():
+        raise ValueError("Feature-cache simulator seeds disagree with the frozen seal.")
+    sealed = frame["sealed_test"].astype(str).str.lower()
+    if not sealed.isin({"true", "false"}).all():
+        raise ValueError("Feature-cache sealed-test markers are invalid.")
+    if not sealed.eq("true").equals(expected_test):
+        raise ValueError("Feature-cache sealed-test markers disagree with partition identity.")
+    if metadata.get("experiment_id") != "EXP-007A":
+        raise ValueError("Feature-cache metadata has the wrong experiment identity.")
+    if int(metadata.get("run_count", -1)) != 96 or int(
+        metadata.get("snapshot_count", -1)
+    ) != len(frame):
+        raise ValueError("Feature-cache metadata counts disagree with the CSV.")
+    if set(metadata.get("progression_families", [])) != set(FAMILIES):
+        raise ValueError("Feature-cache metadata progression families changed.")
+    if metadata.get("development_simulator_seed") != 420071 or metadata.get(
+        "sealed_test_simulator_seed"
+    ) != 920071:
+        raise ValueError("Feature-cache metadata simulator seeds changed.")
+    if metadata.get("sealed_test_generated_separately") is not True:
+        raise ValueError("Feature-cache metadata does not confirm separate sealed generation.")
     return {
         "status": "qualified",
         "feature_path": str(path.resolve()),
         "feature_sha256": observed_sha,
+        "metadata_sha256": metadata_sha,
         "scenario_sha256": sha256_file(scenario_path),
         "rows": int(len(frame)),
         "runs": int(frame["run_id"].nunique()),

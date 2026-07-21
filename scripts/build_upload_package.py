@@ -31,6 +31,7 @@ def main() -> None:
     cache_source = ROOT / config["data"]["feature_cache"]
     metadata_source = ROOT / config["data"]["metadata_file"]
     expected_cache_sha256 = config["data"]["expected_feature_cache_sha256"]
+    expected_metadata_sha256 = config["data"]["expected_metadata_sha256"]
     if expected_cache_sha256 == "PENDING_AFTER_FROZEN_SIMULATION":
         raise RuntimeError("EXP-007A cache identity has not been finalized.")
     resolved = UPLOAD.resolve()
@@ -43,6 +44,11 @@ def main() -> None:
     if observed_cache_sha != expected_cache_sha256:
         raise RuntimeError(
             f"EXP-007A cache changed: {observed_cache_sha} != {expected_cache_sha256}"
+        )
+    observed_metadata_sha = sha256(metadata_source)
+    if observed_metadata_sha != expected_metadata_sha256:
+        raise RuntimeError(
+            f"EXP-007A metadata changed: {observed_metadata_sha} != {expected_metadata_sha256}"
         )
     status = subprocess.run(
         ["git", "status", "--porcelain"],
@@ -102,6 +108,8 @@ def main() -> None:
         "notebook": "train_models_colab.ipynb",
         "feature_cache": "feature_cache/multicondition_features.csv",
         "feature_cache_sha256": observed_cache_sha,
+        "metadata": "feature_cache/multicondition_metadata.json",
+        "metadata_sha256": observed_metadata_sha,
         "empty_output_directory": "experiment_outputs_exp007a",
         "sha_editing_required": False,
         "file_count_excluding_manifest": len(inventory),

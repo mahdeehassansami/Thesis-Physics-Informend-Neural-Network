@@ -1,9 +1,9 @@
 # EXP-007A protocol amendment: counterfactual physics harm
 
-Status: predeclared corrective protocol; no EXP-007A simulation outcomes or neural results
-observed
+Status: corrective protocol frozen after structural cache qualification; no EXP-007A neural
+results observed
 
-Protocol version: 0.2.1
+Protocol version: 0.2.2
 
 Date: 21 July 2026
 
@@ -83,6 +83,20 @@ the primary load/speed/SNR condition correction. Version 0.2.1 fixes every scena
 previously validated 1% slip. Load, speed, SNR, load variation, modulation, all trajectory IDs,
 split membership, simulator seeds, model code, targets, and statistical gates remain unchanged.
 The revised scenario hash must be committed before regeneration.
+
+### Preprocessing erratum 0.2.2
+
+The completed, unchanged 96-trajectory population contains two training trajectories with five
+snapshots. The remaining training trajectories have at least eight snapshots, validation has at
+least nine, and sealed test has at least 20. These are structural sequence counts, not inspected
+RUL prediction outcomes. The version-0.2.1 causal sequence length of eight would silently omit
+the two short training trajectories or violate the declared fail-if-short policy.
+
+Version 0.2.2 therefore reduces causal sequence length from eight to five before any neural
+training. This retains every frozen trajectory and changes no scenario, raw signal, split,
+feature, target construction, architecture width/depth, optimizer, intervention, credibility
+input, seed, or statistical gate. Excluding the short training runs is forbidden. The qualified
+feature cache and metadata hashes are pinned in `configs/experiment.yaml`.
 
 Condition evidence uses declared physical ranges and reference values. A zero-variance fitted
 standard deviation must never be used as an operating-shift denominator.
