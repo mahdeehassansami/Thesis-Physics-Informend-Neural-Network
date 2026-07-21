@@ -1512,3 +1512,7 @@ EXP-007 test population as confirmation evidence.
   upstream P-code overwrote the wrapper's generic output variable before cleanup. No cache or
   test result survived. The wrapper now isolates the P-code in a separate function workspace;
   this is an execution repair with no scientific-condition change.
+- The final 96-scenario simulator population is retained under the ignored derived-data path
+  `data/processed_features/publication/exp007a/simulator_results_final/`. Its first cache-export
+  attempt wrote no output because of an R2023a table-variable-name type incompatibility; the
+  one-line exporter compatibility repair changes no data or experimental condition.

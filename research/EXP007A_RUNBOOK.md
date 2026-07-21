@@ -59,6 +59,10 @@ the complete simulator evidence to `saved results/run_07a/simulator/`.
    deleted with the temporary workspace. No cache or result artifact survived and no RUL/test
    evaluation occurred. The wrapper was corrected by invoking protected P-code inside a
    separate MATLAB function workspace. This changes no scenario, seed, model, target, or gate.
+3. The first cache-export attempt stopped before writing either output because MATLAB R2023a
+   requires a character vector, rather than a string scalar, when assigning one table variable
+   name by brace indexing. The exporter compatibility repair changes no raw data, feature
+   definition, identity mapping, split, model, target, or gate.
 
 ## Colab workflow
 

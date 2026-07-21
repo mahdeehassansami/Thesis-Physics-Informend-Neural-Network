@@ -32,7 +32,8 @@ exp006_export_controlled_results(result_root, scenarios_csv, temporary_csv, temp
 features = readtable(temporary_csv, VariableNamingRule="preserve", TextType="string");
 features.dataset(:) = "exp007a_multicondition_synthetic";
 identity = scenarios(:, ["scenario_id", "simulator_seed", "sealed_test"]);
-identity.Properties.VariableNames{1} = "run_id";
+% R2023a requires a character vector for brace assignment to VariableNames.
+identity.Properties.VariableNames{1} = 'run_id';
 features = outerjoin(features, identity, Keys="run_id", MergeKeys=true, Type="left");
 if any(ismissing(features.simulator_seed))
     error("EXP007A:Identity", "A derived trajectory did not match its scenario identity.");
