@@ -169,33 +169,37 @@ def validate_exp7a_config(
 ) -> dict[str, Any]:
     root = Path(project_root).resolve()
     experiment = config.get("experiment", {})
-    if experiment.get("id") != "EXP-007A":
-        raise ValueError("The active configuration is not EXP-007A.")
-    if experiment.get("protocol_version") != "0.2.2":
-        raise ValueError("EXP-007A requires protocol version 0.2.2.")
+    experiment_id = str(experiment.get("id"))
+    supported = {"EXP-007A": "0.2.2", "EXP-007B": "0.3.0"}
+    if experiment_id not in supported:
+        raise ValueError("The active configuration is not EXP-007A or EXP-007B.")
+    if experiment.get("protocol_version") != supported[experiment_id]:
+        raise ValueError(
+            f"{experiment_id} requires protocol version {supported[experiment_id]}."
+        )
     if config["data"].get("target_test_access") != "evaluation_only_after_development_gate":
         raise ValueError("Test RUL must remain evaluation-only after development qualification.")
     if config["credibility"].get("freeze_before_test") is not True:
         raise ValueError("Credibility must be frozen before sealed-test evaluation.")
     if len(config["training"].get("seeds", [])) < 5:
-        raise ValueError("EXP-007A requires at least five common seeds.")
+        raise ValueError(f"{experiment_id} requires at least five common seeds.")
     if config["training"].get("oom_policy") != "fail_and_record":
-        raise ValueError("EXP-007A permits only fail-and-record OOM behavior.")
+        raise ValueError(f"{experiment_id} permits only fail-and-record OOM behavior.")
 
     scenario_path = root / config["data"]["scenario_file"]
     split = _load_split(config, root)
     if sha256_file(scenario_path) != config["data"]["expected_scenario_sha256"]:
-        raise ValueError("EXP-007A scenario design hash changed.")
+        raise ValueError(f"{experiment_id} scenario design hash changed.")
     if split.get("scenario_sha256") != config["data"]["expected_scenario_sha256"]:
-        raise ValueError("EXP-007A split does not pin the active scenario design.")
+        raise ValueError(f"{experiment_id} split does not pin the active scenario design.")
     sets = {name: set(split[f"{name}_runs"]) for name in ("train", "validation", "test")}
     if [len(sets[name]) for name in ("train", "validation", "test")] != [64, 16, 16]:
-        raise ValueError("EXP-007A requires the immutable 64/16/16 trajectory split.")
+        raise ValueError(f"{experiment_id} requires the immutable 64/16/16 trajectory split.")
     if any(
         sets[left] & sets[right]
         for left, right in (("train", "validation"), ("train", "test"), ("validation", "test"))
     ):
-        raise ValueError("EXP-007A split populations overlap.")
+        raise ValueError(f"{experiment_id} split populations overlap.")
     folds = _crossfit_membership(config, split)
 
     scenarios = pd.read_csv(scenario_path)
@@ -205,7 +209,12 @@ def validate_exp7a_config(
     )
     if observed_membership != expected_membership:
         raise ValueError("Scenario membership disagrees with the immutable split.")
-    if set(scenarios.loc[scenarios["publication_split"] == "test", "simulator_seed"]) != {920071}:
+    expected_test_seed = 920072 if experiment_id == "EXP-007B" else 920071
+    if experiment_id == "EXP-007B" and split.get("exp007a_opened_test_seed_excluded") != 920071:
+        raise ValueError("EXP-007B split does not exclude the opened EXP-007A test seed.")
+    if set(scenarios.loc[scenarios["publication_split"] == "test", "simulator_seed"]) != {
+        expected_test_seed
+    }:
         raise ValueError("Sealed-test scenarios do not use the frozen test simulator seed.")
     if set(scenarios.loc[scenarios["publication_split"] != "test", "simulator_seed"]) != {420071}:
         raise ValueError("Development scenarios do not use the frozen development seed.")
@@ -223,6 +232,24 @@ def validate_exp7a_config(
     )
     if forbidden & selected:
         raise ValueError(f"Forbidden credibility inputs selected: {sorted(forbidden & selected)}")
+    if experiment_id == "EXP-007B":
+        expected_selector = {
+            "decision_level": "causal_prefix",
+            "estimator": "standardized_logistic_regression",
+            "calibration": "none",
+            "threshold_selection": "validation_constrained_risk_coverage",
+            "candidate_selection": "single_highest_probability",
+        }
+        for name, expected_value in expected_selector.items():
+            if config["credibility"].get(name) != expected_value:
+                raise ValueError(f"EXP-007B freezes credibility.{name}={expected_value}.")
+        if not math.isclose(
+            float(config["credibility"].get("maximum_physics_blend", -1.0)),
+            0.50,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("EXP-007B freezes maximum physics blend at 0.50.")
     candidates = candidate_specs(config)
     if len(candidates) != int(config["physics_intervention"]["candidate_count"]):
         raise ValueError("Candidate count disagrees with the physics-intervention design.")
@@ -241,7 +268,7 @@ def validate_exp7a_config(
         raise FileNotFoundError(path)
     observed_sha = sha256_file(path)
     if observed_sha != config["data"]["expected_feature_cache_sha256"]:
-        raise ValueError("EXP-007A feature-cache hash changed.")
+        raise ValueError(f"{experiment_id} feature-cache hash changed.")
     metadata_name = Path(config["data"]["metadata_file"]).name
     metadata_path = (
         Path(feature_path).with_name(metadata_name)
@@ -252,7 +279,7 @@ def validate_exp7a_config(
         raise FileNotFoundError(metadata_path)
     metadata_sha = sha256_file(metadata_path)
     if metadata_sha != config["data"]["expected_metadata_sha256"]:
-        raise ValueError("EXP-007A feature-cache metadata hash changed.")
+        raise ValueError(f"{experiment_id} feature-cache metadata hash changed.")
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     frame = pd.read_csv(path)
     required = {
@@ -307,7 +334,7 @@ def validate_exp7a_config(
             raise ValueError(f"Trajectory {run_id} has non-increasing causal time.")
     seeds = numeric["simulator_seed"].astype(int)
     expected_test = frame["official_partition"].eq("test")
-    if not (seeds[expected_test] == 920071).all() or not (
+    if not (seeds[expected_test] == expected_test_seed).all() or not (
         seeds[~expected_test] == 420071
     ).all():
         raise ValueError("Feature-cache simulator seeds disagree with the frozen seal.")
@@ -316,7 +343,7 @@ def validate_exp7a_config(
         raise ValueError("Feature-cache sealed-test markers are invalid.")
     if not sealed.eq("true").equals(expected_test):
         raise ValueError("Feature-cache sealed-test markers disagree with partition identity.")
-    if metadata.get("experiment_id") != "EXP-007A":
+    if metadata.get("experiment_id") != experiment_id:
         raise ValueError("Feature-cache metadata has the wrong experiment identity.")
     if int(metadata.get("run_count", -1)) != 96 or int(
         metadata.get("snapshot_count", -1)
@@ -326,8 +353,10 @@ def validate_exp7a_config(
         raise ValueError("Feature-cache metadata progression families changed.")
     if metadata.get("development_simulator_seed") != 420071 or metadata.get(
         "sealed_test_simulator_seed"
-    ) != 920071:
+    ) != expected_test_seed:
         raise ValueError("Feature-cache metadata simulator seeds changed.")
+    if experiment_id == "EXP-007B" and metadata.get("opened_exp007a_test_seed_excluded") != 920071:
+        raise ValueError("EXP-007B metadata does not exclude the opened EXP-007A test seed.")
     if metadata.get("sealed_test_generated_separately") is not True:
         raise ValueError("Feature-cache metadata does not confirm separate sealed generation.")
     return {
@@ -353,20 +382,21 @@ def validate_exp7a_runtime(
     environment = _environment()
     git = _git_state(project_root)
     runtime = config["runtime"]
+    experiment_id = str(config["experiment"]["id"])
     if runtime.get("require_cuda", True) and not environment["cuda_available"]:
-        raise RuntimeError("EXP-007A requires a CUDA GPU; select a Colab T4 runtime.")
+        raise RuntimeError(f"{experiment_id} requires a CUDA GPU; select a Colab T4 runtime.")
     required_name = runtime.get("required_gpu_name_contains")
     if required_name and required_name.lower() not in str(environment["gpu_name"]).lower():
         raise RuntimeError(
-            f"EXP-007A requires a {required_name} GPU; assigned device is {environment['gpu_name']}."
+            f"{experiment_id} requires a {required_name} GPU; assigned device is {environment['gpu_name']}."
         )
     expected = config["repository"].get("expected_commit")
     if not expected or len(str(expected)) != 40:
-        raise RuntimeError("EXP-007A requires an exact pushed commit.")
+        raise RuntimeError(f"{experiment_id} requires an exact pushed commit.")
     if git["commit"] != expected:
         raise RuntimeError(f"Git checkout mismatch: {git['commit']} != {expected}")
     if config["repository"].get("require_clean_git", True) and git["dirty"]:
-        raise RuntimeError("EXP-007A refuses to train from a dirty Git checkout.")
+        raise RuntimeError(f"{experiment_id} refuses to train from a dirty Git checkout.")
     return environment, git, qualification
 
 
@@ -784,7 +814,7 @@ def _train_model(
     frame.to_csv(artifact_dir / "history.csv", index=False)
     torch.save(
         {
-            "experiment_id": "EXP-007A",
+            "experiment_id": str(config["experiment"]["id"]),
             "phase": phase,
             "candidate": candidate,
             "parent_seed": parent_seed,
@@ -1085,13 +1115,140 @@ class CredibilityFit:
     feature_names: list[str]
     scaler: StandardScaler
     classifier: LogisticRegression
-    calibrator: LogisticRegression
+    calibrator: LogisticRegression | None
     threshold: float
+    threshold_qualification: dict[str, Any] | None = None
 
 
 def _logit(probability: np.ndarray) -> np.ndarray:
     clipped = np.clip(probability, 1e-9, 1.0 - 1e-9)
     return np.log(clipped / (1.0 - clipped)).reshape(-1, 1)
+
+
+def _sample_causal_prefix_rows(
+    frame: pd.DataFrame, config: dict[str, Any]
+) -> pd.DataFrame:
+    count = int(config["credibility"]["fit_checkpoints_per_trajectory_candidate"])
+    pieces: list[pd.DataFrame] = []
+    keys = ["parent_seed", "run_id", "candidate_spec"]
+    for _, group in frame.groupby(keys, sort=False):
+        ordered = group.sort_values("sample_index")
+        positions = np.unique(
+            np.linspace(0, len(ordered) - 1, min(count, len(ordered))).round().astype(int)
+        )
+        pieces.append(ordered.iloc[positions])
+    return pd.concat(pieces, ignore_index=True)
+
+
+def _causal_threshold_metrics(
+    scored: pd.DataFrame, threshold: float, config: dict[str, Any]
+) -> dict[str, float]:
+    keys = ["parent_seed", "run_id", "sample_index"]
+    best = (
+        scored.sort_values([*keys, "credibility", "candidate_spec"], ascending=[True, True, True, False, True])
+        .groupby(keys, as_index=False, sort=False)
+        .head(1)
+        .copy()
+    )
+    selected = best["credibility"].to_numpy(dtype=float) >= float(threshold)
+    maximum_blend = float(config["credibility"]["maximum_physics_blend"])
+    blended = np.clip(
+        best["data_rul"].to_numpy(dtype=float)
+        + maximum_blend
+        * (
+            best["physics_rul"].to_numpy(dtype=float)
+            - best["data_rul"].to_numpy(dtype=float)
+        ),
+        0.0,
+        1.0,
+    )
+    best["controlled_rul"] = np.where(selected, blended, best["data_rul"])
+    regrets: list[float] = []
+    control_rmse: list[float] = []
+    data_rmse: list[float] = []
+    for _, run in best.groupby(["parent_seed", "run_id"], sort=True):
+        target = run["target_rul"].to_numpy(dtype=float)
+        data_value = float(
+            math.sqrt(mean_squared_error(target, run["data_rul"].to_numpy(dtype=float)))
+        )
+        control_value = float(
+            math.sqrt(
+                mean_squared_error(target, run["controlled_rul"].to_numpy(dtype=float))
+            )
+        )
+        data_rmse.append(data_value)
+        control_rmse.append(control_value)
+        regrets.append(control_value - data_value)
+    regret = np.asarray(regrets, dtype=float)
+    harm_margin = float(config["credibility"]["risk_constraints"]["harm_regret_margin"])
+    return {
+        "threshold": float(threshold),
+        "macro_run_rmse": float(np.mean(control_rmse)),
+        "data_only_macro_run_rmse": float(np.mean(data_rmse)),
+        "mean_control_regret": float(regret.mean()),
+        "mean_positive_control_regret": float(np.maximum(regret, 0.0).mean()),
+        "harmful_run_fraction": float(np.mean(regret > harm_margin)),
+        "maximum_control_regret": float(regret.max()),
+        "intervention_coverage": float(selected.mean()),
+        "trajectory_count": int(len(regret)),
+    }
+
+
+def _choose_causal_threshold(
+    validation_scored: pd.DataFrame, config: dict[str, Any]
+) -> tuple[float, dict[str, Any]]:
+    best_scores = validation_scored.groupby(
+        ["parent_seed", "run_id", "sample_index"]
+    )["credibility"].max().to_numpy(dtype=float)
+    thresholds = np.unique(
+        np.concatenate(
+            [
+                [np.nextafter(float(best_scores.max()), np.inf)],
+                np.quantile(best_scores, np.linspace(0.0, 1.0, 101)),
+            ]
+        )
+    )
+    constraints = config["credibility"]["risk_constraints"]
+    feasible: list[dict[str, float]] = []
+    evaluated: list[dict[str, float]] = []
+    for threshold in thresholds:
+        metrics = _causal_threshold_metrics(validation_scored, float(threshold), config)
+        evaluated.append(metrics)
+        if (
+            metrics["mean_positive_control_regret"]
+            <= float(constraints["maximum_mean_positive_regret"])
+            and metrics["harmful_run_fraction"]
+            <= float(constraints["maximum_harmful_run_fraction"])
+            and metrics["intervention_coverage"]
+            >= float(constraints["minimum_intervention_coverage"])
+            and metrics["intervention_coverage"]
+            <= float(constraints["maximum_intervention_coverage"])
+        ):
+            feasible.append(metrics)
+    if not feasible:
+        all_off = evaluated[-1]
+        return float(all_off["threshold"]), {
+            **all_off,
+            "passed": False,
+            "status": "no_feasible_validation_threshold",
+            "thresholds_evaluated": len(evaluated),
+        }
+    selected = min(
+        feasible,
+        key=lambda item: (
+            item["macro_run_rmse"],
+            item["mean_positive_control_regret"],
+            -item["intervention_coverage"],
+            item["threshold"],
+        ),
+    )
+    return float(selected["threshold"]), {
+        **selected,
+        "passed": True,
+        "status": "qualified",
+        "thresholds_evaluated": len(evaluated),
+        "feasible_thresholds": len(feasible),
+    }
 
 
 def fit_credibility_estimator(
@@ -1100,6 +1257,36 @@ def fit_credibility_estimator(
     config: dict[str, Any],
     seed: int,
 ) -> CredibilityFit:
+    if config["credibility"].get("decision_level") == "causal_prefix":
+        train_rows = _sample_causal_prefix_rows(train_evidence, config)
+        x_train, names = _credibility_matrix(train_rows, config)
+        y_train = train_rows["safe_to_apply"].to_numpy(dtype=int)
+        if len(np.unique(y_train)) != 2:
+            raise ValueError("Causal selector training requires both safe and harmful targets.")
+        scaler = StandardScaler().fit(x_train)
+        classifier = LogisticRegression(
+            C=float(config["credibility"]["regularization_c"]),
+            class_weight=config["credibility"]["class_weight"],
+            max_iter=3000,
+            random_state=seed,
+        ).fit(scaler.transform(x_train), y_train)
+        validation_matrix, validation_names = _credibility_matrix(validation_evidence, config)
+        if names != validation_names:
+            raise ValueError("Causal selector feature order changed on validation.")
+        validation_scored = validation_evidence.copy()
+        validation_scored["credibility_raw"] = classifier.predict_proba(
+            scaler.transform(validation_matrix)
+        )[:, 1]
+        validation_scored["credibility"] = validation_scored["credibility_raw"]
+        threshold, qualification = _choose_causal_threshold(validation_scored, config)
+        return CredibilityFit(
+            names,
+            scaler,
+            classifier,
+            None,
+            threshold,
+            qualification,
+        )
     train_units = aggregate_credibility_units(train_evidence, config)
     validation_units = aggregate_credibility_units(validation_evidence, config)
     x_train, names = _credibility_matrix(train_units, config)
@@ -1137,6 +1324,22 @@ def fit_credibility_estimator(
 def apply_credibility(
     fit: CredibilityFit, evidence: pd.DataFrame, config: dict[str, Any]
 ) -> pd.DataFrame:
+    if config["credibility"].get("decision_level") == "causal_prefix":
+        matrix, names = _credibility_matrix(evidence, config)
+        if names != fit.feature_names:
+            raise ValueError("Causal selector feature order changed at inference.")
+        probability = np.clip(
+            fit.classifier.predict_proba(fit.scaler.transform(matrix))[:, 1], 0.0, 1.0
+        )
+        scored = evidence.copy()
+        scored["credibility_raw"] = probability
+        scored["credibility"] = probability
+        scored["credibility_threshold"] = fit.threshold
+        sample_best = scored.groupby(
+            ["parent_seed", "run_id", "sample_index"]
+        )["credibility"].transform("max")
+        scored["fallback"] = sample_best < fit.threshold
+        return scored
     units = aggregate_credibility_units(evidence, config)
     matrix, names = _credibility_matrix(units, config)
     if names != fit.feature_names:
@@ -1182,16 +1385,25 @@ def development_target_qualification(
 
 
 def _serialize_credibility_fit(fit: CredibilityFit) -> dict[str, Any]:
-    return {
+    result = {
         "feature_names": fit.feature_names,
         "scaler_mean": fit.scaler.mean_.tolist(),
         "scaler_scale": fit.scaler.scale_.tolist(),
         "classifier_coefficients": fit.classifier.coef_.reshape(-1).tolist(),
         "classifier_intercept": float(fit.classifier.intercept_[0]),
-        "calibrator_coefficient": float(fit.calibrator.coef_.reshape(-1)[0]),
-        "calibrator_intercept": float(fit.calibrator.intercept_[0]),
         "threshold": fit.threshold,
+        "threshold_qualification": fit.threshold_qualification,
     }
+    if fit.calibrator is not None:
+        result.update(
+            {
+                "calibrator_coefficient": float(fit.calibrator.coef_.reshape(-1)[0]),
+                "calibrator_intercept": float(fit.calibrator.intercept_[0]),
+            }
+        )
+    else:
+        result.update({"calibrator_coefficient": None, "calibrator_intercept": None})
+    return result
 
 
 def _load_fit(
@@ -1200,7 +1412,7 @@ def _load_fit(
     config: dict[str, Any],
 ) -> ModelFit:
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
-    if checkpoint.get("experiment_id") != "EXP-007A":
+    if checkpoint.get("experiment_id") != str(config["experiment"]["id"]):
         raise RuntimeError(f"Incompatible checkpoint: {checkpoint_path}")
     context = fit_training_context(train_frame, config)
     if not np.allclose(context.scaler.mean_, checkpoint["scaler_mean"]):
@@ -1335,6 +1547,15 @@ def credibility_metrics(frame: pd.DataFrame, config: dict[str, Any]) -> dict[str
     threshold = float(frame["credibility_threshold"].iloc[0])
     prevalence = float(target.mean())
     brier = float(brier_score_loss(target, probability))
+    if config["credibility"].get("decision_level") == "causal_prefix":
+        sample_best = frame.groupby(
+            ["parent_seed", "run_id", "sample_index"]
+        )["credibility"].max().to_numpy(dtype=float)
+        all_on_fraction = float(np.mean(sample_best >= threshold))
+        all_off_fraction = 1.0 - all_on_fraction
+    else:
+        all_on_fraction = float(np.mean(probability >= threshold))
+        all_off_fraction = float(np.mean(probability < threshold))
     return {
         "auroc": float(roc_auc_score(target, probability)),
         "auprc": float(average_precision_score(target, probability)),
@@ -1344,8 +1565,8 @@ def credibility_metrics(frame: pd.DataFrame, config: dict[str, Any]) -> dict[str
         "brier_better_than_prevalence": bool(brier < prevalence * (1.0 - prevalence)),
         "ece": _ece(target, probability, int(config["evaluation"]["calibration_bins"])),
         "threshold": threshold,
-        "all_on_fraction": float(np.mean(probability >= threshold)),
-        "all_off_fraction": float(np.mean(probability < threshold)),
+        "all_on_fraction": all_on_fraction,
+        "all_off_fraction": all_off_fraction,
         "trajectory_candidate_units": int(len(units)),
     }
 
@@ -1374,7 +1595,9 @@ def _combine_candidates(
     return float(np.clip(data_rul + np.sum(normalized * delta), 0.0, 1.0))
 
 
-def _control_base(evidence: pd.DataFrame, seed: int) -> pd.DataFrame:
+def _control_base(
+    evidence: pd.DataFrame, seed: int, config: dict[str, Any]
+) -> pd.DataFrame:
     rows: list[dict[str, Any]] = []
     rng = np.random.default_rng(seed + 70070)
     for (run_id, sample_index), group in evidence.groupby(["run_id", "sample_index"], sort=True):
@@ -1383,7 +1606,39 @@ def _control_base(evidence: pd.DataFrame, seed: int) -> pd.DataFrame:
         data_rul = float(group["data_rul"].iloc[0])
         threshold = float(group["credibility_threshold"].iloc[0])
         credibility = group["credibility"].to_numpy(dtype=float)
-        priorcred_weights = np.where(credibility >= threshold, credibility, 0.0)
+        causal_prefix = config["credibility"].get("decision_level") == "causal_prefix"
+        if causal_prefix:
+            best_index = int(np.argmax(credibility))
+            selected = bool(credibility[best_index] >= threshold)
+            selected_count = int(selected)
+            if selected:
+                selected_spec = str(group["candidate_spec"].iloc[best_index])
+                selected_family = str(group["candidate_family"].iloc[best_index])
+                selected_scale = float(group["time_scale_factor"].iloc[best_index])
+                blend = float(config["credibility"]["maximum_physics_blend"])
+                priorcred_prediction = float(
+                    np.clip(
+                        data_rul
+                        + blend
+                        * (float(group["physics_rul"].iloc[best_index]) - data_rul),
+                        0.0,
+                        1.0,
+                    )
+                )
+            else:
+                selected_spec = ""
+                selected_family = ""
+                selected_scale = float("nan")
+                priorcred_prediction = data_rul
+            priorcred_weights = np.zeros(len(group), dtype=float)
+            priorcred_weights[best_index] = float(selected)
+        else:
+            priorcred_weights = np.where(credibility >= threshold, credibility, 0.0)
+            selected_count = int(np.count_nonzero(priorcred_weights))
+            selected_spec = "multiple" if selected_count else ""
+            selected_family = "multiple" if selected_count else ""
+            selected_scale = float("nan")
+            priorcred_prediction = _combine_candidates(group, priorcred_weights)
         inverse = np.exp(-np.clip(group["prior_absolute_disagreement"].to_numpy(dtype=float), 0.0, 50.0))
         safe = group["safe_to_apply"].to_numpy(dtype=float)
         harmful = 1.0 - safe
@@ -1391,7 +1646,7 @@ def _control_base(evidence: pd.DataFrame, seed: int) -> pd.DataFrame:
             "data_only": data_rul,
             "all_off": data_rul,
             "all_on": float(np.clip(group["physics_rul"].mean(), 0.0, 1.0)),
-            "priorcred": _combine_candidates(group, priorcred_weights),
+            "priorcred": priorcred_prediction,
             "inverse_residual": _combine_candidates(group, inverse),
             "random_credibility": _combine_candidates(group, rng.uniform(0.0, 1.0, len(group))),
             "oracle": _combine_candidates(group, safe),
@@ -1407,8 +1662,11 @@ def _control_base(evidence: pd.DataFrame, seed: int) -> pd.DataFrame:
             "true_family": str(group["true_family"].iloc[0]),
             "target_rul": target,
             "data_rul": data_rul,
-            "priorcred_selected_candidates": int(np.count_nonzero(priorcred_weights)),
-            "priorcred_fallback": bool(np.count_nonzero(priorcred_weights) == 0),
+            "priorcred_selected_candidates": selected_count,
+            "priorcred_fallback": bool(selected_count == 0),
+            "priorcred_selected_candidate_spec": selected_spec,
+            "priorcred_selected_candidate_family": selected_family,
+            "priorcred_selected_time_scale_factor": selected_scale,
         }
         for method, prediction in methods.items():
             rows.append(
@@ -1503,6 +1761,99 @@ def summarize_control_predictions(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd
                 }
             )
     return comparison, pd.DataFrame(regret_rows)
+
+
+def _risk_slice_summary(
+    controls: pd.DataFrame,
+    control_regret: pd.DataFrame,
+    harm_margin: float,
+) -> pd.DataFrame:
+    prior = controls[controls["method"] == "priorcred"].copy()
+    metadata = prior[
+        ["parent_seed", "run_id", "true_family", "condition_id"]
+    ].drop_duplicates()
+    full = control_regret[control_regret["method"] == "priorcred"].merge(
+        metadata,
+        on=["parent_seed", "run_id"],
+        how="left",
+        validate="one_to_one",
+    )
+    run_coverage = prior.groupby(["parent_seed", "run_id"], as_index=False).agg(
+        intervention_coverage=(
+            "priorcred_selected_candidates",
+            lambda values: float(np.mean(np.asarray(values) > 0)),
+        )
+    )
+    full = full.merge(
+        run_coverage,
+        on=["parent_seed", "run_id"],
+        how="left",
+        validate="one_to_one",
+    )
+    lifecycle_source = controls[controls["method"].isin(["data_only", "priorcred"])].copy()
+    lifecycle_source["lifecycle_region"] = np.select(
+        [
+            lifecycle_source["target_rul"] > 2.0 / 3.0,
+            lifecycle_source["target_rul"] > 1.0 / 3.0,
+        ],
+        ["early", "middle"],
+        default="late",
+    )
+    lifecycle_rows: list[dict[str, Any]] = []
+    keys = [
+        "parent_seed",
+        "run_id",
+        "true_family",
+        "condition_id",
+        "lifecycle_region",
+    ]
+    for identity, group in lifecycle_source.groupby(keys, sort=True):
+        rmse: dict[str, float] = {}
+        for method in ("data_only", "priorcred"):
+            part = group[group["method"] == method]
+            rmse[method] = float(
+                math.sqrt(mean_squared_error(part["target_rul"], part["predicted_rul"]))
+            )
+        prior_part = group[group["method"] == "priorcred"]
+        regret = rmse["priorcred"] - rmse["data_only"]
+        lifecycle_rows.append(
+            {
+                **dict(zip(keys, identity, strict=True)),
+                "physics_regret": regret,
+                "positive_physics_regret": max(0.0, regret),
+                "intervention_coverage": float(
+                    (prior_part["priorcred_selected_candidates"] > 0).mean()
+                ),
+            }
+        )
+    lifecycle = pd.DataFrame(lifecycle_rows)
+    rows: list[dict[str, Any]] = []
+    for dimension, source, column in (
+        ("parent_seed", full, "parent_seed"),
+        ("true_family", full, "true_family"),
+        ("condition_id", full, "condition_id"),
+        ("lifecycle_region", lifecycle, "lifecycle_region"),
+    ):
+        for value, group in source.groupby(column, sort=True):
+            rows.append(
+                {
+                    "dimension": dimension,
+                    "value": value,
+                    "trajectory_seed_units": int(len(group)),
+                    "mean_regret": float(group["physics_regret"].mean()),
+                    "mean_positive_regret": float(
+                        group["positive_physics_regret"].mean()
+                    ),
+                    "harmful_fraction": float(
+                        (group["physics_regret"] > harm_margin).mean()
+                    ),
+                    "maximum_regret": float(group["physics_regret"].max()),
+                    "mean_intervention_coverage": float(
+                        group["intervention_coverage"].mean()
+                    ),
+                }
+            )
+    return pd.DataFrame(rows)
 
 
 def _fit_candidate_population(
@@ -1614,7 +1965,6 @@ def _run_seed(
     final_dir = seed_dir / "final"
     train_frame = frame[frame["run_id"].isin(split["train_runs"])].copy()
     validation_frame = frame[frame["run_id"].isin(split["validation_runs"])].copy()
-    test_frame = frame[frame["run_id"].isin(split["test_runs"])].copy()
     parent = _fit_or_load_data_only(
         train_frame,
         validation_frame,
@@ -1678,12 +2028,53 @@ def _run_seed(
     )
     train_scored = apply_credibility(credibility_fit, train_evidence, config)
     validation_scored = apply_credibility(credibility_fit, validation_evidence, config)
-    validation_controls = _control_base(validation_scored, seed)
+    if credibility_fit.threshold_qualification is not None:
+        qualification["selector_threshold_qualification"] = (
+            credibility_fit.threshold_qualification
+        )
+        qualification["passed"] = bool(
+            qualification["passed"]
+            and credibility_fit.threshold_qualification.get("passed", False)
+        )
+        qualification["status"] = "passed" if qualification["passed"] else "failed"
+        qualification["test_access_authorized"] = qualification["passed"]
+        (seed_dir / "development_target_qualification.json").write_text(
+            json.dumps(qualification, indent=2), encoding="utf-8"
+        )
+        if not qualification["passed"]:
+            pd.concat(histories, ignore_index=True).to_csv(
+                seed_dir / "training_history.csv", index=False
+            )
+            _write_prediction_csv(
+                train_scored, seed_dir / "train_counterfactual_evidence.csv", config
+            )
+            _write_prediction_csv(
+                validation_scored,
+                seed_dir / "validation_counterfactual_evidence.csv",
+                config,
+            )
+            (seed_dir / "credibility_estimator.json").write_text(
+                json.dumps(_serialize_credibility_fit(credibility_fit), indent=2),
+                encoding="utf-8",
+            )
+            result = {
+                "parent_seed": seed,
+                "status": "development_gate_failed",
+                "test_evaluated": False,
+                "seconds": time.perf_counter() - started,
+                "development_target_qualification": qualification,
+            }
+            (seed_dir / "job_result.json").write_text(
+                json.dumps(result, indent=2), encoding="utf-8"
+            )
+            return result
+    validation_controls = _control_base(validation_scored, seed, config)
     validation_scalar = choose_validation_scalar(validation_controls)
     validation_controls = add_validation_scalar(validation_controls, validation_scalar)
 
-    # The sealed test is first touched only after the development target, estimator,
-    # calibration, threshold, and scalar comparator are frozen.
+    # The sealed-test population is first subset for prediction only after the development
+    # target, estimator, calibration, threshold, and scalar comparator are frozen.
+    test_frame = frame[frame["run_id"].isin(split["test_runs"])].copy()
     test_data = _predict_model(parent, test_frame, config, device)
     test_candidate_parts: list[pd.DataFrame] = []
     by_name = {item["candidate_spec"]: item for item in candidate_specs(config)}
@@ -1707,7 +2098,9 @@ def _run_seed(
     )
     test_evidence["parent_seed"] = seed
     test_scored = apply_credibility(credibility_fit, test_evidence, config)
-    test_controls = add_validation_scalar(_control_base(test_scored, seed), validation_scalar)
+    test_controls = add_validation_scalar(
+        _control_base(test_scored, seed, config), validation_scalar
+    )
 
     pd.concat(histories, ignore_index=True).to_csv(seed_dir / "training_history.csv", index=False)
     _write_prediction_csv(train_scored, seed_dir / "train_counterfactual_evidence.csv", config)
@@ -1779,6 +2172,37 @@ def _hierarchical_bootstrap(
     }
 
 
+def _hierarchical_regret_bootstrap(
+    prior_runs: pd.DataFrame, config: dict[str, Any]
+) -> dict[str, Any]:
+    seeds = sorted(int(value) for value in prior_runs["parent_seed"].unique())
+    rng = np.random.default_rng(int(config["evaluation"]["bootstrap_seed"]) + 1)
+    signed: list[float] = []
+    positive: list[float] = []
+    for _ in range(int(config["evaluation"]["bootstrap_replicates"])):
+        sampled_seeds = rng.choice(seeds, size=len(seeds), replace=True)
+        sampled_parts: list[pd.DataFrame] = []
+        for seed in sampled_seeds:
+            seed_frame = prior_runs[prior_runs["parent_seed"] == int(seed)]
+            runs = seed_frame["run_id"].to_numpy()
+            sampled_runs = rng.choice(runs, size=len(runs), replace=True)
+            sampled_parts.extend(
+                seed_frame[seed_frame["run_id"] == run] for run in sampled_runs
+            )
+        sample = pd.concat(sampled_parts, ignore_index=True)
+        regret = sample["physics_regret"].to_numpy(dtype=float)
+        signed.append(float(regret.mean()))
+        positive.append(float(np.maximum(regret, 0.0).mean()))
+    return {
+        "replicates": len(signed),
+        "aggregation": "trajectory_within_resampled_seed_then_pooled_mean",
+        "mean_regret_ci_lower_95": float(np.quantile(signed, 0.025)),
+        "mean_regret_ci_upper_95": float(np.quantile(signed, 0.975)),
+        "mean_positive_regret_ci_lower_95": float(np.quantile(positive, 0.025)),
+        "mean_positive_regret_ci_upper_95": float(np.quantile(positive, 0.975)),
+    }
+
+
 def _plots(
     output_root: Path,
     credibility: pd.DataFrame,
@@ -1786,6 +2210,7 @@ def _plots(
     candidate_regret: pd.DataFrame,
     config: dict[str, Any],
 ) -> None:
+    experiment_id = str(config["experiment"]["id"])
     plot_dir = output_root / "plots"
     plot_dir.mkdir(parents=True, exist_ok=True)
     units = aggregate_credibility_units(credibility, config)
@@ -1794,7 +2219,11 @@ def _plots(
         fpr, tpr, _ = roc_curve(group["safe_to_apply"], group["credibility"])
         ax.plot(fpr, tpr, alpha=0.65, label=f"seed {seed}: {roc_auc_score(group['safe_to_apply'], group['credibility']):.3f}")
     ax.plot([0, 1], [0, 1], "--", color="0.5")
-    ax.set(xlabel="False-positive rate", ylabel="True-positive rate", title="EXP-007A safe-intervention ROC")
+    ax.set(
+        xlabel="False-positive rate",
+        ylabel="True-positive rate",
+        title=f"{experiment_id} safe-intervention ROC",
+    )
     ax.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(plot_dir / "safe_intervention_roc.png", dpi=180)
@@ -1804,7 +2233,10 @@ def _plots(
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.bar(summary["method"], summary["macro_run_rmse"])
     ax.tick_params(axis="x", rotation=45)
-    ax.set(ylabel="Mean macro trajectory RMSE", title="EXP-007A intervention controls")
+    ax.set(
+        ylabel="Mean macro trajectory RMSE",
+        title=f"{experiment_id} intervention controls",
+    )
     fig.tight_layout()
     fig.savefig(plot_dir / "control_comparison.png", dpi=180)
     plt.close(fig)
@@ -1884,26 +2316,48 @@ def _write_summary(
     metrics: pd.DataFrame,
     qualification: dict[str, Any],
 ) -> None:
+    experiment_id = str(gate.get("experiment_id", "EXP-007A"))
     rows = [
-        "# EXP-007A counterfactual physics-harm credibility",
+        f"# {experiment_id} counterfactual physics-harm credibility",
         "",
         f"Status: **{gate['status']}**",
         "",
-        f"Development target qualification: **{qualification['status']}**",
-        f"Mean within-seed safe-intervention AUROC: `{gate.get('mean_seed_auroc', float('nan')):.6f}`",
-        f"Hierarchical bootstrap 95% interval: `[{gate.get('auroc_ci_lower_95', float('nan')):.6f}, {gate.get('auroc_ci_upper_95', float('nan')):.6f}]`",
-        f"Decision: **{gate['decision']}**",
-        "",
-        "Candidate prior models were trained with differentiable value/rate/monotonic losses",
-        "from identical data-only parent checkpoints. Mathematical law correctness is secondary",
-        "metadata; the primary label is counterfactual RUL intervention safety.",
-        "",
-        "## Per-seed credibility metrics",
-        "",
-        "```text",
-        metrics.to_string(index=False) if not metrics.empty else "No sealed-test metrics were produced.",
-        "```",
+        f"Development target and selector qualification: **{qualification['status']}**",
     ]
+    if experiment_id == "EXP-007B" and "relative_macro_rmse_improvement_percent" in gate:
+        rows.extend(
+            [
+                f"Relative macro-run RMSE improvement: `{gate['relative_macro_rmse_improvement_percent']:.6f}%`",
+                f"Mean positive control regret: `{gate['mean_positive_control_regret']:.6f}`",
+                f"Harmful-run fraction: `{gate['harmful_run_fraction']:.6f}`",
+                f"Maximum observed run regret: `{gate['maximum_observed_run_regret']:.6f}`",
+                f"Pooled intervention coverage: `{gate['pooled_intervention_coverage']:.6f}`",
+            ]
+        )
+    else:
+        rows.extend(
+            [
+                f"Mean within-seed safe-intervention AUROC: `{gate.get('mean_seed_auroc', float('nan')):.6f}`",
+                f"Hierarchical bootstrap 95% interval: `[{gate.get('auroc_ci_lower_95', float('nan')):.6f}, {gate.get('auroc_ci_upper_95', float('nan')):.6f}]`",
+            ]
+        )
+    rows.extend(
+        [
+            f"Decision: **{gate['decision']}**",
+            "",
+            "Candidate prior models were trained with differentiable value/rate/monotonic losses",
+            "from identical data-only parent checkpoints. Mathematical law correctness is secondary",
+            "metadata; the primary label is counterfactual RUL intervention safety.",
+            "",
+            "## Per-seed credibility metrics",
+            "",
+            "```text",
+            metrics.to_string(index=False)
+            if not metrics.empty
+            else "No sealed-test metrics were produced.",
+            "```",
+        ]
+    )
     (output_root / "summary.md").write_text("\n".join(rows) + "\n", encoding="utf-8")
 
 
@@ -1926,11 +2380,12 @@ def run_exp7a_experiment(
     environment, git, qualification = validate_exp7a_runtime(
         config, project_root, feature_path
     )
+    experiment_id = str(config["experiment"]["id"])
     split = _load_split(config, project_root)
     resolved_config = copy.deepcopy(config)
     resolved_config.pop("_config_path", None)
     identity = {
-        "experiment_id": "EXP-007A",
+        "experiment_id": experiment_id,
         "git_commit": git["commit"],
         "config_sha256": _json_sha256(resolved_config),
         "feature_sha256": qualification["feature_sha256"],
@@ -1942,13 +2397,13 @@ def run_exp7a_experiment(
     if state_path.is_file():
         existing = json.loads(state_path.read_text(encoding="utf-8"))
         if existing != identity:
-            raise RuntimeError("Existing EXP-007A recovery state is incompatible.")
+            raise RuntimeError(f"Existing {experiment_id} recovery state is incompatible.")
     else:
         state_path.write_text(json.dumps(identity, indent=2), encoding="utf-8")
     log_path = output_root / "training.log"
     _append_log(
         log_path,
-        f"EXP-007A start/resume commit={git['commit']} feature_sha256={qualification['feature_sha256']}",
+        f"{experiment_id} start/resume commit={git['commit']} feature_sha256={qualification['feature_sha256']}",
     )
     (output_root / "experiment_config.yaml").write_text(
         yaml.safe_dump(resolved_config, sort_keys=False), encoding="utf-8"
@@ -2036,7 +2491,7 @@ def run_exp7a_experiment(
 
     if len(completed) != len(config["training"]["seeds"]):
         gate = {
-            "experiment_id": "EXP-007A",
+            "experiment_id": experiment_id,
             "status": "failed",
             "decision": "stop_before_or_during_sealed_test",
             "development_target_qualification": qualification_summary["status"],
@@ -2124,45 +2579,166 @@ def run_exp7a_experiment(
     comparison, control_regret = summarize_control_predictions(controls)
     comparison.to_csv(output_root / "model_comparison.csv", index=False)
     control_regret.to_csv(output_root / "physics_regret.csv", index=False)
+    slice_harm_margin = float(
+        config["success_criteria"].get(
+            "harm_regret_margin",
+            config["counterfactual_target"]["harmful_regret_margin"],
+        )
+    )
+    _risk_slice_summary(controls, control_regret, slice_harm_margin).to_csv(
+        output_root / "risk_slice_metrics.csv", index=False
+    )
+    if experiment_id == "EXP-007B":
+        prior_rows = controls[controls["method"] == "priorcred"].copy()
+        prior_rows["lifecycle_region"] = np.select(
+            [
+                prior_rows["target_rul"] > 2.0 / 3.0,
+                prior_rows["target_rul"] > 1.0 / 3.0,
+            ],
+            ["early", "middle"],
+            default="late",
+        )
+        total_by_seed = prior_rows.groupby("parent_seed").size().to_dict()
+        selected_rows = prior_rows[prior_rows["priorcred_selected_candidates"] > 0]
+        frequency = selected_rows.groupby(
+            [
+                "parent_seed",
+                "priorcred_selected_candidate_family",
+                "priorcred_selected_time_scale_factor",
+                "lifecycle_region",
+            ],
+            as_index=False,
+        ).agg(selected_samples=("sample_index", "size"))
+        frequency["fraction_of_seed_samples"] = frequency.apply(
+            lambda row: float(
+                row["selected_samples"] / total_by_seed[int(row["parent_seed"])]
+            ),
+            axis=1,
+        )
+        frequency.to_csv(output_root / "selected_candidate_frequency.csv", index=False)
 
-    maximum = float(config["success_criteria"]["maximum_all_off_fraction_per_seed"])
-    passes_auroc = statistical["mean_seed_auroc"] >= float(
-        config["success_criteria"]["minimum_test_auroc"]
-    )
-    passes_ci = bootstrap["auroc_ci_lower_95"] > float(
-        config["success_criteria"]["minimum_auroc_ci_lower"]
-    )
-    passes_collapse = bool(
-        (metrics["all_off_fraction"] <= maximum).all()
-        and (metrics["all_on_fraction"] <= float(config["success_criteria"]["maximum_all_on_fraction_per_seed"])).all()
-    )
-    passes_brier = bool(metrics["brier"].mean() < metrics["prevalence_brier"].mean())
-    harmful = candidate_regret[candidate_regret["harmful_intervention"] == 1]
-    passes_harm_stress = bool(len(harmful) and float(harmful["physics_regret"].mean()) > 0.0)
     mean_positive = control_regret.groupby("method")["positive_physics_regret"].mean()
-    passes_regret = bool(
-        mean_positive.get("priorcred", float("inf")) < mean_positive.get("all_on", -float("inf"))
-        and mean_positive.get("priorcred", float("inf"))
-        < mean_positive.get("validation_selected_scalar", -float("inf"))
-    )
-    passes = all(
-        (passes_auroc, passes_ci, passes_collapse, passes_brier, passes_harm_stress, passes_regret)
-    )
-    gate = {
-        "experiment_id": "EXP-007A",
-        "status": "passed" if passes else "failed",
-        "decision": "permit_exp008_preparation" if passes else "stop_and_diagnose_exp007a",
-        "mean_seed_auroc": statistical["mean_seed_auroc"],
-        "std_seed_auroc": statistical["std_seed_auroc"],
-        **bootstrap,
-        "passes_minimum_auroc": passes_auroc,
-        "passes_bootstrap_ci": passes_ci,
-        "passes_per_seed_anti_collapse": passes_collapse,
-        "passes_brier_baseline": passes_brier,
-        "passes_harm_stress": passes_harm_stress,
-        "passes_priorcred_regret_reduction": passes_regret,
-        "mean_positive_regret": {name: float(value) for name, value in mean_positive.items()},
-    }
+    if experiment_id == "EXP-007B":
+        criteria = config["success_criteria"]
+        prior_runs = control_regret[control_regret["method"] == "priorcred"]
+        prior_comparison = comparison[comparison["method"] == "priorcred"]
+        data_comparison = comparison[comparison["method"] == "data_only"]
+        prior_macro = float(prior_comparison["macro_run_rmse"].mean())
+        data_macro = float(data_comparison["macro_run_rmse"].mean())
+        relative_improvement = 100.0 * (data_macro - prior_macro) / data_macro
+        mean_positive_prior = float(prior_runs["positive_physics_regret"].mean())
+        harm_margin = float(criteria["harm_regret_margin"])
+        harmful_fraction = float((prior_runs["physics_regret"] > harm_margin).mean())
+        maximum_regret = float(prior_runs["physics_regret"].max())
+        mean_regret = float(prior_runs["physics_regret"].mean())
+        regret_bootstrap = _hierarchical_regret_bootstrap(prior_runs, config)
+        statistical["causal_controller_regret_bootstrap"] = regret_bootstrap
+        (output_root / "statistical_summary.json").write_text(
+            json.dumps(statistical, indent=2), encoding="utf-8"
+        )
+        coverage = float((prior_rows["priorcred_selected_candidates"] > 0).mean())
+        passes_improvement = relative_improvement >= float(
+            criteria["minimum_relative_macro_rmse_improvement_percent"]
+        )
+        passes_mean_positive = mean_positive_prior <= float(
+            criteria["maximum_mean_positive_regret"]
+        )
+        passes_harm_rate = harmful_fraction <= float(criteria["maximum_harmful_run_fraction"])
+        passes_maximum = maximum_regret <= float(criteria["maximum_observed_run_regret"])
+        passes_coverage = bool(
+            coverage >= float(criteria["minimum_pooled_intervention_coverage"])
+            and coverage <= float(criteria["maximum_pooled_intervention_coverage"])
+        )
+        passes = all(
+            (
+                passes_improvement,
+                passes_mean_positive,
+                passes_harm_rate,
+                passes_maximum,
+                passes_coverage,
+            )
+        )
+        gate = {
+            "experiment_id": experiment_id,
+            "status": "passed" if passes else "failed",
+            "decision": (
+                "permit_higher_fidelity_or_real_bearing_confirmation"
+                if passes
+                else "stop_and_preserve_exp007b_negative_result"
+            ),
+            "primary_unit": "complete_test_trajectory_within_neural_seed",
+            "trajectory_seed_units": int(len(prior_runs)),
+            "data_only_mean_macro_run_rmse": data_macro,
+            "causal_controller_mean_macro_run_rmse": prior_macro,
+            "relative_macro_rmse_improvement_percent": relative_improvement,
+            "mean_control_regret": mean_regret,
+            "mean_positive_control_regret": mean_positive_prior,
+            "harm_regret_margin": harm_margin,
+            "harmful_run_fraction": harmful_fraction,
+            "maximum_observed_run_regret": maximum_regret,
+            "pooled_intervention_coverage": coverage,
+            "passes_minimum_relative_improvement": passes_improvement,
+            "passes_maximum_mean_positive_regret": passes_mean_positive,
+            "passes_maximum_harmful_run_fraction": passes_harm_rate,
+            "passes_maximum_observed_run_regret": passes_maximum,
+            "passes_pooled_intervention_coverage": passes_coverage,
+            "safe_intervention_auroc_secondary": statistical["mean_seed_auroc"],
+            "auroc_bootstrap_secondary": bootstrap,
+            "regret_bootstrap_secondary": regret_bootstrap,
+        }
+    else:
+        maximum = float(config["success_criteria"]["maximum_all_off_fraction_per_seed"])
+        passes_auroc = statistical["mean_seed_auroc"] >= float(
+            config["success_criteria"]["minimum_test_auroc"]
+        )
+        passes_ci = bootstrap["auroc_ci_lower_95"] > float(
+            config["success_criteria"]["minimum_auroc_ci_lower"]
+        )
+        passes_collapse = bool(
+            (metrics["all_off_fraction"] <= maximum).all()
+            and (
+                metrics["all_on_fraction"]
+                <= float(config["success_criteria"]["maximum_all_on_fraction_per_seed"])
+            ).all()
+        )
+        passes_brier = bool(metrics["brier"].mean() < metrics["prevalence_brier"].mean())
+        harmful = candidate_regret[candidate_regret["harmful_intervention"] == 1]
+        passes_harm_stress = bool(
+            len(harmful) and float(harmful["physics_regret"].mean()) > 0.0
+        )
+        passes_regret = bool(
+            mean_positive.get("priorcred", float("inf"))
+            < mean_positive.get("all_on", -float("inf"))
+            and mean_positive.get("priorcred", float("inf"))
+            < mean_positive.get("validation_selected_scalar", -float("inf"))
+        )
+        passes = all(
+            (
+                passes_auroc,
+                passes_ci,
+                passes_collapse,
+                passes_brier,
+                passes_harm_stress,
+                passes_regret,
+            )
+        )
+        gate = {
+            "experiment_id": experiment_id,
+            "status": "passed" if passes else "failed",
+            "decision": "permit_exp008_preparation" if passes else "stop_and_diagnose_exp007a",
+            "mean_seed_auroc": statistical["mean_seed_auroc"],
+            "std_seed_auroc": statistical["std_seed_auroc"],
+            **bootstrap,
+            "passes_minimum_auroc": passes_auroc,
+            "passes_bootstrap_ci": passes_ci,
+            "passes_per_seed_anti_collapse": passes_collapse,
+            "passes_brier_baseline": passes_brier,
+            "passes_harm_stress": passes_harm_stress,
+            "passes_priorcred_regret_reduction": passes_regret,
+            "mean_positive_regret": {
+                name: float(value) for name, value in mean_positive.items()
+            },
+        }
     (output_root / "gate_decision.json").write_text(
         json.dumps(gate, indent=2), encoding="utf-8"
     )
@@ -2219,6 +2795,12 @@ def run_exp7a_experiment(
             "candidate_count": len(candidate_specs(config)),
             "baseline_epochs": int(config["backbone"]["epochs"]),
             "intervention_epochs": int(config["physics_intervention"]["fine_tune_epochs"]),
+            "credibility_decision_level": config["credibility"].get(
+                "decision_level", "complete_trajectory"
+            ),
+            "maximum_physics_blend": config["credibility"].get(
+                "maximum_physics_blend"
+            ),
             "oom_retries": 0,
         },
     }

@@ -1,41 +1,41 @@
 schema_version: 2
 
 experiment:
-  id: EXP-007A
-  run_id: exp007a_counterfactual_physics_harm
-  name: Counterfactual physics-harm credibility correction
+  id: EXP-007B
+  run_id: exp007b_causal_selective_risk_confirmation
+  name: Causal selective physics-risk confirmation
   goal: >-
-    Determine whether label-safe causal evidence can identify when an actual differentiable
-    simulator-progression prior harms RUL prediction relative to its identical data-only parent
-    under a multi-condition development design and a fresh sealed test population.
+    Confirm whether a prefix-local abstaining controller can preserve useful physics-informed
+    RUL improvement while limiting negative transfer on a newly generated sealed simulator
+    population.
   evidence: >-
-    EXP-007 failed AUROC and anti-collapse gates. Its source condition variables had zero
-    variance and its corrupt template blends generally improved the weak data-only backbone,
-    so mathematical prior correctness did not represent physics-induced negative transfer.
+    EXP-007A was a valid negative AUROC/tail gate and its complete-trajectory mean selector was
+    not available causally at early prediction times. Nested development-only diagnostics found
+    that prefix-local logistic selection with a fixed 0.50 blend improved macro-run RMSE by
+    1.7659% while meeting the preregistered development risk constraints.
   hypothesis: >-
-    Cross-fitted counterfactual safe-intervention labels and physically scaled condition
-    evidence will achieve mean within-seed sealed-test AUROC >= 0.80, pass calibration and
-    anti-collapse gates, and reduce positive physics regret relative to fixed and scalar
-    physics controls.
+    On fresh seed-920072 trajectories, the frozen causal controller will improve macro-run RMSE
+    by at least 1% relative to identical data-only parents, with mean positive regret <= 0.005,
+    harmful-run fraction <= 0.10, and maximum run regret <= 0.05.
   execution: google_colab_t4
   neural_training: true
-  protocol: research/EXP007A_PROTOCOL_AMENDMENT.md
-  protocol_version: 0.2.2
-  method_scope: corrective_actual_physics_intervention_feasibility
+  protocol: research/EXP007B_PROTOCOL.md
+  protocol_version: 0.3.0
+  method_scope: confirmatory_causal_selective_physics_risk_control
 
 repository:
   expected_commit: null
   require_clean_git: true
 
 data:
-  dataset_id: exp007a_multicondition_synthetic
-  feature_cache: data/processed_features/publication/exp007a/multicondition_features.csv
-  metadata_file: data/processed_features/publication/exp007a/multicondition_metadata.json
-  expected_feature_cache_sha256: 050db850cc5dd0177fc6c58cb0efb1227f305254aeae7fa0ac18a79974ac35af
-  expected_metadata_sha256: 81f327a8d73312240d43c571a987770322ab64cb45d480fba5269cd0b3a8ee2b
-  scenario_file: configs/exp007a_multicondition_scenarios.csv
-  expected_scenario_sha256: 35c8968f392ecaefcb1bacd69aef0db364824b8dd17d88ca1e380e5b67754e48
-  split_file: configs/exp007a_data_split.json
+  dataset_id: exp007b_multicondition_synthetic
+  feature_cache: data/processed_features/publication/exp007b/multicondition_features.csv
+  metadata_file: data/processed_features/publication/exp007b/multicondition_metadata.json
+  expected_feature_cache_sha256: 4f710c4715caa3bd63f6b9e92c21ac97475492092ef892cc6fd55e2737b0a553
+  expected_metadata_sha256: d725368d7515ebf91e87bc11d738ece490027afb3db0fe8d83638d09ec7275d3
+  scenario_file: configs/exp007b_multicondition_scenarios.csv
+  expected_scenario_sha256: 808c036fa9e5b9609f8e868bce9f6d68890c26b025d1c08f7fb4cfa7c4b71522
+  split_file: configs/exp007b_data_split.json
   target: normalized_rul
   target_test_access: evaluation_only_after_development_gate
   representation: causal_feature_sequence
@@ -89,8 +89,10 @@ simulation:
     - step_like
     - gamma
   development_seed: 420071
-  sealed_test_seed: 920071
-  test_seal: do_not_evaluate_until_development_target_qualification_passes
+  sealed_test_seed: 920072
+  preregistration_commit: b8e4b1e18845e7056fd70c6956426483360975f3
+  opened_exp007a_test_seed_excluded: 920071
+  test_seal: do_not_evaluate_until_development_target_and_selector_qualification_pass
 
 cross_fit:
   policy: >-
@@ -180,10 +182,20 @@ counterfactual_target:
 
 credibility:
   estimator: standardized_logistic_regression
+  decision_level: causal_prefix
   class_weight: balanced
   regularization_c: 1.0
-  calibration: validation_platt_scaling
-  threshold_selection: validation_youden_j
+  calibration: none
+  threshold_selection: validation_constrained_risk_coverage
+  fit_checkpoints_per_trajectory_candidate: 12
+  candidate_selection: single_highest_probability
+  maximum_physics_blend: 0.50
+  risk_constraints:
+    harm_regret_margin: 0.01
+    maximum_mean_positive_regret: 0.005
+    maximum_harmful_run_fraction: 0.10
+    minimum_intervention_coverage: 0.05
+    maximum_intervention_coverage: 0.90
   freeze_before_test: true
   numeric_evidence:
     - prior_absolute_disagreement
@@ -250,7 +262,7 @@ evaluation:
   bootstrap_unit_order: [trajectory_within_seed, seed]
   calibration_bins: 10
   probability_float_format: '%.17g'
-  primary_endpoint: sealed_test_safe_intervention_auroc
+  primary_endpoint: fresh_sealed_test_causal_controller_risk_and_macro_run_rmse
   report_by:
     - seed
     - trajectory
@@ -261,22 +273,22 @@ evaluation:
     - lifecycle_region
 
 success_criteria:
-  minimum_test_auroc: 0.80
-  minimum_auroc_ci_lower: 0.50
-  maximum_all_on_fraction_per_seed: 0.90
-  maximum_all_off_fraction_per_seed: 0.90
-  require_brier_better_than_prevalence: true
-  require_positive_regret_in_harmful_all_on: true
-  require_priorcred_positive_regret_below: [all_on, validation_selected_scalar]
+  minimum_relative_macro_rmse_improvement_percent: 1.0
+  maximum_mean_positive_regret: 0.005
+  harm_regret_margin: 0.01
+  maximum_harmful_run_fraction: 0.10
+  maximum_observed_run_regret: 0.05
+  minimum_pooled_intervention_coverage: 0.05
+  maximum_pooled_intervention_coverage: 0.90
   decision: >-
-    Stop before EXP-008 unless development target qualification and every sealed-test
-    credibility, calibration, anti-collapse, and regret-reduction gate passes.
+    Stop physics-controller escalation unless every development threshold qualifies and every
+    fresh sealed-test improvement, regret, harm-rate, tail, and coverage gate passes.
 
 runtime:
   require_cuda: true
   required_gpu_name_contains: T4
-  train_work_directory: /content/exp007a_work
-  drive_output_directory: /content/drive/MyDrive/Upload/experiment_outputs_exp007a
+  train_work_directory: /content/exp007b_work
+  drive_output_directory: /content/drive/MyDrive/Upload/experiment_outputs_exp007b
 
 artifacts:
   create_lightweight_bundle: true
@@ -290,8 +302,12 @@ artifacts:
     - development_target_qualification.json
     - credibility_metrics.csv
     - credibility_predictions.csv
+    - control_predictions.csv
     - candidate_regret.csv
     - model_comparison.csv
+    - physics_regret.csv
+    - risk_slice_metrics.csv
+    - selected_candidate_frequency.csv
     - training_history.csv
     - statistical_summary.json
     - gate_decision.json

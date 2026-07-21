@@ -1,15 +1,17 @@
-# EXP-007A Google Drive and Colab instructions
+# EXP-007B Google Drive and Colab instructions
 
 ## What this package runs
 
-EXP-007A is the corrective counterfactual physics-harm feasibility experiment. It uses a new
-96-trajectory multi-condition official-simulator cache. Candidate LSTM models are initialized
-from identical data-only checkpoints and fine-tuned with differentiable simulator-progression
-value, rate, and monotonic losses.
+EXP-007B is the preregistered causal selective physics-risk confirmation. It reuses the exact
+80 EXP-007A development trajectories and replaces the opened test with 16 newly generated
+seed-920072 trajectories. Candidate LSTMs, differentiable simulator-progression losses, and
+five neural seeds remain unchanged.
 
-The run must first prove that development data contain both safe and harmful interventions. If
-that qualification fails, the notebook stops before sealed-test evaluation. If it passes, the
-frozen credibility estimator is evaluated on the separate test simulator seed.
+The run must first prove that development data contain both safe and harmful interventions and
+that every seed has a feasible validation risk/coverage threshold. If either qualification
+fails, the notebook stops before the fresh test. The selector then works at each observed
+prefix, chooses at most one candidate, abstains to data-only when unsafe, and limits physics to
+a 50% blend.
 
 ## Upload and run
 
@@ -33,13 +35,13 @@ Budget approximately 60-120 minutes on a Colab T4. The experiment schedules four
 data-only parents and 48 physics fine-tunes per seed, plus one final parent and 12 final physics
 fine-tunes, across five seeds. Early stopping may reduce runtime.
 
-Training occurs under `/content/exp007a_work`. Completed checkpoints and artifacts synchronize
-to `MyDrive/Upload/experiment_outputs_exp007a`, so rerunning the same pinned notebook can resume.
+Training occurs under `/content/exp007b_work`. Completed checkpoints and artifacts synchronize
+to `MyDrive/Upload/experiment_outputs_exp007b`, so rerunning the same pinned notebook can resume.
 
 ## Return for analysis
 
 Download `codex_results_bundle.zip` from
-`MyDrive/Upload/experiment_outputs_exp007a/` and place it under `results/incoming/`. Keep the
-full output directory in Drive. Do not begin EXP-008 until Codex independently validates the
-manifest, serialized metrics, development qualification, per-seed collapse checks, calibration,
-candidate regret, and final gate.
+`MyDrive/Upload/experiment_outputs_exp007b/` and place it under `results/incoming/`. Keep the
+full output directory in Drive. Do not tune or rescore the newly opened population. Codex must
+independently validate the manifest, serialized metrics, development thresholds, intervention
+coverage, candidate regret, and every preregistered primary gate.

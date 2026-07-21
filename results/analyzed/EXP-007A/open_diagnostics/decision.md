@@ -14,6 +14,10 @@ not be rescored or redesigned after that population is opened.
 - Candidate negative transfer is concentrated in the `gamma` truth family and the `1.60`
   time-scale prior. On the opened test, their harmful fractions are `0.625` and `0.5625`,
   respectively.
+- The original PriorCred controller intervened at every lifecycle sample. Its early-life regional
+  mean regret was `0.013987`, harmful fraction `0.475`, and maximum regret `0.107786`; middle and
+  late mean regrets were negative. This localizes the tail to exactly the period where a
+  complete-trajectory score is least defensible as a causal decision.
 - The old strict comparison against validation scalar control is ill-posed because that
   comparator selected zero physics for every seed and therefore had zero positive regret.
 
@@ -47,4 +51,3 @@ calibration, while [Selective Classification via One-Sided Prediction](https://p
 motivates abstention and risk-coverage reporting. The available 16-trajectory validation set and
 the present controller loss do not support an honest finite-sample conformal guarantee, so none
 will be claimed.
-

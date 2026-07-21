@@ -30,9 +30,9 @@ def main() -> None:
     cells = [
         markdown(
             """
-# EXP-007A - counterfactual physics-harm credibility
+# EXP-007B - causal selective physics-risk confirmation
 
-This thin, restartable controller runs the frozen protocol-v0.2.2 corrective experiment. Candidate physics models are trained with differentiable progression value/rate/monotonic losses from identical data-only checkpoints. Development counterfactual regret labels must qualify before the fresh sealed test is evaluated.
+This thin, restartable controller runs the preregistered protocol-v0.3.0 confirmation. Candidate physics models and data-only parents remain unchanged from EXP-007A. The selector now makes prefix-local decisions, abstains when its validation risk constraints are not met, and limits selected physics to a 50% blend.
 """
         ),
         markdown(
@@ -57,12 +57,12 @@ COMMIT_FILE = UPLOAD / "expected_commit.txt"
 REPOSITORY_URL = "https://github.com/mahdeehassansami/Thesis-Physics-Informend-Neural-Network.git"
 for required in (FEATURE_PATH, METADATA_PATH, COMMIT_FILE):
     if not required.is_file():
-        raise FileNotFoundError(f"Missing EXP-007A Upload file: {required}")
+        raise FileNotFoundError(f"Missing EXP-007B Upload file: {required}")
 EXPECTED_COMMIT = COMMIT_FILE.read_text(encoding="utf-8").strip().lower()
 if len(EXPECTED_COMMIT) != 40 or any(ch not in "0123456789abcdef" for ch in EXPECTED_COMMIT):
     raise ValueError("expected_commit.txt must contain one full lowercase Git SHA.")
 
-CLONE = Path("/content/thesis_work_exp007a")
+CLONE = Path("/content/thesis_work_exp007b")
 if CLONE.exists():
     shutil.rmtree(CLONE)
 subprocess.run(["git", "clone", "--quiet", REPOSITORY_URL, str(CLONE)], check=True)
@@ -98,7 +98,7 @@ print({
     "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
 })
 if not torch.cuda.is_available() or "T4" not in torch.cuda.get_device_name(0):
-    raise RuntimeError("EXP-007A requires a Colab Tesla T4 runtime.")
+    raise RuntimeError("EXP-007B requires a Colab Tesla T4 runtime.")
 free, total = torch.cuda.mem_get_info()
 print({"gpu_memory_free_bytes": free, "gpu_memory_total_bytes": total, "selected_device": "cuda:0"})
 """
@@ -107,22 +107,22 @@ print({"gpu_memory_free_bytes": free, "gpu_memory_total_bytes": total, "selected
         code(
             """
 sys.path.insert(0, str(CLONE / "src"))
-from thesis_work.exp7a_harm_credibility import load_exp7a_config, validate_exp7a_runtime
+from thesis_work.exp7b_causal_risk_control import load_exp7b_config, validate_exp7b_runtime
 
 CONFIG_PATH = CLONE / "configs" / "experiment.yaml"
-config = load_exp7a_config(CONFIG_PATH)
+config = load_exp7b_config(CONFIG_PATH)
 config["repository"]["expected_commit"] = EXPECTED_COMMIT
-environment, git_state, qualification = validate_exp7a_runtime(config, CLONE, FEATURE_PATH)
+environment, git_state, qualification = validate_exp7b_runtime(config, CLONE, FEATURE_PATH)
 print(json.dumps({"experiment": config["experiment"], "qualification": qualification}, indent=2))
 
 LOCAL_ROOT = Path(config["runtime"]["train_work_directory"])
-OUTPUT_ROOT = LOCAL_ROOT / "experiment_outputs_exp007a"
-RECOVERY_ROOT = UPLOAD / "experiment_outputs_exp007a"
+OUTPUT_ROOT = LOCAL_ROOT / "experiment_outputs_exp007b"
+RECOVERY_ROOT = UPLOAD / "experiment_outputs_exp007b"
 LOCAL_ROOT.mkdir(parents=True, exist_ok=True)
 if RECOVERY_ROOT.exists() and any(RECOVERY_ROOT.iterdir()):
     state = RECOVERY_ROOT / "run_state.json"
     if not state.is_file():
-        raise FileExistsError("Nonempty EXP-007A Drive output lacks compatible run_state.json.")
+        raise FileExistsError("Nonempty EXP-007B Drive output lacks compatible run_state.json.")
 else:
     RECOVERY_ROOT.mkdir(parents=True, exist_ok=True)
 print({"local_output": str(OUTPUT_ROOT), "drive_recovery": str(RECOVERY_ROOT)})
@@ -130,16 +130,16 @@ print({"local_output": str(OUTPUT_ROOT), "drive_recovery": str(RECOVERY_ROOT)})
         ),
         markdown(
             """
-## 5. Train, qualify the development harm target, and conditionally evaluate the sealed test
+## 5. Train, qualify the causal risk threshold, and conditionally evaluate the fresh sealed test
 
-The runner resumes completed fold/candidate checkpoints. If development contains insufficient safe or harmful interventions, it records a benchmark-design failure and does not evaluate the sealed test.
+The runner resumes completed fold/candidate checkpoints. Every seed must have both safe/harmful development targets and a validation threshold satisfying the frozen risk and coverage constraints. Otherwise it records a development-gate failure and does not evaluate the fresh test.
 """
         ),
         code(
             """
-from thesis_work.exp7a_harm_credibility import run_exp7a_experiment
+from thesis_work.exp7b_causal_risk_control import run_exp7b_experiment
 
-gate = run_exp7a_experiment(
+gate = run_exp7b_experiment(
     config=config,
     project_root=CLONE,
     feature_path=FEATURE_PATH,
@@ -152,14 +152,14 @@ print(json.dumps(gate, indent=2))
         markdown("## 6. Finalize the complete Drive artifacts and lightweight Codex bundle"),
         code(
             """
-from thesis_work.exp7a_harm_credibility import finalize_exp7a_artifacts
+from thesis_work.exp7b_causal_risk_control import finalize_exp7b_artifacts
 
 notebook_source = UPLOAD / "train_models_colab.ipynb"
 if notebook_source.is_file():
     shutil.copy2(notebook_source, OUTPUT_ROOT / "executed_notebook.ipynb")
-finalize_exp7a_artifacts(OUTPUT_ROOT)
+finalize_exp7b_artifacts(OUTPUT_ROOT)
 shutil.copytree(OUTPUT_ROOT, RECOVERY_ROOT, dirs_exist_ok=True)
-finalize_exp7a_artifacts(RECOVERY_ROOT)
+finalize_exp7b_artifacts(RECOVERY_ROOT)
 bundle = RECOVERY_ROOT / "codex_results_bundle.zip"
 if not bundle.is_file():
     raise FileNotFoundError(bundle)
@@ -171,7 +171,7 @@ print({"full_drive_artifacts": str(RECOVERY_ROOT), "lightweight_bundle": str(bun
             """
 from google.colab import files
 files.download(str(RECOVERY_ROOT / "codex_results_bundle.zip"))
-print("Place the downloaded EXP-007A bundle under results/incoming and ask Codex to verify it. Do not start EXP-008 from the notebook output alone.")
+print("Place the downloaded EXP-007B bundle under results/incoming and ask Codex to verify it. Do not tune or rescore the opened test population.")
 """
         ),
     ]

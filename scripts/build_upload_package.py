@@ -26,14 +26,15 @@ def sha256(path: Path) -> str:
 
 def main() -> None:
     config = yaml.safe_load(CONFIG_SOURCE.read_text(encoding="utf-8"))
-    if config.get("experiment", {}).get("id") != "EXP-007A":
-        raise RuntimeError("The active configuration is not EXP-007A.")
+    experiment_id = str(config.get("experiment", {}).get("id"))
+    if experiment_id not in {"EXP-007A", "EXP-007B"}:
+        raise RuntimeError("The active configuration is not a supported EXP-007 experiment.")
     cache_source = ROOT / config["data"]["feature_cache"]
     metadata_source = ROOT / config["data"]["metadata_file"]
     expected_cache_sha256 = config["data"]["expected_feature_cache_sha256"]
     expected_metadata_sha256 = config["data"]["expected_metadata_sha256"]
     if expected_cache_sha256 == "PENDING_AFTER_FROZEN_SIMULATION":
-        raise RuntimeError("EXP-007A cache identity has not been finalized.")
+        raise RuntimeError(f"{experiment_id} cache identity has not been finalized.")
     resolved = UPLOAD.resolve()
     if resolved.parent != ROOT.resolve() or resolved.name != "Upload":
         raise RuntimeError(f"Refusing unsafe Upload target: {resolved}")
@@ -43,12 +44,12 @@ def main() -> None:
     observed_cache_sha = sha256(cache_source)
     if observed_cache_sha != expected_cache_sha256:
         raise RuntimeError(
-            f"EXP-007A cache changed: {observed_cache_sha} != {expected_cache_sha256}"
+            f"{experiment_id} cache changed: {observed_cache_sha} != {expected_cache_sha256}"
         )
     observed_metadata_sha = sha256(metadata_source)
     if observed_metadata_sha != expected_metadata_sha256:
         raise RuntimeError(
-            f"EXP-007A metadata changed: {observed_metadata_sha} != {expected_metadata_sha256}"
+            f"{experiment_id} metadata changed: {observed_metadata_sha} != {expected_metadata_sha256}"
         )
     status = subprocess.run(
         ["git", "status", "--porcelain"],
@@ -58,7 +59,7 @@ def main() -> None:
         text=True,
     ).stdout.strip()
     if status:
-        raise RuntimeError("Build the EXP-007A Upload only from a clean committed worktree.")
+        raise RuntimeError(f"Build the {experiment_id} Upload only from a clean committed worktree.")
     commit = subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=ROOT,
@@ -76,12 +77,15 @@ def main() -> None:
         text=True,
     ).stdout.strip()
     if upstream != commit:
-        raise RuntimeError(f"Push EXP-007A before building Upload: HEAD={commit}, upstream={upstream}")
+        raise RuntimeError(
+            f"Push {experiment_id} before building Upload: HEAD={commit}, upstream={upstream}"
+        )
 
     if UPLOAD.exists():
         shutil.rmtree(UPLOAD)
     cache = UPLOAD / "feature_cache"
-    output = UPLOAD / "experiment_outputs_exp007a"
+    output_name = Path(config["runtime"]["drive_output_directory"]).name
+    output = UPLOAD / output_name
     cache.mkdir(parents=True)
     output.mkdir(parents=True)
     shutil.copy2(NOTEBOOK_SOURCE, UPLOAD / "train_models_colab.ipynb")
@@ -102,15 +106,15 @@ def main() -> None:
             )
     manifest = {
         "schema_version": 1,
-        "experiment_id": "EXP-007A",
-        "run_id": "exp007a_counterfactual_physics_harm",
+        "experiment_id": experiment_id,
+        "run_id": config["experiment"]["run_id"],
         "expected_commit": commit,
         "notebook": "train_models_colab.ipynb",
         "feature_cache": "feature_cache/multicondition_features.csv",
         "feature_cache_sha256": observed_cache_sha,
         "metadata": "feature_cache/multicondition_metadata.json",
         "metadata_sha256": observed_metadata_sha,
-        "empty_output_directory": "experiment_outputs_exp007a",
+        "empty_output_directory": output_name,
         "sha_editing_required": False,
         "file_count_excluding_manifest": len(inventory),
         "files": inventory,
@@ -118,7 +122,7 @@ def main() -> None:
     (UPLOAD / "UPLOAD_PACKAGE_MANIFEST.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
     )
-    print(f"Fresh EXP-007A Upload package prepared at {UPLOAD}")
+    print(f"Fresh {experiment_id} Upload package prepared at {UPLOAD}")
     print(f"Pinned pushed-source candidate: {commit}")
 
 

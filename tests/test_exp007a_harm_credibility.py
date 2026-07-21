@@ -64,7 +64,7 @@ def test_frozen_design_is_multicondition_and_cache_qualified() -> None:
     qualification = validate_exp7a_config(config, ROOT)
     assert qualification["status"] == "qualified"
     assert qualification["runs"] == 96
-    assert qualification["rows"] == 7772
+    assert qualification["rows"] == 8268
     assert qualification["minimum_snapshots_per_run"] == 5
     assert qualification["split_counts"] == {
         "train": 64,
@@ -78,7 +78,7 @@ def test_frozen_design_is_multicondition_and_cache_qualified() -> None:
     assert train["SD_SNR"].nunique() == 4
     assert set(
         scenarios.loc[scenarios["publication_split"] == "test", "simulator_seed"]
-    ) == {920071}
+    ) == {920072}
 
 
 def test_external_cache_uses_sibling_metadata(tmp_path: Path) -> None:

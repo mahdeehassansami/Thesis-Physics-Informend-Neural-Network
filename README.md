@@ -90,3 +90,21 @@ Feature caches are written under:
 ```text
 data/processed_features/
 ```
+
+## Current publication experiment
+
+The active Colab protocol is `EXP-007B`, preregistered in
+`research/EXP007B_PROTOCOL.md`. It confirms a prefix-local abstaining physics controller on a
+fresh seed-920072 simulator test population; the opened EXP-007A test is diagnostic-only and is
+excluded from the active cache.
+
+The notebook remains a thin controller over `src/thesis_work/`. Before Colab handoff, validate
+the workflow with:
+
+```powershell
+uv run python scripts/validate_exp007b_workflow.py
+```
+
+The prepared `Upload` directory contains the notebook, exact pushed commit, and the lightweight
+feature cache needed by Colab. Full checkpoints and run outputs remain in Google Drive; return
+the lightweight result bundle under `results/incoming/` for independent verification.
