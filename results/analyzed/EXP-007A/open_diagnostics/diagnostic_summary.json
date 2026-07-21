@@ -1,0 +1,55 @@
+{
+  "experiment_id": "EXP-007A",
+  "status": "open_data_diagnostic_only",
+  "confirmation_use_allowed": false,
+  "source_git_commit": "76d9f78227f8a8b9ff823c0883097d32d4edfc7e",
+  "causality_audit": {
+    "existing_selector_feature_aggregation": "complete_trajectory_mean",
+    "existing_score_unique_values_per_trajectory_candidate_max": 1,
+    "existing_selector_is_prefix_local": false,
+    "finding": "EXP-007A computes rolling evidence causally, then averages it across the complete trajectory before fitting and inference; the resulting intervention score is not available at the earlier prediction times to which it is applied."
+  },
+  "development_design": {
+    "held_out_unit": "complete_trajectory across all candidates and prefixes",
+    "outer_folds": 5,
+    "per_outer_fold": "48 fit trajectories, 16 threshold-calibration trajectories, 16 held-out trajectories",
+    "test_population_used_for_model_choice": false,
+    "mean_positive_regret_limit": 0.005,
+    "harm_margin": 0.01,
+    "harm_rate_limit": 0.1,
+    "coverage_interval": [
+      0.05,
+      0.9
+    ],
+    "maximum_physics_blend": 0.5
+  },
+  "selected_development_method": "logistic_safe",
+  "selected_development_metrics": {
+    "model": "logistic_safe",
+    "trajectory_seed_units": 400,
+    "macro_run_rmse": 0.17316882475596543,
+    "data_only_macro_run_rmse": 0.17628187035952395,
+    "relative_improvement_percent": 1.7659476820897761,
+    "mean_control_regret": -0.003113045603558493,
+    "mean_positive_control_regret": 0.0024259614096728103,
+    "harm_rate": 0.09,
+    "maximum_control_regret": 0.04838648656477404,
+    "mean_coverage": 0.2977571304398385,
+    "feasible_fold_fraction": 0.96,
+    "development_eligible": true
+  },
+  "opened_test_role": "exploratory stress audit only; not confirmation and not used for method selection",
+  "methodology_references": [
+    {
+      "title": "Conformal Risk Control",
+      "url": "https://arxiv.org/abs/2208.02814",
+      "use": "risk-control framing and explicit abstention conservativeness",
+      "claim_excluded": "No conformal guarantee is claimed for this diagnostic selector."
+    },
+    {
+      "title": "Selective Classification via One-Sided Prediction",
+      "url": "https://proceedings.mlr.press/v130/gangrade21a.html",
+      "use": "coverage-versus-risk abstention framing"
+    }
+  ]
+}
