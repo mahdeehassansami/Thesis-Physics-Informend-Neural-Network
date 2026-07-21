@@ -41,7 +41,7 @@ end
 features = sortrows(features, ["official_partition", "run_id", "sample_index"]);
 local_atomic_writetable(features, output_csv);
 
-counts = groupsummary(features, "official_partition", "numel", "run_id");
+counts = groupsummary(features, "official_partition");
 metadata = struct();
 metadata.schema_version = 1;
 metadata.experiment_id = "EXP-007A";

@@ -59,10 +59,13 @@ the complete simulator evidence to `saved results/run_07a/simulator/`.
    deleted with the temporary workspace. No cache or result artifact survived and no RUL/test
    evaluation occurred. The wrapper was corrected by invoking protected P-code inside a
    separate MATLAB function workspace. This changes no scenario, seed, model, target, or gate.
-3. The first cache-export attempt stopped before writing either output because MATLAB R2023a
-   requires a character vector, rather than a string scalar, when assigning one table variable
-   name by brace indexing. The exporter compatibility repair changes no raw data, feature
-   definition, identity mapping, split, model, target, or gate.
+3. The first cache-export attempt wrote no output because MATLAB R2023a requires a character
+   vector, rather than a string scalar, when assigning one table variable name by brace indexing.
+   The second wrote the atomic feature CSV but stopped before metadata because R2023a rejects
+   `numel` as the method in the used `groupsummary` call form. That incomplete CSV is preserved
+   under `saved results/run_07a/export_failure_02/` and cannot be treated as a qualified cache.
+   The exporter compatibility repairs select the equivalent default `GroupCount` and change no
+   raw data, feature definition, identity mapping, split, model, target, or gate.
 
 ## Colab workflow
 
