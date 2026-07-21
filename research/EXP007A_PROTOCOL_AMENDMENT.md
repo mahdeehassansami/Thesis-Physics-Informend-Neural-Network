@@ -3,7 +3,7 @@
 Status: predeclared corrective protocol; no EXP-007A simulation outcomes or neural results
 observed
 
-Protocol version: 0.2
+Protocol version: 0.2.1
 
 Date: 21 July 2026
 
@@ -63,11 +63,26 @@ The official CC BY 4.0 MATLAB simulator will generate 96 complete trajectories:
 - 16 validation trajectories: four per family; and
 - 16 fresh sealed-test trajectories: four per family.
 
-Training spans four loads, four speeds, four SNR levels, load variation, slip, and modulation
+Training spans four loads, four speeds, four SNR levels, load variation, and modulation
 settings in a balanced deterministic design. Validation and test conditions are distinct but
 inside the declared training ranges. Development/validation use simulator seed `420071`; the
 sealed test uses seed `920071`. The scenario file is authoritative and must be committed before
 simulation. Raw output is immutable derived evidence and is not committed.
+
+### Execution erratum 0.2.1
+
+The first full development invocation stopped inside the upstream protected
+`myfct_bearingSignalModelLocal` at scenario 48 with an array-index error after 47 complete raw
+signals. No sealed-test prediction or RUL result was evaluated. The failed raw population is
+preserved under `saved results/run_07a/simulation_failure_01/`.
+
+The official parameterization document defines slip as a constant impact-interarrival
+deviation and gives 1% as its example, but does not declare a supported range. EXP-006 completed
+all 40 scenarios at 1%. Version 0.2 had introduced 0.5%-2% slip variation, which is unrelated to
+the primary load/speed/SNR condition correction. Version 0.2.1 fixes every scenario at the
+previously validated 1% slip. Load, speed, SNR, load variation, modulation, all trajectory IDs,
+split membership, simulator seeds, model code, targets, and statistical gates remain unchanged.
+The revised scenario hash must be committed before regeneration.
 
 Condition evidence uses declared physical ranges and reference values. A zero-variance fitted
 standard deviation must never be used as an operating-shift denominator.

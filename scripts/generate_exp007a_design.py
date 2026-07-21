@@ -142,7 +142,10 @@ def _row(
         "SD_degradation_progression": family,
         "SD_gamma_process_alpha": gamma_alpha if family == "gamma" else "",
         "SD_gamma_process_beta": 10 if family == "gamma" else "",
-        "SD_slip_mean": [0.005, 0.01, 0.015, 0.02][(replicate - 1) % 4],
+        # The official documentation gives an interpretation but no supported range.
+        # Keep the 1% value that completed all EXP-006 trajectories; condition diversity
+        # comes from load, speed, noise, load variation, and frequency modulation.
+        "SD_slip_mean": 0.01,
         "SD_SDOF_m": 15000,
         "SD_SDOF_k": 3.5e12,
         "SD_SDOF_c": 1.0e7,

@@ -4,7 +4,7 @@ Status: implementation frozen before simulator generation
 
 Experiment ID: `EXP-007A`
 
-Protocol: `research/EXP007A_PROTOCOL_AMENDMENT.md`, version 0.2
+Protocol: `research/EXP007A_PROTOCOL_AMENDMENT.md`, version 0.2.1
 
 ## Purpose
 
@@ -17,12 +17,14 @@ misalignment between law correctness and RUL harm.
 
 - Scenario file: `configs/exp007a_multicondition_scenarios.csv`
 - Split file: `configs/exp007a_data_split.json`
-- Scenario SHA-256: `051a54a2c28f898695702caf23eb3bc2de5f368f6dceb5fabbdcf53c2170d397`
+- Scenario SHA-256: `35c8968f392ecaefcb1bacd69aef0db364824b8dd17d88ca1e380e5b67754e48`
 - Training: 64 trajectories, 16 per progression family
 - Validation: 16 trajectories, four per family
 - Fresh sealed test: 16 trajectories, four per family
 - Development/validation simulator seed: `420071`
 - Sealed-test simulator seed: `920071`
+- Slip: fixed at the previously validated 1% after the preserved upstream array-index failure;
+  see the protocol erratum
 
 Generate raw derived results only after committing the method, protocol, scenarios, split, and
 gates. Use:

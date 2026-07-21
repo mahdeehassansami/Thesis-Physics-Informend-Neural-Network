@@ -171,8 +171,8 @@ def validate_exp7a_config(
     experiment = config.get("experiment", {})
     if experiment.get("id") != "EXP-007A":
         raise ValueError("The active configuration is not EXP-007A.")
-    if experiment.get("protocol_version") != 0.2:
-        raise ValueError("EXP-007A requires protocol version 0.2.")
+    if experiment.get("protocol_version") != "0.2.1":
+        raise ValueError("EXP-007A requires protocol version 0.2.1.")
     if config["data"].get("target_test_access") != "evaluation_only_after_development_gate":
         raise ValueError("Test RUL must remain evaluation-only after development qualification.")
     if config["credibility"].get("freeze_before_test") is not True:

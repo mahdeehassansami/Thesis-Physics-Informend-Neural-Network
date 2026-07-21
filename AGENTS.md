@@ -1481,14 +1481,14 @@ calibration, or target-alignment failures.
 EXP-007A is the authorized corrective experiment. It is not EXP-008 and must not use the opened
 EXP-007 test population as confirmation evidence.
 
-- Protocol version 0.2 is frozen in `research/EXP007A_PROTOCOL_AMENDMENT.md`.
+- Protocol version 0.2.1 is frozen in `research/EXP007A_PROTOCOL_AMENDMENT.md`.
 - The historical EXP-007 configuration and notebook are archived as
   `configs/experiment_exp007.yaml` and `notebooks/train_models_colab_exp007.ipynb`.
 - The active configuration is `configs/experiment.yaml` with experiment ID `EXP-007A`.
 - The tracked scenario design contains 64 training, 16 validation, and 16 fresh sealed-test
   trajectories across four progression families. Development uses simulator seed `420071` and
   test uses seed `920071`.
-- Training spans multiple load, speed, SNR, load-variation, slip, and modulation conditions.
+- Training spans multiple load, speed, SNR, load-variation, and modulation conditions.
   Validation and test settings are distinct but remain inside declared training support.
 - Candidate physics models clone the identical best data-only checkpoint and are fine-tuned
   with explicit differentiable prior-value, prior-rate, and monotonic losses. The empirical
@@ -1504,3 +1504,7 @@ EXP-007 test population as confirmation evidence.
   `results/analyzed/EXP-007/open_diagnostics/`. They are diagnostic only.
 - ANSYS remains deferred. EXP-008 remains blocked until EXP-007A passes every frozen gate and
   its downloaded artifacts are independently verified.
+- The first version-0.2 development simulation failed in upstream protected signal code at
+  scenario 48. Its partial raw evidence is preserved at
+  `saved results/run_07a/simulation_failure_01/`. Erratum 0.2.1 fixes slip at the EXP-006-validated
+  1% and changes no split, seed, primary condition, model, target, or gate.

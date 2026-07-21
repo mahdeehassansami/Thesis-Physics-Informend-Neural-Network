@@ -3,7 +3,7 @@
   "created_for": "EXP-007A",
   "design_policy": "Complete simulator trajectories; multi-condition source support; separate development and fresh sealed-test simulator RNG seeds.",
   "scenario_file": "configs/exp007a_multicondition_scenarios.csv",
-  "scenario_sha256": "051a54a2c28f898695702caf23eb3bc2de5f368f6dceb5fabbdcf53c2170d397",
+  "scenario_sha256": "35c8968f392ecaefcb1bacd69aef0db364824b8dd17d88ca1e380e5b67754e48",
   "development_simulator_seed": 420071,
   "sealed_test_simulator_seed": 920071,
   "train_runs": [

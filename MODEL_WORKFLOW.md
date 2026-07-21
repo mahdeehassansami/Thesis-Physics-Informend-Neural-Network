@@ -161,7 +161,7 @@ EXP-007A is the predeclared correction, not EXP-008. The active configuration is
 `configs/experiment_exp007.yaml` and `notebooks/train_models_colab_exp007.ipynb`.
 
 The official MATLAB scenario design contains 96 trajectories with varied load, speed, SNR,
-load variability, slip, and modulation. Training has 64 trajectories, validation 16, and the
+load variability, and modulation. Training has 64 trajectories, validation 16, and the
 fresh sealed test 16. Development and test use separate simulator seeds. Operating-condition
 evidence uses fixed physical ranges rather than a fitted standard deviation.
 
@@ -175,3 +175,9 @@ optimization seeds separately, aggregates AUROC within seed, applies per-seed co
 and verifies metrics after 17-digit probability serialization. The frozen protocol is
 `research/EXP007A_PROTOCOL_AMENDMENT.md`; reproduction guidance is in
 `research/EXP007A_RUNBOOK.md`.
+
+The first version-0.2 simulator invocation failed inside upstream protected signal-generation
+code at development scenario 48 after 47 complete signals. The partial population is preserved
+under `saved results/run_07a/simulation_failure_01/`. Protocol erratum 0.2.1 fixes slip at the
+previously validated 1%; it does not change conditions, membership, seeds, models, targets, or
+gates.

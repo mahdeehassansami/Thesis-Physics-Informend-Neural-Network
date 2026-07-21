@@ -101,11 +101,16 @@ started_at = datetime("now", "TimeZone", "UTC");
 Main_Setup_Simulation;
 finished_at = datetime("now", "TimeZone", "UTC");
 
-created = dir(fullfile(working_directory, "*EXP007A_Results_" + string(seed)));
-created = created([created.isdir]);
+post_run_directory = string(pwd);
+entries = dir(post_run_directory);
+entries = entries([entries.isdir]);
+entry_names = string({entries.name});
+expected_fragment = "EXP007A_Results_" + string(seed);
+created = entries(contains(entry_names, expected_fragment));
 if numel(created) ~= 1
-    error("EXP007A:SimulatorOutput", "Expected one seed result directory, found %d.", ...
-        numel(created));
+    error("EXP007A:SimulatorOutput", ...
+        "Expected one new seed result directory under %s, found %d. Entries: %s", ...
+        post_run_directory, numel(created), strjoin(entry_names, ", "));
 end
 
 run_label = "exp007a_seed_" + string(seed);
