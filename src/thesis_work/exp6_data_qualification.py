@@ -419,6 +419,72 @@ def physics_applicability_rows(priors: dict[str, Any]) -> pd.DataFrame:
     return pd.DataFrame(rows).sort_values(["prior", "dataset"]).reset_index(drop=True)
 
 
+def _run_summary(frame: pd.DataFrame, split_definition: dict[str, Any]) -> pd.DataFrame:
+    membership = {
+        str(run_id): partition
+        for partition in ("train", "validation", "test")
+        for run_id in split_definition[f"{partition}_runs"]
+    }
+    records: list[dict[str, Any]] = []
+    for run_id, run in frame.groupby("run_id", sort=True):
+        ordered = run.sort_values("sample_index")
+
+        def first(column: str, default: Any = "") -> Any:
+            if column not in ordered:
+                return default
+            value = ordered[column].iloc[0]
+            return default if pd.isna(value) else value
+
+        records.append(
+            {
+                "run_id": str(run_id),
+                "publication_split": membership[str(run_id)],
+                "source_partition": str(first("official_partition")),
+                "condition_id": str(first("condition_id")),
+                "truth_available": bool(_truth_values(ordered["truth_available"]).pop()),
+                "degradation_family": str(first("degradation_family")),
+                "fault_location": str(first("fault_location")),
+                "snapshots": len(ordered),
+                "duration_minutes": float(ordered["elapsed_minutes"].max()),
+                "load_n": float(first("load_n", np.nan)),
+                "speed_rpm": float(first("speed_rpm", np.nan)),
+                "snr_db": float(first("snr_db", np.nan)),
+                "minimum_degradation_value": float(
+                    ordered["degradation_value"].min()
+                ),
+                "maximum_degradation_value": float(
+                    ordered["degradation_value"].max()
+                ),
+                "supports_sequence_length_8": len(ordered) > 8,
+            }
+        )
+    return pd.DataFrame(records).sort_values(
+        ["publication_split", "run_id"]
+    ).reset_index(drop=True)
+
+
+def _controlled_family_summary(run_summary: pd.DataFrame) -> pd.DataFrame:
+    return (
+        run_summary.groupby(
+            ["publication_split", "degradation_family"], as_index=False
+        )
+        .agg(
+            runs=("run_id", "size"),
+            snapshots=("snapshots", "sum"),
+            minimum_snapshots=("snapshots", "min"),
+            median_snapshots=("snapshots", "median"),
+            maximum_snapshots=("snapshots", "max"),
+            median_duration_minutes=("duration_minutes", "median"),
+            minimum_load_n=("load_n", "min"),
+            maximum_load_n=("load_n", "max"),
+            speed_rpm=("speed_rpm", "first"),
+            snr_db=("snr_db", "first"),
+        )
+        .sort_values(["publication_split", "degradation_family"])
+        .reset_index(drop=True)
+    )
+
+
 def _git_state(root: Path) -> dict[str, Any]:
     commit = subprocess.run(
         ["git", "rev-parse", "HEAD"],
@@ -567,10 +633,32 @@ def run_qualification(paths: QualificationPaths) -> dict[str, Any]:
             f"one overview MAT file; found {controlled_raw['files']}."
         )
 
-    applicability = physics_applicability_rows(priors)
     paths.output_dir.mkdir(parents=True, exist_ok=True)
+    supplied_frame = pd.read_csv(paths.supplied_cache_path)
+    controlled_frame = pd.read_csv(paths.controlled_cache_path)
+    supplied_runs = _run_summary(
+        supplied_frame, split["supplied_synthetic_v2"]
+    )
+    controlled_runs = _run_summary(
+        controlled_frame, split["controlled_synthetic"]
+    )
+    controlled_families = _controlled_family_summary(controlled_runs)
+    supplied_runs_path = paths.output_dir / "supplied_run_summary.csv"
+    controlled_runs_path = paths.output_dir / "controlled_run_summary.csv"
+    controlled_families_path = paths.output_dir / "controlled_family_summary.csv"
+    supplied_runs.to_csv(supplied_runs_path, index=False)
+    controlled_runs.to_csv(controlled_runs_path, index=False)
+    controlled_families.to_csv(controlled_families_path, index=False)
+
+    applicability = physics_applicability_rows(priors)
     applicability_path = paths.output_dir / "physics_applicability.csv"
     applicability.to_csv(applicability_path, index=False)
+    analysis_artifacts = {
+        "physics_applicability": applicability_path,
+        "supplied_run_summary": supplied_runs_path,
+        "controlled_run_summary": controlled_runs_path,
+        "controlled_family_summary": controlled_families_path,
+    }
 
     dataset_manifest = {
         "schema_version": 1,
@@ -600,6 +688,14 @@ def run_qualification(paths: QualificationPaths) -> dict[str, Any]:
         "split_sha256": inventory["publication_split"]["sha256"],
         "physics_priors_sha256": inventory["physics_priors"]["sha256"],
         "scenario_sha256": inventory["controlled_scenarios"]["sha256"],
+        "analysis_artifacts": {
+            name: {
+                "relative_path": path.relative_to(paths.project_root).as_posix(),
+                "bytes": path.stat().st_size,
+                "sha256": sha256_file(path),
+            }
+            for name, path in analysis_artifacts.items()
+        },
     }
     manifest_path = paths.output_dir / "dataset_manifest.json"
     manifest_path.write_text(
@@ -680,6 +776,11 @@ def run_qualification(paths: QualificationPaths) -> dict[str, Any]:
         ),
         "dataset_manifest_sha256": sha256_file(manifest_path),
         "physics_applicability_sha256": sha256_file(applicability_path),
+        "supplied_run_summary_sha256": sha256_file(supplied_runs_path),
+        "controlled_run_summary_sha256": sha256_file(controlled_runs_path),
+        "controlled_family_summary_sha256": sha256_file(
+            controlled_families_path
+        ),
         "success_criteria_sha256": sha256_file(criteria_path),
     }
     summary_path = paths.output_dir / "qualification_summary.json"
