@@ -49,6 +49,17 @@ matlab -batch "addpath('scripts/matlab'); exp007a_export_multicondition_results(
 Do not modify raw result MAT files. Record the cache hash in the active configuration and copy
 the complete simulator evidence to `saved results/run_07a/simulator/`.
 
+### Preparation execution failures
+
+1. Version 0.2 stopped in upstream signal code at development scenario 48. The partial 1.03 GB
+   population is preserved under `saved results/run_07a/simulation_failure_01/`; protocol
+   erratum 0.2.1 fixed slip at the previously validated 1%.
+2. The first complete 0.2.1 invocation computed all 96 trajectories, but the wrapper allowed
+   upstream P-code to overwrite its generic destination variable, so final raw directories were
+   deleted with the temporary workspace. No cache or result artifact survived and no RUL/test
+   evaluation occurred. The wrapper was corrected by invoking protected P-code inside a
+   separate MATLAB function workspace. This changes no scenario, seed, model, target, or gate.
+
 ## Colab workflow
 
 After cache qualification, final validation, commit, and push:

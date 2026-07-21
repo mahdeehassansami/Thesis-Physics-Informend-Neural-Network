@@ -90,28 +90,8 @@ parameter_workbook = fullfile(working_directory, ...
     "EXP007A_Simulation_Parameters_" + string(seed) + ".xlsx");
 writetable(parameter_table, parameter_workbook);
 
-previous_directory = string(pwd);
-directory_cleanup = onCleanup(@() cd(previous_directory));
-cd(working_directory);
-rng(seed, "twister");
-saveSignal = 1; %#ok<NASGU> Upstream P-code reads workspace variables.
-nameParameterList = "EXP007A_Simulation_Parameters_" + string(seed) + ".xlsx"; %#ok<NASGU>
-nameFolderResults = "EXP007A_Results_" + string(seed); %#ok<NASGU>
-started_at = datetime("now", "TimeZone", "UTC");
-Main_Setup_Simulation;
-finished_at = datetime("now", "TimeZone", "UTC");
-
-post_run_directory = string(pwd);
-entries = dir(post_run_directory);
-entries = entries([entries.isdir]);
-entry_names = string({entries.name});
-expected_fragment = "EXP007A_Results_" + string(seed);
-created = entries(contains(entry_names, expected_fragment));
-if numel(created) ~= 1
-    error("EXP007A:SimulatorOutput", ...
-        "Expected one new seed result directory under %s, found %d. Entries: %s", ...
-        post_run_directory, numel(created), strjoin(entry_names, ", "));
-end
+[created_folder, started_at, finished_at] = local_invoke_upstream( ...
+    working_directory, seed);
 
 run_label = "exp007a_seed_" + string(seed);
 if smoke_only
@@ -122,7 +102,7 @@ if isfolder(result_directory)
     error("EXP007A:ExistingOutput", "Refusing to overwrite simulator output: %s", ...
         result_directory);
 end
-movefile(fullfile(created(1).folder, created(1).name), result_directory);
+movefile(created_folder, result_directory);
 
 metadata = struct();
 metadata.schema_version = 1;
@@ -144,9 +124,41 @@ metadata.simulator_citation = ...
     "10.3850/978-981-94-3281-3_ESREL-SRA-E2025-P8028-cd";
 local_write_json(metadata, fullfile(result_directory, "exp007a_simulator_run.json"));
 
-clear directory_cleanup;
 clear cleanup;
 local_remove_working_directory(working_directory);
+end
+
+
+function [created_folder, started_at, finished_at] = local_invoke_upstream( ...
+        runtime_directory_argument, seed_argument)
+% Isolate the upstream script because it mutates variables in its caller workspace.
+previous_directory_internal = string(pwd);
+directory_cleanup_internal = onCleanup(@() cd(previous_directory_internal));
+cd(runtime_directory_argument);
+rng(seed_argument, "twister");
+saveSignal = 1; %#ok<NASGU> Upstream P-code reads these exact workspace names.
+nameParameterList = ...
+    "EXP007A_Simulation_Parameters_" + string(seed_argument) + ".xlsx"; %#ok<NASGU>
+nameFolderResults = "EXP007A_Results_" + string(seed_argument); %#ok<NASGU>
+started_at = datetime("now", "TimeZone", "UTC");
+Main_Setup_Simulation;
+finished_at = datetime("now", "TimeZone", "UTC");
+
+post_run_directory_internal = string(pwd);
+entries_internal = dir(post_run_directory_internal);
+entries_internal = entries_internal([entries_internal.isdir]);
+entry_names_internal = string({entries_internal.name});
+expected_fragment_internal = "EXP007A_Results_" + string(seed_argument);
+created_internal = entries_internal(contains(entry_names_internal, expected_fragment_internal));
+if numel(created_internal) ~= 1
+    error("EXP007A:SimulatorOutput", ...
+        "Expected one new seed result directory under %s, found %d. Entries: %s", ...
+        post_run_directory_internal, numel(created_internal), ...
+        strjoin(entry_names_internal, ", "));
+end
+created_folder = string(fullfile(created_internal(1).folder, created_internal(1).name));
+clear directory_cleanup_internal;
+cd(previous_directory_internal);
 end
 
 

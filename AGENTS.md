@@ -1508,3 +1508,7 @@ EXP-007 test population as confirmation evidence.
   scenario 48. Its partial raw evidence is preserved at
   `saved results/run_07a/simulation_failure_01/`. Erratum 0.2.1 fixes slip at the EXP-006-validated
   1% and changes no split, seed, primary condition, model, target, or gate.
+- A subsequent 0.2.1 invocation computed all 96 scenarios but retained no raw result because the
+  upstream P-code overwrote the wrapper's generic output variable before cleanup. No cache or
+  test result survived. The wrapper now isolates the P-code in a separate function workspace;
+  this is an execution repair with no scientific-condition change.
