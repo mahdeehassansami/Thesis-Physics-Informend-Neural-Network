@@ -450,7 +450,38 @@ def _relative_inventory(root: Path, paths: dict[str, Path]) -> dict[str, Any]:
     return inventory
 
 
+def _tree_fingerprint(root: Path, pattern: str) -> dict[str, Any]:
+    files = sorted(path for path in root.rglob(pattern) if path.is_file())
+    if not files:
+        raise FileNotFoundError(f"No files matching {pattern} were found under {root}.")
+    entries = []
+    combined = hashlib.sha256()
+    total_bytes = 0
+    for path in files:
+        relative = path.relative_to(root).as_posix()
+        digest = sha256_file(path)
+        size = path.stat().st_size
+        total_bytes += size
+        combined.update(f"{relative}:{size}:{digest}\n".encode())
+        entries.append(
+            {
+                "relative_path": relative,
+                "bytes": size,
+                "sha256": digest,
+            }
+        )
+    return {
+        "root": root.as_posix(),
+        "pattern": pattern,
+        "files": len(entries),
+        "bytes": total_bytes,
+        "combined_sha256": combined.hexdigest(),
+        "inventory": entries,
+    }
+
+
 def run_qualification(paths: QualificationPaths) -> dict[str, Any]:
+    source_git_state = _git_state(paths.project_root)
     config = _load_json(paths.config_path)
     split = _load_json(paths.split_path)
     priors = yaml.safe_load(paths.priors_path.read_text(encoding="utf-8"))
@@ -478,6 +509,12 @@ def run_qualification(paths: QualificationPaths) -> dict[str, Any]:
             config["controlled_benchmark"]["progression_families"]
         ),
     )
+    supplied_summary["path"] = paths.supplied_cache_path.relative_to(
+        paths.project_root
+    ).as_posix()
+    controlled_summary["path"] = paths.controlled_cache_path.relative_to(
+        paths.project_root
+    ).as_posix()
 
     input_paths = {
         "supplied_data": _resolve_repository_path(
@@ -520,6 +557,15 @@ def run_qualification(paths: QualificationPaths) -> dict[str, Any]:
         config["randomness"]["scenario_generation_seed"]
     ):
         raise ValueError("The controlled simulator seed differs from the configuration.")
+    controlled_raw = _tree_fingerprint(paths.controlled_results_path, "*.mat")
+    controlled_raw["root"] = paths.controlled_results_path.relative_to(
+        paths.project_root
+    ).as_posix()
+    if controlled_raw["files"] != 41:
+        raise ValueError(
+            "The controlled simulator result must contain 40 signal MAT files and "
+            f"one overview MAT file; found {controlled_raw['files']}."
+        )
 
     applicability = physics_applicability_rows(priors)
     paths.output_dir.mkdir(parents=True, exist_ok=True)
@@ -530,7 +576,7 @@ def run_qualification(paths: QualificationPaths) -> dict[str, Any]:
         "schema_version": 1,
         "experiment_id": "EXP-006",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "git": _git_state(paths.project_root),
+        "git": source_git_state,
         "environment": {
             "python": sys.version,
             "platform": platform.platform(),
@@ -543,6 +589,7 @@ def run_qualification(paths: QualificationPaths) -> dict[str, Any]:
         "scenario_summary": scenario_summary,
         "supplied_cache": supplied_summary,
         "controlled_cache": controlled_summary,
+        "controlled_raw_artifacts": controlled_raw,
         "simulator_run_manifest": {
             "relative_path": simulator_manifests[0]
             .relative_to(paths.project_root)
@@ -590,6 +637,14 @@ def run_qualification(paths: QualificationPaths) -> dict[str, Any]:
                 f"{controlled_summary['runs']} runs, "
                 f"{controlled_summary['snapshots']} snapshots, families "
                 f"{controlled_summary['degradation_families']}"
+            ),
+        },
+        {
+            "criterion": "Controlled raw simulator artifacts are fingerprinted",
+            "passed": controlled_raw["files"] == 41,
+            "evidence": (
+                f"41 MAT files, {controlled_raw['bytes']} bytes, combined SHA-256 "
+                f"{controlled_raw['combined_sha256']}"
             ),
         },
         {
@@ -694,10 +749,13 @@ measured units and a simulation-to-real gap analysis.
 """
     (paths.output_dir / "analysis.md").write_text(analysis, encoding="utf-8")
 
+    short_run_count = len(supplied["runs_not_supporting_sequence_length_8"])
+    short_run_word = "trajectory" if short_run_count == 1 else "trajectories"
+    short_run_verb = "has" if short_run_count == 1 else "have"
     issues = f"""# EXP-006 issues and limitations
 
 - Supplied v2 progression-family and fault labels are intentionally unavailable.
-- {len(supplied['runs_not_supporting_sequence_length_8'])} supplied trajectories have at
+- {short_run_count} supplied {short_run_word} {short_run_verb} at
   most eight snapshots and cannot support the old fixed sequence construction.
 - The simulator is distributed primarily as MATLAB P-code. Its inputs and outputs are
   auditable, but internal implementation lines cannot be independently inspected.

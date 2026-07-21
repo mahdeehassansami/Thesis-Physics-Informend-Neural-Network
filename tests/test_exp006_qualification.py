@@ -9,6 +9,7 @@ import pytest
 import yaml
 
 from thesis_work.exp6_data_qualification import (
+    _tree_fingerprint,
     physics_applicability_rows,
     qualification_paths,
     validate_feature_cache,
@@ -143,3 +144,17 @@ def test_exp006_paths_cannot_escape_repository() -> None:
     assert paths.config_path == ROOT / "configs" / "exp006_data_qualification.json"
     with pytest.raises(ValueError, match="escapes"):
         qualification_paths(ROOT, "../outside.json")
+
+
+def test_tree_fingerprint_is_order_stable(tmp_path: Path) -> None:
+    (tmp_path / "b.mat").write_bytes(b"b")
+    (tmp_path / "a.mat").write_bytes(b"a")
+    first = _tree_fingerprint(tmp_path, "*.mat")
+    second = _tree_fingerprint(tmp_path, "*.mat")
+    assert first["files"] == 2
+    assert first["bytes"] == 2
+    assert first["combined_sha256"] == second["combined_sha256"]
+    assert [item["relative_path"] for item in first["inventory"]] == [
+        "a.mat",
+        "b.mat",
+    ]
