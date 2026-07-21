@@ -1,0 +1,486 @@
+{
+  "analysis_artifacts": {
+    "controlled_family_summary": {
+      "bytes": 1320,
+      "relative_path": "results/analyzed/EXP-006/controlled_family_summary.csv",
+      "sha256": "9be49431c195de0436def2623f387a7b28d632d375579fb85e91c62701864cf1"
+    },
+    "controlled_run_summary": {
+      "bytes": 6042,
+      "relative_path": "results/analyzed/EXP-006/controlled_run_summary.csv",
+      "sha256": "8aa57822a4a0908b2159d1a5dd7f8ada84ba724703914a891048e40ff49a056d"
+    },
+    "physics_applicability": {
+      "bytes": 6709,
+      "relative_path": "results/analyzed/EXP-006/physics_applicability.csv",
+      "sha256": "a054a4412a9e05f357aafa750973f742f8dbb6f310b1dd9a4722ba6d6a2808de"
+    },
+    "supplied_run_summary": {
+      "bytes": 3290,
+      "relative_path": "results/analyzed/EXP-006/supplied_run_summary.csv",
+      "sha256": "f5589be9290764575dd87da8b54204845976456a9d25ba19139ccc381f26328d"
+    }
+  },
+  "controlled_cache": {
+    "bytes": 2055221,
+    "degradation_families": [
+      "gamma",
+      "linear_increasing",
+      "progressively_increasing",
+      "step_like"
+    ],
+    "maximum_snapshots_per_run": 305,
+    "minimum_snapshots_per_run": 20,
+    "path": "data/processed_features/publication/exp006/controlled_synthetic_features.csv",
+    "runs": 40,
+    "runs_not_supporting_sequence_length_8": [],
+    "sha256": "3199282d5abf674538797b41dc97240825cf6ec80853dffb5c9f8ca4f45bfdae",
+    "snapshots": 3997,
+    "truth_available": true
+  },
+  "controlled_raw_artifacts": {
+    "bytes": 885145546,
+    "combined_sha256": "e95127afa4a4cd8791b2351e878e7d8a1fe16e908cb71035e41cd8095276f30b",
+    "files": 41,
+    "inventory": [
+      {
+        "bytes": 23249816,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_gamma_test_01.mat",
+        "sha256": "2bef84f952a12b08f3faf5890e60cfe2cba49374295e171db233ecc8344da398"
+      },
+      {
+        "bytes": 7525399,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_gamma_test_02.mat",
+        "sha256": "d3e28b080ce59911e11ffc4a45d55eabad108f205ddeeab89e2aa4bc171cd149"
+      },
+      {
+        "bytes": 6197746,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_gamma_train_01.mat",
+        "sha256": "f5f08d26ebebd717e397ae30da0adf601cc0754b1c8630bc2e3ff772a28a299b"
+      },
+      {
+        "bytes": 32766590,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_gamma_train_02.mat",
+        "sha256": "8b02170cdfbfdce194593b344a90367e009b418d4cb7f83e627638c253254fcd"
+      },
+      {
+        "bytes": 10633342,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_gamma_train_03.mat",
+        "sha256": "66ed0826013b1bf04ca9efedb76ba3f1fbf5b36f358cfd283534b5cc898f6bc1"
+      },
+      {
+        "bytes": 12394558,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_gamma_train_04.mat",
+        "sha256": "b140bf5660f5d26118ffb40443a3c1005e4550565549fc72357b0f0a50a13a13"
+      },
+      {
+        "bytes": 19055218,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_gamma_train_05.mat",
+        "sha256": "bbd2df2101f4b81336e66239ba5b37720522b9b99fbbe7c12160a09b592aed17"
+      },
+      {
+        "bytes": 23235925,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_gamma_train_06.mat",
+        "sha256": "ec4c182562b2251ddf71e305cb30f3bf97deb890c3f3e96fcc35c614e9676875"
+      },
+      {
+        "bytes": 11739832,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_gamma_validation_01.mat",
+        "sha256": "b7cbdcf51e8e9ad7b1f7d1a5b042fb00267517c237d6f0c6cc1ec6f5876c31a8"
+      },
+      {
+        "bytes": 10415638,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_gamma_validation_02.mat",
+        "sha256": "c120f713b18d824b7b46fb72e8432df49e7d3523c42bddb708d6285eddb91ee2"
+      },
+      {
+        "bytes": 4640294,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_linear_test_01.mat",
+        "sha256": "4fd4de7ae7ce6921620b9afea750a15f35e3fda3e80b1879ee8de496d01fa681"
+      },
+      {
+        "bytes": 19643343,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_linear_test_02.mat",
+        "sha256": "9b49dbff6026eecbc53343f815ccdd8d208ba0e99a7d35f8e7f1b372683b2666"
+      },
+      {
+        "bytes": 5087780,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_linear_train_01.mat",
+        "sha256": "15f60d05eb043e09ea691db744abd774d10fb867df38ece80adb5e743b24924f"
+      },
+      {
+        "bytes": 28769008,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_linear_train_02.mat",
+        "sha256": "22cdf35de39626c0ac66dba3db8ed49b7b1ec4793ff7c5ed9ffc927201acdc0a"
+      },
+      {
+        "bytes": 4859176,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_linear_train_03.mat",
+        "sha256": "a97230f0af329c3a5cb24f567f8f5eb5fba4d28b250b8332b51fa443b7cb24c3"
+      },
+      {
+        "bytes": 32531026,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_linear_train_04.mat",
+        "sha256": "d8f891e122bb6938471dac8636dea84372bc841f3c743a65c82811ec8a8e791a"
+      },
+      {
+        "bytes": 25171698,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_linear_train_05.mat",
+        "sha256": "94be68a5e35b34f541e6d5159cca14347c77d3269346ec9ce98dc4da0bacc3cd"
+      },
+      {
+        "bytes": 67446848,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_linear_train_06.mat",
+        "sha256": "088466afee765a94dbcd5e0308415e974e92439b88c324e7b3047d0cdd3db5e5"
+      },
+      {
+        "bytes": 7963885,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_linear_validation_01.mat",
+        "sha256": "067a16fa46729024e6bf5638f105d3846b35dab4d38e2bbf6736f3a50a819179"
+      },
+      {
+        "bytes": 15484565,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_linear_validation_02.mat",
+        "sha256": "d862d9890394426abeaa1cd7216e38c3eed4cb677a3e188f6012fe84e19f6645"
+      },
+      {
+        "bytes": 18600305,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_progressive_test_01.mat",
+        "sha256": "8c789604dccaca885306251a7bdc1e3a859ec40972d5f6579248f41caf6a47b5"
+      },
+      {
+        "bytes": 7529605,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_progressive_test_02.mat",
+        "sha256": "7f473182d4c74736c89cf2067f4d7ad9802bcf411faa54e06edc6b1e58e979a0"
+      },
+      {
+        "bytes": 58077246,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_progressive_train_01.mat",
+        "sha256": "f0340fa30b5330301c3d5a48172f243734bdad884a71afda7693366b6349d97a"
+      },
+      {
+        "bytes": 61343920,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_progressive_train_02.mat",
+        "sha256": "b8432f966a3814406f875174021835b822fa372359daf14515cbc64a5decaa5d"
+      },
+      {
+        "bytes": 20825978,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_progressive_train_03.mat",
+        "sha256": "8c67787e802ddf865c6d088288fb1bb651ff314acf7bd2bc502c5fabafdec3f6"
+      },
+      {
+        "bytes": 11970227,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_progressive_train_04.mat",
+        "sha256": "54d84892e7332ed6eaa2fbb944b10a355cb8c5200ab4cdee38c9bd599bffc667"
+      },
+      {
+        "bytes": 53421303,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_progressive_train_05.mat",
+        "sha256": "7cc21ac531fe9d743a5833a88457a94b56a98c97a7c9a05c2abc30da3f94cdc5"
+      },
+      {
+        "bytes": 39432683,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_progressive_train_06.mat",
+        "sha256": "00fe5aad52c3ec4bd5c4f293b7b4f0a1fc6fb10db041eb6d3c3ba78837587a81"
+      },
+      {
+        "bytes": 20609949,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_progressive_validation_01.mat",
+        "sha256": "5d922df35b815428a032a711194d16c5b1b80a157766869fc50a0d9c19003e44"
+      },
+      {
+        "bytes": 25014041,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_progressive_validation_02.mat",
+        "sha256": "e85b95f1fdf26a3353f1ca788e56c91a329ed57529ef85cbfb0e7b91c4da6bc9"
+      },
+      {
+        "bytes": 4435149,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_step_test_01.mat",
+        "sha256": "9a6631b72a7ee7bbfd56cc6cd0ea2d0782a4528f4299a9c91285b9d2cf0488e4"
+      },
+      {
+        "bytes": 11311185,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_step_test_02.mat",
+        "sha256": "26475bbf5fe4717cf6d472bb3fe35b5d938561da55b979ffa62f602a5635b44b"
+      },
+      {
+        "bytes": 28597027,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_step_train_01.mat",
+        "sha256": "b83620f1d267521d131dc3c89ba03a018425a8abd506d175f214c75dc3926393"
+      },
+      {
+        "bytes": 15967079,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_step_train_02.mat",
+        "sha256": "8f1a65139bac10e77e4f0e9b2f6cf716cca5a27a90ad58e68178d37d8b898327"
+      },
+      {
+        "bytes": 25257252,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_step_train_03.mat",
+        "sha256": "14f60f29f9d2046bcdcbf3c180cdf89f691e7e86b4bf13c8e3521f9ade302fae"
+      },
+      {
+        "bytes": 22171804,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_step_train_04.mat",
+        "sha256": "62d2c298a12b1e77b8067ad9d748c4939ebd02a0cdb01960d3afd5326272c805"
+      },
+      {
+        "bytes": 42515717,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_step_train_05.mat",
+        "sha256": "aeffedac1d346028218c8c3fadbd8a6ae978cc6d878316241bd3e1cd607d47e5"
+      },
+      {
+        "bytes": 16398926,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_step_train_06.mat",
+        "sha256": "c9eb14f47ad15e430ddd1ac3989d0a1bd90c3e56dfce8362a120442ce9f4e7f2"
+      },
+      {
+        "bytes": 15297434,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_step_validation_01.mat",
+        "sha256": "e6083e26d9b556a8c0426f1db65faf3ab1104b0f086767f3f5b23086e6d7bd7b"
+      },
+      {
+        "bytes": 17515615,
+        "relative_path": "exp006_controlled_seed_42006/260721_0838_acceleration_signal_pc_step_validation_02.mat",
+        "sha256": "9802a7ba96835e1a90613e23add556fd6c02206e417c480e27f87d9bb27f909f"
+      },
+      {
+        "bytes": 41414,
+        "relative_path": "exp006_controlled_seed_42006/_260721_0838_results_overview.mat",
+        "sha256": "fd73152df11e13b11d536b6ababa3910037997d376bab9e6116237aaa64c0313"
+      }
+    ],
+    "pattern": "*.mat",
+    "root": "data/processed_features/publication/exp006/controlled_simulator_results"
+  },
+  "environment": {
+    "matlab": "9.14.0.2206163 (R2023a)",
+    "numpy": "2.4.6",
+    "pandas": "3.0.3",
+    "platform": "Windows-10-10.0.22631-SP0",
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]"
+  },
+  "experiment_id": "EXP-006",
+  "generated_at_utc": "2026-07-21T02:49:21.207218+00:00",
+  "git": {
+    "commit": "dc134aeefcfe7609d51d074974c6e39e7ef14ee2",
+    "dirty": false
+  },
+  "inventory": {
+    "controlled_feature_cache": {
+      "bytes": 2055221,
+      "relative_path": "data/processed_features/publication/exp006/controlled_synthetic_features.csv",
+      "sha256": "3199282d5abf674538797b41dc97240825cf6ec80853dffb5c9f8ca4f45bfdae"
+    },
+    "controlled_metadata": {
+      "bytes": 1544,
+      "relative_path": "data/processed_features/publication/exp006/controlled_synthetic_metadata.json",
+      "sha256": "3556f77ea37a4696c99bf376f15c513e9f2ee14a814101499e6323ca351bf16b"
+    },
+    "controlled_scenarios": {
+      "bytes": 8489,
+      "relative_path": "configs/exp006_controlled_simulation_scenarios.csv",
+      "sha256": "6d6319934f84126d82f387ba1e74761adf80e7adce6f553f8f948b1080918ed0"
+    },
+    "experiment_config": {
+      "bytes": 3955,
+      "relative_path": "configs/exp006_data_qualification.json",
+      "sha256": "7874d53087810360790ea0b39dff9e100457775df8cf11782c4a11c7f9014c92"
+    },
+    "physics_priors": {
+      "bytes": 5449,
+      "relative_path": "configs/physics_priors.yaml",
+      "sha256": "6fc3bfadaa61f5f84d0be03fdb90efdd7e4549cf50b54d421785e9cf0d075111"
+    },
+    "publication_split": {
+      "bytes": 4624,
+      "relative_path": "configs/publication_data_split.json",
+      "sha256": "6ddeb71d56f42fd0abad14c834569a83f76e3c296bdecf657ed32280daa0f2b6"
+    },
+    "simulator_archive": {
+      "bytes": 45823,
+      "relative_path": "Bearing_Simulation_Model-main/Bearing_Simulation_Model-main/Simulation_Model.zip",
+      "sha256": "08b1272d7c7756142111ba353cf2671c53a02e47c9a6100ab1ce9a1dc145ff5f"
+    },
+    "simulator_documentation": {
+      "bytes": 250680,
+      "relative_path": "Bearing_Simulation_Model-main/Bearing_Simulation_Model-main/README_Parameterization.pdf",
+      "sha256": "2374c19863912f9fb8e49a58675f55b06a158b5a215bd48b20e6b097a6a22257"
+    },
+    "supplied_data": {
+      "bytes": 308697520,
+      "relative_path": "Datasets/Bearings_with_Varying_Degradation_Behaviors_v2/Data.mat",
+      "sha256": "94d0c09cc53bb85a59a54f141ffcc8aab8d7f098424fabba7d20ca19ce560728"
+    },
+    "supplied_documentation": {
+      "bytes": 314995,
+      "relative_path": "Datasets/Bearings_with_Varying_Degradation_Behaviors_v2/Bearings_with_Varying_Degradation_Behaviors_v2.pdf",
+      "sha256": "14e528966416dfcf76448eec4fe9dfc5c923fa2afc19004926846e22510dcb6e"
+    },
+    "supplied_feature_cache": {
+      "bytes": 633162,
+      "relative_path": "data/processed_features/publication/exp006/supplied_synthetic_features.csv",
+      "sha256": "55908929140aa66c0fac78288718ab62f66b477071334206baf29f3e20c6f096"
+    },
+    "supplied_metadata": {
+      "bytes": 1934,
+      "relative_path": "data/processed_features/publication/exp006/supplied_synthetic_metadata.json",
+      "sha256": "8fa0b83f65401f71db0c8b9d1f0f84d97901a9bfb05b9e1e28019ae6c3a5d056"
+    }
+  },
+  "physics_priors_sha256": "6fc3bfadaa61f5f84d0be03fdb90efdd7e4549cf50b54d421785e9cf0d075111",
+  "scenario_sha256": "6d6319934f84126d82f387ba1e74761adf80e7adce6f553f8f948b1080918ed0",
+  "scenario_summary": {
+    "condition_design": [
+      {
+        "load_mean_n": [
+          5500.0
+        ],
+        "publication_split": "test",
+        "snr_db": [
+          3.0
+        ],
+        "speed_hz": [
+          46.0
+        ]
+      },
+      {
+        "load_mean_n": [
+          4500.0
+        ],
+        "publication_split": "train",
+        "snr_db": [
+          10.0
+        ],
+        "speed_hz": [
+          50.0
+        ]
+      },
+      {
+        "load_mean_n": [
+          5000.0
+        ],
+        "publication_split": "validation",
+        "snr_db": [
+          7.0
+        ],
+        "speed_hz": [
+          48.0
+        ]
+      }
+    ],
+    "families": [
+      "gamma",
+      "linear_increasing",
+      "progressively_increasing",
+      "step_like"
+    ],
+    "family_counts": {
+      "gamma": 10,
+      "linear_increasing": 10,
+      "progressively_increasing": 10,
+      "step_like": 10
+    },
+    "scenarios": 40,
+    "split_counts": {
+      "test": 8,
+      "train": 24,
+      "validation": 8
+    }
+  },
+  "schema_version": 1,
+  "simulator_run_manifest": {
+    "content": {
+      "elapsed_seconds": 198.4825390000008,
+      "experiment_id": "EXP-006",
+      "finished_at_utc": "2026-07-21T02:41:42Z",
+      "matlab_version": "9.14.0.2206163 (R2023a)",
+      "rng": "twister",
+      "scenario_count": 40,
+      "scenario_ids": [
+        "pc_linear_train_01",
+        "pc_linear_train_02",
+        "pc_linear_train_03",
+        "pc_linear_train_04",
+        "pc_linear_train_05",
+        "pc_linear_train_06",
+        "pc_linear_validation_01",
+        "pc_linear_validation_02",
+        "pc_linear_test_01",
+        "pc_linear_test_02",
+        "pc_progressive_train_01",
+        "pc_progressive_train_02",
+        "pc_progressive_train_03",
+        "pc_progressive_train_04",
+        "pc_progressive_train_05",
+        "pc_progressive_train_06",
+        "pc_progressive_validation_01",
+        "pc_progressive_validation_02",
+        "pc_progressive_test_01",
+        "pc_progressive_test_02",
+        "pc_step_train_01",
+        "pc_step_train_02",
+        "pc_step_train_03",
+        "pc_step_train_04",
+        "pc_step_train_05",
+        "pc_step_train_06",
+        "pc_step_validation_01",
+        "pc_step_validation_02",
+        "pc_step_test_01",
+        "pc_step_test_02",
+        "pc_gamma_train_01",
+        "pc_gamma_train_02",
+        "pc_gamma_train_03",
+        "pc_gamma_train_04",
+        "pc_gamma_train_05",
+        "pc_gamma_train_06",
+        "pc_gamma_validation_01",
+        "pc_gamma_validation_02",
+        "pc_gamma_test_01",
+        "pc_gamma_test_02"
+      ],
+      "schema_version": 1,
+      "seed": 42006,
+      "simulator_citation": "Mauthe, Hagmeyer, and Zeiler (2025), DOI 10.3850/978-981-94-3281-3_ESREL-SRA-E2025-P8028-cd",
+      "simulator_license": "CC BY 4.0",
+      "smoke_only": false,
+      "started_at_utc": "2026-07-21T02:38:23Z"
+    },
+    "relative_path": "data/processed_features/publication/exp006/controlled_simulator_results/exp006_controlled_seed_42006/exp006_simulator_run.json",
+    "sha256": "62393273b69d126e6347d991b5d12fe9f7dec1938d418207508fbf35b6cc77d0"
+  },
+  "split_sha256": "6ddeb71d56f42fd0abad14c834569a83f76e3c296bdecf657ed32280daa0f2b6",
+  "split_summary": {
+    "controlled_synthetic": {
+      "test_runs": 8,
+      "total_runs": 40,
+      "train_runs": 24,
+      "validation_runs": 8
+    },
+    "pronostia": {
+      "test_runs": 11,
+      "total_runs": 17,
+      "train_runs": 3,
+      "validation_runs": 3
+    },
+    "supplied_synthetic_v2": {
+      "test_runs": 12,
+      "total_runs": 40,
+      "train_runs": 20,
+      "validation_runs": 8
+    }
+  },
+  "supplied_cache": {
+    "bytes": 633162,
+    "degradation_families": [],
+    "maximum_snapshots_per_run": 98,
+    "minimum_snapshots_per_run": 6,
+    "path": "data/processed_features/publication/exp006/supplied_synthetic_features.csv",
+    "runs": 40,
+    "runs_not_supporting_sequence_length_8": [
+      "synthetic_train_016"
+    ],
+    "sha256": "55908929140aa66c0fac78288718ab62f66b477071334206baf29f3e20c6f096",
+    "snapshots": 1492,
+    "truth_available": false
+  }
+}

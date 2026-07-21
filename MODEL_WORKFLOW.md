@@ -92,3 +92,22 @@ EXP-006 is a data and physics-identifiability qualification milestone. It must i
 synthetic HDF5 schema, establish recoverable generator truth, define immutable publication
 splits and physics applicability, and build derived-cache tooling before any new full neural
 training. Do not prepare another fixed-weight PINN sweep.
+
+## EXP-006 data and physics qualification result
+
+EXP-006 completed locally without neural training. The supplied synthetic v2 dataset was
+verified at 28 training and 12 test trajectories with 1,492 snapshots, but its documentation
+intentionally withholds degradation-family and fault-location truth. It remains a separate RUL
+generalization benchmark and must not be used as known-truth physics-validity evidence.
+
+The official CC BY 4.0 MATLAB simulator completed 40 predeclared trajectories with seed 42006:
+24 training, 8 validation, and 8 test across four progression families. The resulting compact
+cache contains 3,997 snapshots with family, hidden degradation, fault location, parameters, and
+operating context. Validation/test load-speed-noise shifts were declared before simulation.
+
+Every EXP-006 success criterion passed. The exact report is under
+`results/analyzed/EXP-006/`, the reproduction guide is
+`research/EXP006_RUNBOOK.md`, and the local full preservation copy is under
+`saved results/run_06/`. No Colab Upload was needed. The next experiment is EXP-007 synthetic
+credibility feasibility; it must not use ANSYS or real test labels to compensate for a failed
+controlled validity diagnostic.

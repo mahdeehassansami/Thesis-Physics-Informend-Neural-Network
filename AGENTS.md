@@ -1369,3 +1369,38 @@ If supplied synthetic truth is insufficient, use a transparent new simulator fro
 equations and identify it as newly generated data. Never infer or invent hidden simulator
 truth. EXP-006 must not become another fixed-weight model sweep, and its Colab Upload must not
 be prepared until the local schema, split, configuration, and validation artifacts exist.
+
+## 32. EXP-006 completed data and physics qualification
+
+EXP-006 is complete and passed all predeclared qualification gates. It used local MATLAB
+simulation and Python validation only; no neural-network training or Colab Upload occurred.
+
+- Qualification source commit:
+  `dc134aeefcfe7609d51d074974c6e39e7ef14ee2`.
+- The supplied Bearings with Varying Degradation Behaviors v2 file was preserved unchanged.
+  It contains 28 official training and 12 official test trajectories with 1,492 snapshots.
+- The supplied documentation intentionally withholds each trajectory's degradation family
+  and fault type. Never infer those labels or use that dataset as known-truth physics-
+  applicability evidence.
+- One supplied trajectory has only six snapshots. A fixed sequence length of eight silently
+  excludes it; EXP-007 must declare and validate a short-trajectory policy.
+- The official CC BY 4.0 MATLAB simulator ran 40 predeclared scenarios with seed 42006:
+  24 training, 8 validation, and 8 test trajectories across linear, progressive, step-like,
+  and gamma degradation families.
+- The controlled cache contains 3,997 snapshots and retains progression family, hidden
+  degradation, fault location, bearing parameters, operating conditions, and simulation
+  details. Every controlled trajectory has at least 20 snapshots.
+- Validation and test operation/noise shifts were declared in
+  `configs/exp006_controlled_simulation_scenarios.csv` before simulation.
+- The verified report and per-file inventory are under `results/analyzed/EXP-006/`. The
+  full local preservation copy is under `saved results/run_06/`, and reproduction guidance
+  is in `research/EXP006_RUNBOOK.md`.
+- MATLAB is sufficient for EXP-007. ANSYS is deferred unless a later, separately defined
+  contact/crack/thermal validation study has explicit geometry, materials, boundary
+  conditions, mesh convergence, units, and simulation-to-real limitations.
+
+The next implementation milestone is EXP-007 synthetic credibility feasibility. It must use
+the immutable controlled 24/8/8 split, pair correct priors with predeclared wrong-family and
+parameter corruptions, distinguish law mismatch from ordinary covariate shift, and apply the
+AUROC/calibration stop rule in `research/PUBLICATION_PROTOCOL.md` before escalation to real
+bearing experiments.

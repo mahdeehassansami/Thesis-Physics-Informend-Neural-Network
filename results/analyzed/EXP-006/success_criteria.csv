@@ -1,0 +1,8 @@
+criterion,passed,evidence
+Supplied v2 28/12 partition and fingerprint verified,True,"40 runs, 1492 snapshots, SHA-256 55908929140aa66c0fac78288718ab62f66b477071334206baf29f3e20c6f096"
+Supplied hidden progression/fault labels not invented,True,Documentation withholds both labels; exported truth_available=false.
+Official simulator executed all controlled scenarios,True,MATLAB 9.14.0.2206163 (R2023a); seed 42006; 198.483 s
+Controlled truth is complete for four progression families,True,"40 runs, 3997 snapshots, families ['gamma', 'linear_increasing', 'progressively_increasing', 'step_like']"
+Controlled raw simulator artifacts are fingerprinted,True,"41 MAT files, 885145546 bytes, combined SHA-256 e95127afa4a4cd8791b2351e878e7d8a1fe16e908cb71035e41cd8095276f30b"
+Immutable complete-trajectory splits pass,True,"{""controlled_synthetic"": {""test_runs"": 8, ""total_runs"": 40, ""train_runs"": 24, ""validation_runs"": 8}, ""pronostia"": {""test_runs"": 11, ""total_runs"": 17, ""train_runs"": 3, ""validation_runs"": 3}, ""supplied_synthetic_v2"": {""test_runs"": 12, ""total_runs"": 40, ""train_runs"": 20, ""validation_runs"": 8}}"
+No neural training occurred,True,"EXP-006 contains MATLAB simulation, feature extraction, and validation only."

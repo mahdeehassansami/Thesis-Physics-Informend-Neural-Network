@@ -32,7 +32,7 @@ Completed:
   UQ as standalone contributions; and
 - locked the initial research questions, outcomes, leakage rules, baselines, and stop criteria.
 
-## Stage 1 — EXP-006: data and physics identifiability qualification
+## Stage 1 — EXP-006: data and physics identifiability qualification — completed
 
 ### Goal
 
@@ -55,12 +55,18 @@ planned claims before writing a new neural model.
 - Define corruption generators without altering raw data.
 - Run only small deterministic checks locally; reserve heavy feature extraction for Colab.
 
-### Decision gate
+### Decision gate — passed
 
 Proceed only if valid/corrupt prior labels can be established without using test RUL labels.
 If the supplied synthetic data do not expose enough truth, implement a transparent controlled
 Python generator from published equations and record that as a new simulated benchmark. Do not
 pretend unknown simulator internals are known.
+
+The supplied v2 dataset intentionally withholds progression-family and fault labels, so it was
+not relabeled. The official CC BY 4.0 MATLAB simulator was instead run from a predeclared
+40-scenario design with seed 42006. It generated 3,997 labeled snapshots and exposes progression
+family, hidden degradation, and fault location. The full qualification is under
+`results/analyzed/EXP-006/`; exact reproduction details are in `EXP006_RUNBOOK.md`.
 
 ### Required artifacts
 
@@ -70,8 +76,8 @@ pretend unknown simulator internals are known.
 - conversion tests and cache schema
 - an EXP-006 report documenting what is and is not identifiable
 
-EXP-006 is the next implementation milestone. Do not prepare its Colab Upload until these
-artifacts pass local structural tests and the active configuration records an exact commit.
+EXP-006 required no Colab Upload or neural training. EXP-007 synthetic credibility feasibility
+is now the next implementation milestone.
 
 ## Stage 2 — EXP-007: synthetic credibility feasibility
 

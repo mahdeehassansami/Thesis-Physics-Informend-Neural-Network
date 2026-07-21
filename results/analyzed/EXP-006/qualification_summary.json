@@ -1,0 +1,15 @@
+{
+  "all_success_criteria_passed": true,
+  "ansys_decision": "Not required for EXP-007 generator-family credibility. Consider ANSYS later only for an independently parameterized contact/crack mechanics validation.",
+  "ansys_required_for_next_stage": false,
+  "central_finding": "The supplied v2 data support RUL evaluation but not known-truth physics applicability because progression and fault labels are intentionally withheld. The official MATLAB simulator supplies those labels for the new controlled set.",
+  "controlled_family_summary_sha256": "9be49431c195de0436def2623f387a7b28d632d375579fb85e91c62701864cf1",
+  "controlled_run_summary_sha256": "8aa57822a4a0908b2159d1a5dd7f8ada84ba724703914a891048e40ff49a056d",
+  "dataset_manifest_sha256": "902a5a2e2952b64f22eebc67289bb14a087c8e433babdf4d96e6ffd5cfe55c04",
+  "experiment_id": "EXP-006",
+  "physics_applicability_sha256": "a054a4412a9e05f357aafa750973f742f8dbb6f310b1dd9a4722ba6d6a2808de",
+  "schema_version": 1,
+  "status": "completed",
+  "success_criteria_sha256": "6443de4176dc1574886fdb7e5631c6ea8deac56f1a2ff516a624cb5c84e8db3f",
+  "supplied_run_summary_sha256": "f5589be9290764575dd87da8b54204845976456a9d25ba19139ccc381f26328d"
+}
