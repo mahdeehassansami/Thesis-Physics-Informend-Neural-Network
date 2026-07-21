@@ -153,3 +153,25 @@ is blocked. The next work is a protocol amendment, an oracle/feature diagnostic 
 data, and a redesigned multi-condition MATLAB benchmark with a fresh sealed test population.
 The complete result is preserved in `saved results/run_07/`; verified analyses are in
 `results/analyzed/EXP-007/`.
+
+## EXP-007A corrective workflow
+
+EXP-007A is the predeclared correction, not EXP-008. The active configuration is
+`configs/experiment.yaml`; the historical EXP-007 configuration and notebook are archived as
+`configs/experiment_exp007.yaml` and `notebooks/train_models_colab_exp007.ipynb`.
+
+The official MATLAB scenario design contains 96 trajectories with varied load, speed, SNR,
+load variability, slip, and modulation. Training has 64 trajectories, validation 16, and the
+fresh sealed test 16. Development and test use separate simulator seeds. Operating-condition
+evidence uses fixed physical ranges rather than a fitted standard deviation.
+
+Candidate physics models clone the same best data-only checkpoint and are actually fine-tuned
+with differentiable progression-value, progression-rate, and monotonic losses. Out-of-fold RUL
+regret defines whether each intervention is safe; law correctness remains explanatory metadata.
+Development must contain both safe and harmful interventions before test evaluation is allowed.
+
+The thin Colab notebook calls `src/thesis_work/exp7a_harm_credibility.py`, records parent and
+optimization seeds separately, aggregates AUROC within seed, applies per-seed collapse checks,
+and verifies metrics after 17-digit probability serialization. The frozen protocol is
+`research/EXP007A_PROTOCOL_AMENDMENT.md`; reproduction guidance is in
+`research/EXP007A_RUNBOOK.md`.

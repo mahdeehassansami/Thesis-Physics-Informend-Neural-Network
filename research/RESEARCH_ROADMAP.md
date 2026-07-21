@@ -113,6 +113,24 @@ generally reduce rather than increase RMSE relative to the weak data-only backbo
 does not support H1 or justify real-data PriorCred-RUL escalation. Full verification is under
 `results/analyzed/EXP-007/`.
 
+## Stage 2A - EXP-007A: counterfactual physics-harm correction - predeclared
+
+EXP-007A replaces mathematical law-validity as the primary target with actual out-of-fold RUL
+intervention safety. Each candidate model begins from the identical best data-only checkpoint
+and is fine-tuned with differentiable simulator-progression value, rate, and monotonic losses.
+Credibility evidence remains causal and excludes RUL, degradation truth, realized regret, and
+future observations.
+
+The official simulator design contains 64 multi-condition training, 16 interpolation
+validation, and 16 fresh sealed-test trajectories. Development/validation use seed `420071`;
+test uses seed `920071`. Before test evaluation, every seed must demonstrate at least 20% safe
+and 20% harmful trajectory-candidate interventions. Full changes and gates are frozen in
+`EXP007A_PROTOCOL_AMENDMENT.md`.
+
+Open EXP-007 feature ablations are diagnostic only. They cannot select EXP-007A based on its
+sealed outcomes. EXP-008 remains blocked until EXP-007A independently passes all credibility,
+calibration, anti-collapse, harm-stress, and regret-reduction gates.
+
 ## Stage 3 — EXP-008: frozen real-data benchmark qualification — blocked
 
 ### Goal
@@ -210,7 +228,7 @@ the intended paper claim has failed.
 
 ## Immediate next repository actions
 
-The next coding turn should not prepare EXP-008. It should:
+The corrective EXP-007A implementation follows these locked actions:
 
 1. freeze EXP-007 as a negative feasibility result and amend the protocol before changing the
    method;

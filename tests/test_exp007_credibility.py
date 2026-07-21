@@ -69,7 +69,7 @@ def _fit_fixture(config: dict, frame: pd.DataFrame) -> BackboneFit:
 
 
 def test_exp007_config_keeps_truth_out_of_credibility_inputs() -> None:
-    config = load_exp7_config(ROOT / "configs" / "experiment.yaml")
+    config = load_exp7_config(ROOT / "configs" / "experiment_exp007.yaml")
     forbidden = set(config["corruptions"]["forbidden_credibility_inputs"])
     evidence = set(config["credibility"]["numeric_evidence"]) | set(
         config["credibility"]["categorical_evidence"]
@@ -81,7 +81,7 @@ def test_exp007_config_keeps_truth_out_of_credibility_inputs() -> None:
 
 
 def test_partition_corruptions_are_predeclared_and_truth_independent() -> None:
-    config = load_exp7_config(ROOT / "configs" / "experiment.yaml")
+    config = load_exp7_config(ROOT / "configs" / "experiment_exp007.yaml")
     train = _candidate_specs("linear_increasing", "train", config)
     test = _candidate_specs("linear_increasing", "test", config)
     assert sum(item["validity_label"] for item in train) == 3
@@ -107,7 +107,7 @@ def test_partition_corruptions_are_predeclared_and_truth_independent() -> None:
 
 
 def test_empirical_templates_are_monotone_and_bounded() -> None:
-    config = load_exp7_config(ROOT / "configs" / "experiment.yaml")
+    config = load_exp7_config(ROOT / "configs" / "experiment_exp007.yaml")
     library = fit_template_library(_fixture_frame(config), config)
     for family in FAMILIES:
         assert np.all(np.diff(library.mean[family]) >= -1e-12)
@@ -116,7 +116,7 @@ def test_empirical_templates_are_monotone_and_bounded() -> None:
 
 
 def test_evidence_generation_does_not_expose_truth_to_estimator() -> None:
-    config = load_exp7_config(ROOT / "configs" / "experiment.yaml")
+    config = load_exp7_config(ROOT / "configs" / "experiment_exp007.yaml")
     frame = _fixture_frame(config)
     fit = _fit_fixture(config, frame)
     proxy_config = dict(config)
@@ -150,7 +150,7 @@ def test_evidence_generation_does_not_expose_truth_to_estimator() -> None:
 
 
 def test_credibility_fit_is_frozen_and_finite() -> None:
-    config = load_exp7_config(ROOT / "configs" / "experiment.yaml")
+    config = load_exp7_config(ROOT / "configs" / "experiment_exp007.yaml")
     frame = _fixture_frame(config)
     fit = _fit_fixture(config, frame)
     proxy_config = dict(config)

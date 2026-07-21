@@ -1,0 +1,307 @@
+schema_version: 1
+
+experiment:
+  id: EXP-007
+  run_id: exp007_synthetic_credibility_feasibility
+  name: Synthetic physics-prior credibility feasibility
+  goal: >-
+    Test whether a label-safe, frozen credibility estimator distinguishes supported from
+    deliberately misspecified simulator progression priors under held-out law, parameter,
+    noise, and operating-condition regimes before integration into a high-capacity PINN.
+  evidence: >-
+    EXP-006 verified that the supplied v2 file withholds progression truth, while the official
+    MATLAB simulator produced 40 labeled controlled trajectories and an immutable 24/8/8
+    train/validation/test split across four progression families.
+  hypothesis: >-
+    Cross-fitted causal evidence will achieve held-out physics-validity AUROC >= 0.80 with a
+    trajectory-bootstrap 95% lower bound above 0.50, without collapsing to all-on or all-off.
+  execution: google_colab_t4
+  neural_training: true
+  method_scope: diagnostic_feasibility_before_high_capacity_pinn_integration
+
+repository:
+  expected_commit: null
+  require_clean_git: true
+
+data:
+  dataset_id: exp006_controlled_synthetic
+  feature_cache: data/processed_features/publication/exp006/controlled_synthetic_features.csv
+  expected_feature_cache_sha256: 3199282d5abf674538797b41dc97240825cf6ec80853dffb5c9f8ca4f45bfdae
+  split_file: configs/publication_data_split.json
+  split_key: controlled_synthetic
+  physics_prior_file: configs/physics_priors.yaml
+  target: normalized_rul
+  hidden_truth: degradation_value
+  target_test_access: evaluation_only
+  representation: causal_feature_sequence
+  sequence_length: 8
+  sequence_stride: 1
+  feature_columns:
+    - rms
+    - std
+    - ptp
+    - kurtosis
+    - crest_factor
+    - mean_abs
+    - skewness
+    - spectral_centroid
+    - spectral_bandwidth
+    - spectral_entropy
+    - high_frequency_ratio
+    - load_n
+    - speed_rpm
+    - snr_db
+  signal_feature_columns:
+    - rms
+    - std
+    - ptp
+    - kurtosis
+    - crest_factor
+    - mean_abs
+    - skewness
+    - spectral_centroid
+    - spectral_bandwidth
+    - spectral_entropy
+    - high_frequency_ratio
+  operating_condition_columns: [load_n, speed_rpm, snr_db]
+  short_trajectory_policy: >-
+    EXP-007 uses only the controlled benchmark, whose trajectories all have at least 20
+    snapshots. The six-snapshot supplied-v2 trajectory is outside the known-truth endpoint
+    and is not silently discarded from a dataset used by this experiment.
+
+cross_fit:
+  policy: >-
+    Each controlled training trajectory is predicted once by a backbone and degradation
+    proxy that did not train, tune, normalize, or fit templates on that trajectory.
+  folds:
+    - fold_id: cf_01
+      holdout_runs:
+        - pc_linear_train_01
+        - pc_linear_train_02
+        - pc_progressive_train_01
+        - pc_progressive_train_02
+        - pc_step_train_01
+        - pc_step_train_02
+        - pc_gamma_train_01
+        - pc_gamma_train_02
+      validation_runs:
+        - pc_linear_train_03
+        - pc_progressive_train_03
+        - pc_step_train_03
+        - pc_gamma_train_03
+    - fold_id: cf_02
+      holdout_runs:
+        - pc_linear_train_03
+        - pc_linear_train_04
+        - pc_progressive_train_03
+        - pc_progressive_train_04
+        - pc_step_train_03
+        - pc_step_train_04
+        - pc_gamma_train_03
+        - pc_gamma_train_04
+      validation_runs:
+        - pc_linear_train_05
+        - pc_progressive_train_05
+        - pc_step_train_05
+        - pc_gamma_train_05
+    - fold_id: cf_03
+      holdout_runs:
+        - pc_linear_train_05
+        - pc_linear_train_06
+        - pc_progressive_train_05
+        - pc_progressive_train_06
+        - pc_step_train_05
+        - pc_step_train_06
+        - pc_gamma_train_05
+        - pc_gamma_train_06
+      validation_runs:
+        - pc_linear_train_01
+        - pc_progressive_train_01
+        - pc_step_train_01
+        - pc_gamma_train_01
+
+backbone:
+  name: causal_lstm
+  role: identical_data_only_fallback
+  hidden_dim: 64
+  epochs: 160
+  patience: 24
+  batch_size: 128
+  learning_rate: 0.0005
+  weight_decay: 0.00001
+  gradient_clip: 5.0
+  minimum_improvement: 0.000001
+  mixed_precision: false
+  mixed_precision_rationale: >-
+    The network is deliberately small and reproducibility is preferred over a negligible
+    speed gain; the credibility and template computations remain in float64 on CPU.
+
+degradation_proxy:
+  model: extra_trees_regressor
+  estimators: 128
+  max_depth: 12
+  min_samples_leaf: 4
+  target: degradation_value
+  uncertainty: standard_deviation_across_trees
+
+prior_templates:
+  source: training_only_simulator_hidden_truth
+  source_artifact: Bearing_Simulation_Model-main/Bearing_Simulation_Model-main/Simulation_Model.zip
+  source_license: CC BY 4.0
+  adaptation_record: >-
+    Newly fitted empirical lifecycle-to-degradation templates derived from EXP-006 controlled
+    outputs; neither reproduced simulator internals nor a claimed real bearing equation.
+  interpretation: empirical_family_template_not_claimed_governing_equation
+  progression_families:
+    - linear_increasing
+    - progressively_increasing
+    - step_like
+    - gamma
+  lifecycle_grid_points: 101
+  gaussian_bandwidth: 0.08
+  minimum_standard_deviation: 0.02
+  monotonic_projection: cumulative_maximum
+
+corruptions:
+  validity_tolerance: [0.85, 1.15]
+  specifications:
+    train:
+      uncertain_scales: [0.90, 1.10]
+      severe_scales: [0.55, 1.80]
+    validation:
+      uncertain_scales: [0.92, 1.08]
+      severe_scales: [0.65, 1.55]
+    test:
+      uncertain_scales: [0.94, 1.06]
+      severe_scales: [0.72, 1.40]
+  candidate_enumeration: >-
+    Enumerate all four family identities crossed with exact, two mildly uncertain, and two
+    severely biased time scales without consulting trajectory truth. Truth is used only after
+    construction to label the three within-tolerance correct-family candidates valid; the
+    remaining seventeen candidates are corrupt.
+  forbidden_credibility_inputs:
+    - rul_norm
+    - rul_minutes
+    - degradation_value
+    - degradation_family
+    - validity_label
+    - corruption_type
+    - total_trajectory_length
+    - failure_time
+    - future_observations
+
+credibility:
+  estimator: standardized_logistic_regression
+  class_weight: balanced
+  regularization_c: 1.0
+  calibration: validation_platt_scaling
+  threshold_selection: validation_youden_j
+  freeze_before_test: true
+  stop_gradient_required_for_future_pinn_integration: true
+  numeric_evidence:
+    - template_absolute_residual
+    - template_standardized_residual
+    - lifecycle_disagreement
+    - rolling_absolute_residual
+    - rolling_lifecycle_disagreement
+    - prior_monotonic_violation_rate
+    - residual_relative_to_best
+    - residual_rank_fraction
+    - proxy_uncertainty
+    - template_uncertainty
+    - covariate_shift_score
+    - operation_shift_score
+    - backbone_damage
+    - causal_prefix_length_log
+  categorical_evidence: [candidate_family]
+  maximum_prior_blend: 0.5
+  fallback: identical_data_only_backbone
+
+comparators:
+  requested:
+    - data_only
+    - priorcred_thresholded
+    - inverse_residual
+    - validation_selected_scalar
+    - random_credibility
+    - all_on
+    - all_off
+    - oracle
+    - anti_oracle
+  excluded:
+    pile_inspired:
+      reason: >-
+        PILE selects settings through a GP/PDE evidence formulation that is not faithfully
+        transferable to empirical simulator-family templates; it is documented as not
+        applicable rather than mislabeled as reproduced.
+
+training:
+  seeds: [42, 1042, 2042, 3042, 4042]
+  deterministic_torch: true
+  dataloader_workers: 0
+  resume: true
+  recovery_granularity: completed_crossfit_fold_or_seed
+  oom_policy: fail_and_record
+
+evaluation:
+  credibility_metrics: [auroc, auprc, brier, ece]
+  rul_metrics: [mae, mse, rmse, r2, macro_run_rmse]
+  bootstrap_replicates: 2000
+  bootstrap_seed: 42007
+  bootstrap_unit_order: [trajectory, seed]
+  calibration_bins: 10
+  primary_endpoint: heldout_test_physics_validity_auroc
+  report_by: [seed, trajectory, true_family, candidate_family, corruption_type, condition_id]
+
+success_criteria:
+  minimum_test_auroc: 0.80
+  minimum_auroc_ci_lower: 0.50
+  maximum_all_on_fraction_without_explanation: 0.90
+  maximum_all_off_fraction_without_explanation: 0.90
+  decision: >-
+    Stop method escalation if aggregate held-out AUROC is below 0.80 or its trajectory/seed
+    bootstrap 95% interval includes 0.50. Diagnose identifiability rather than enlarging the
+    model. RUL-regret results in EXP-007 are feasibility diagnostics, not the final real-data
+    PriorCred-RUL claim.
+
+runtime:
+  require_cuda: true
+  required_gpu_name_contains: T4
+  train_work_directory: /content/exp007_work
+  drive_output_directory: /content/drive/MyDrive/Upload/experiment_outputs_exp007
+
+artifacts:
+  create_lightweight_bundle: true
+  exclude_from_bundle:
+    - "*.pt"
+    - "*.pth"
+    - "*.pkl"
+    - "*.joblib"
+    - seeds/*/crossfit/*/evidence.csv
+    - seeds/*/train_credibility_predictions.csv
+    - seeds/*/validation_credibility_predictions.csv
+    - seeds/*/test_credibility_predictions.csv
+    - seeds/*/validation_rul_predictions.csv
+    - seeds/*/test_rul_predictions.csv
+    - predictions/credibility_predictions.csv
+    - predictions/rul_predictions.csv
+  expected:
+    - run_manifest.json
+    - experiment_config.yaml
+    - git_commit.txt
+    - environment.txt
+    - dataset_summary.json
+    - data_split.json
+    - model_comparison.csv
+    - training_history.csv
+    - training.log
+    - credibility_metrics.csv
+    - credibility_predictions.csv
+    - rul_predictions.csv
+    - physics_regret.csv
+    - parameter_recovery.csv
+    - statistical_summary.json
+    - gate_decision.json
+    - failure_report.json
+    - summary.md
+    - codex_results_bundle.zip

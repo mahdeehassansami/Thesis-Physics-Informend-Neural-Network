@@ -24,8 +24,8 @@ from thesis_work.sequence_models import LSTMRUL
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG_PATH = ROOT / "configs" / "experiment.yaml"
-NOTEBOOK_PATH = ROOT / "notebooks" / "train_models_colab.ipynb"
+CONFIG_PATH = ROOT / "configs" / "experiment_exp007.yaml"
+NOTEBOOK_PATH = ROOT / "notebooks" / "train_models_colab_exp007.ipynb"
 
 
 def main() -> None:

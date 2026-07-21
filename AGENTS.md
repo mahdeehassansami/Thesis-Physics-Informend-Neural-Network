@@ -1475,3 +1475,32 @@ After the design and gates are frozen, MATLAB should generate a larger multi-con
 development population and a fresh sealed test population with a new seed. ANSYS remains
 deferred because finite-element fidelity does not address the current identifiability,
 calibration, or target-alignment failures.
+
+## 35. EXP-007A corrective implementation state
+
+EXP-007A is the authorized corrective experiment. It is not EXP-008 and must not use the opened
+EXP-007 test population as confirmation evidence.
+
+- Protocol version 0.2 is frozen in `research/EXP007A_PROTOCOL_AMENDMENT.md`.
+- The historical EXP-007 configuration and notebook are archived as
+  `configs/experiment_exp007.yaml` and `notebooks/train_models_colab_exp007.ipynb`.
+- The active configuration is `configs/experiment.yaml` with experiment ID `EXP-007A`.
+- The tracked scenario design contains 64 training, 16 validation, and 16 fresh sealed-test
+  trajectories across four progression families. Development uses simulator seed `420071` and
+  test uses seed `920071`.
+- Training spans multiple load, speed, SNR, load-variation, slip, and modulation conditions.
+  Validation and test settings are distinct but remain inside declared training support.
+- Candidate physics models clone the identical best data-only checkpoint and are fine-tuned
+  with explicit differentiable prior-value, prior-rate, and monotonic losses. The empirical
+  simulator progression is an adapted controlled prior, not a claimed Paris/ISO governing law.
+- The primary target is safe counterfactual intervention, defined by out-of-fold normalized-RUL
+  regret relative to the identical data-only parent. Law correctness is secondary metadata.
+- Every seed must contain at least 20% safe and 20% harmful development units before sealed-test
+  prediction. A failure stops the run before test evaluation.
+- Credibility metrics are computed within seed. The bootstrap samples complete trajectories
+  within resampled seeds; collapse checks are per seed; serialized probabilities use 17
+  significant digits and are reloaded before metrics are recorded.
+- Open EXP-007 nonlinear feature ablations are under
+  `results/analyzed/EXP-007/open_diagnostics/`. They are diagnostic only.
+- ANSYS remains deferred. EXP-008 remains blocked until EXP-007A passes every frozen gate and
+  its downloaded artifacts are independently verified.

@@ -1,6 +1,7 @@
 # Locked publication protocol: physics-prior credibility for bearing RUL
 
-Status: version 0.1 evaluated in EXP-007; gate failed; amendment required before new experiments
+Status: version 0.1 evaluated in EXP-007 and failed; corrective version 0.2 is predeclared in
+`EXP007A_PROTOCOL_AMENDMENT.md`
 
 Protocol version: 0.1
 

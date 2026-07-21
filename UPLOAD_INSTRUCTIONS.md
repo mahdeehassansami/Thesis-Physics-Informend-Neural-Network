@@ -1,60 +1,41 @@
-# EXP-007 Google Drive and Colab instructions
+# EXP-007A Google Drive and Colab instructions
 
-Use a completely fresh Drive package. First preserve any previous experiment output, delete
-the old `MyDrive/Upload`, and upload this complete local `Upload` directory to the root of
-Google Drive.
+## What this package runs
 
-EXP-007 is the controlled synthetic physics-prior credibility decision gate. It is not a new
-fixed-weight PINN sweep and it does not use the supplied-v2 dataset whose progression truth is
-withheld. It uses the 40 official-simulator trajectories qualified in EXP-006 and their frozen
-24 training, 8 validation, and 8 test trajectory split.
+EXP-007A is the corrective counterfactual physics-harm feasibility experiment. It uses a new
+96-trajectory multi-condition official-simulator cache. Candidate LSTM models are initialized
+from identical data-only checkpoints and fine-tuned with differentiable simulator-progression
+value, rate, and monotonic losses.
 
-The experiment performs five common-seed repetitions. Within each seed it:
+The run must first prove that development data contain both safe and harmful interventions. If
+that qualification fails, the notebook stops before sealed-test evaluation. If it passes, the
+frozen credibility estimator is evaluated on the separate test simulator seed.
 
-1. cross-fits a small causal LSTM data-only RUL backbone across complete training trajectories;
-2. cross-fits a vibration-to-degradation proxy and training-only empirical progression-family
-   templates;
-3. independently enumerates 20 candidate priors per causal checkpoint—three valid and seventeen
-   deliberately corrupt—without using trajectory truth to select the candidate pool;
-4. fits a logistic credibility estimator on cross-fitted training evidence;
-5. calibrates it, chooses its threshold, and selects the scalar-weight comparator using only
-   validation trajectories; and
-6. evaluates the frozen diagnostic and controls once on the untouched test trajectories.
+## Upload and run
 
-The test corruption magnitudes differ from training, and every wrong family is evaluated.
-Validation and test also retain the load, speed, and noise shifts declared before the EXP-006 simulation.
-Operation/noise shift does not turn a correct progression family into corrupt physics.
+1. Delete the previous `MyDrive/Upload` only after its prior results are preserved locally.
+2. Drag this entire new `Upload` folder into `MyDrive`.
+3. Open `MyDrive/Upload/train_models_colab.ipynb` in Google Colab.
+4. Select **Runtime > Change runtime type > T4 GPU**.
+5. Run all cells in order and approve Google Drive access.
 
-Before running:
+Do not edit a Git SHA. `expected_commit.txt` pins the exact pushed version automatically. The
+notebook stops on a dirty or mismatched checkout, wrong GPU, cache mismatch, split mismatch, or
+incompatible recovery directory.
 
-1. Upload this fresh folder as `MyDrive/Upload`.
-2. Open `MyDrive/Upload/train_models_colab.ipynb` in Google Colab.
-3. Select `Runtime > Change runtime type > T4 GPU`.
-4. Run all cells from the beginning.
+## Runtime and recovery
 
-No SHA editing is required. `expected_commit.txt` already contains the exact pushed commit, and
-the notebook refuses a different or dirty checkout. It also verifies the controlled cache hash
-before training.
+Budget approximately 60-120 minutes on a Colab T4. The experiment schedules four cross-fit
+data-only parents and 48 physics fine-tunes per seed, plus one final parent and 12 final physics
+fine-tunes, across five seeds. Early stopping may reduce runtime.
 
-Training runs primarily under `/content/exp007_work`. Completed fold/seed recovery artifacts
-are synchronized to:
+Training occurs under `/content/exp007a_work`. Completed checkpoints and artifacts synchronize
+to `MyDrive/Upload/experiment_outputs_exp007a`, so rerunning the same pinned notebook can resume.
 
-```text
-/content/drive/MyDrive/Upload/experiment_outputs_exp007/
-```
+## Return for analysis
 
-Do not add files to that output directory before the run. A compatible interrupted run may be
-resumed by reopening the same fresh notebook and running from the beginning.
-
-The predeclared gate is:
-
-- aggregate held-out trajectory-candidate AUROC at least `0.80`;
-- trajectory/seed bootstrap 95% AUROC lower bound strictly above `0.50`; and
-- neither all-on nor all-off behavior above `90%` without a declared physical explanation.
-
-If the gate fails, preserve the result. Do not tune against the test trajectories or enlarge
-the network to force a pass.
-
-When finished, download the complete `experiment_outputs_exp007` directory and place it under
-`results/incoming/` in this repository. The included `codex_results_bundle.zip` is the compact
-analysis package; the complete directory retains recovery checkpoints.
+Download `codex_results_bundle.zip` from
+`MyDrive/Upload/experiment_outputs_exp007a/` and place it under `results/incoming/`. Keep the
+full output directory in Drive. Do not begin EXP-008 until Codex independently validates the
+manifest, serialized metrics, development qualification, per-seed collapse checks, calibration,
+candidate regret, and final gate.

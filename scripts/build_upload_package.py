@@ -6,23 +6,14 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parents[1]
 UPLOAD = ROOT / "Upload"
-CACHE_SOURCE = (
-    ROOT
-    / "data"
-    / "processed_features"
-    / "publication"
-    / "exp006"
-    / "controlled_synthetic_features.csv"
-)
-METADATA_SOURCE = CACHE_SOURCE.with_name("controlled_synthetic_metadata.json")
+CONFIG_SOURCE = ROOT / "configs" / "experiment.yaml"
 NOTEBOOK_SOURCE = ROOT / "notebooks" / "train_models_colab.ipynb"
 INSTRUCTIONS_SOURCE = ROOT / "UPLOAD_INSTRUCTIONS.md"
-EXPECTED_CACHE_SHA256 = (
-    "3199282d5abf674538797b41dc97240825cf6ec80853dffb5c9f8ca4f45bfdae"
-)
 
 
 def sha256(path: Path) -> str:
@@ -34,16 +25,24 @@ def sha256(path: Path) -> str:
 
 
 def main() -> None:
+    config = yaml.safe_load(CONFIG_SOURCE.read_text(encoding="utf-8"))
+    if config.get("experiment", {}).get("id") != "EXP-007A":
+        raise RuntimeError("The active configuration is not EXP-007A.")
+    cache_source = ROOT / config["data"]["feature_cache"]
+    metadata_source = ROOT / config["data"]["metadata_file"]
+    expected_cache_sha256 = config["data"]["expected_feature_cache_sha256"]
+    if expected_cache_sha256 == "PENDING_AFTER_FROZEN_SIMULATION":
+        raise RuntimeError("EXP-007A cache identity has not been finalized.")
     resolved = UPLOAD.resolve()
     if resolved.parent != ROOT.resolve() or resolved.name != "Upload":
         raise RuntimeError(f"Refusing unsafe Upload target: {resolved}")
-    for source in (CACHE_SOURCE, METADATA_SOURCE, NOTEBOOK_SOURCE, INSTRUCTIONS_SOURCE):
+    for source in (cache_source, metadata_source, NOTEBOOK_SOURCE, INSTRUCTIONS_SOURCE):
         if not source.is_file():
             raise FileNotFoundError(source)
-    observed_cache_sha = sha256(CACHE_SOURCE)
-    if observed_cache_sha != EXPECTED_CACHE_SHA256:
+    observed_cache_sha = sha256(cache_source)
+    if observed_cache_sha != expected_cache_sha256:
         raise RuntimeError(
-            f"Controlled cache changed: {observed_cache_sha} != {EXPECTED_CACHE_SHA256}"
+            f"EXP-007A cache changed: {observed_cache_sha} != {expected_cache_sha256}"
         )
     status = subprocess.run(
         ["git", "status", "--porcelain"],
@@ -53,7 +52,7 @@ def main() -> None:
         text=True,
     ).stdout.strip()
     if status:
-        raise RuntimeError("Build the EXP-007 Upload only from a clean committed worktree.")
+        raise RuntimeError("Build the EXP-007A Upload only from a clean committed worktree.")
     commit = subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=ROOT,
@@ -63,17 +62,26 @@ def main() -> None:
     ).stdout.strip()
     if len(commit) != 40:
         raise RuntimeError(f"Unexpected Git commit: {commit}")
+    upstream = subprocess.run(
+        ["git", "rev-parse", "@{upstream}"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if upstream != commit:
+        raise RuntimeError(f"Push EXP-007A before building Upload: HEAD={commit}, upstream={upstream}")
 
     if UPLOAD.exists():
         shutil.rmtree(UPLOAD)
     cache = UPLOAD / "feature_cache"
-    output = UPLOAD / "experiment_outputs_exp007"
+    output = UPLOAD / "experiment_outputs_exp007a"
     cache.mkdir(parents=True)
     output.mkdir(parents=True)
     shutil.copy2(NOTEBOOK_SOURCE, UPLOAD / "train_models_colab.ipynb")
     shutil.copy2(INSTRUCTIONS_SOURCE, UPLOAD / "UPLOAD_INSTRUCTIONS.md")
-    shutil.copy2(CACHE_SOURCE, cache / CACHE_SOURCE.name)
-    shutil.copy2(METADATA_SOURCE, cache / METADATA_SOURCE.name)
+    shutil.copy2(cache_source, cache / cache_source.name)
+    shutil.copy2(metadata_source, cache / metadata_source.name)
     (UPLOAD / "expected_commit.txt").write_text(commit + "\n", encoding="utf-8")
 
     inventory = []
@@ -88,13 +96,13 @@ def main() -> None:
             )
     manifest = {
         "schema_version": 1,
-        "experiment_id": "EXP-007",
-        "run_id": "exp007_synthetic_credibility_feasibility",
+        "experiment_id": "EXP-007A",
+        "run_id": "exp007a_counterfactual_physics_harm",
         "expected_commit": commit,
         "notebook": "train_models_colab.ipynb",
-        "feature_cache": "feature_cache/controlled_synthetic_features.csv",
+        "feature_cache": "feature_cache/multicondition_features.csv",
         "feature_cache_sha256": observed_cache_sha,
-        "empty_output_directory": "experiment_outputs_exp007",
+        "empty_output_directory": "experiment_outputs_exp007a",
         "sha_editing_required": False,
         "file_count_excluding_manifest": len(inventory),
         "files": inventory,
@@ -102,7 +110,7 @@ def main() -> None:
     (UPLOAD / "UPLOAD_PACKAGE_MANIFEST.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
     )
-    print(f"Fresh EXP-007 Upload package prepared at {UPLOAD}")
+    print(f"Fresh EXP-007A Upload package prepared at {UPLOAD}")
     print(f"Pinned pushed-source candidate: {commit}")
 
 

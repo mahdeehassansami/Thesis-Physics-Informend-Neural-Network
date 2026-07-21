@@ -118,7 +118,9 @@ def validate_artifacts(run: Path) -> dict[str, object]:
     manifest = json.loads((run / "run_manifest.json").read_text(encoding="utf-8"))
     config = yaml.safe_load((run / "experiment_config.yaml").read_text(encoding="utf-8"))
     split = json.loads((run / "data_split.json").read_text(encoding="utf-8"))
-    local_config = yaml.safe_load((ROOT / "configs" / "experiment.yaml").read_text(encoding="utf-8"))
+    local_config = yaml.safe_load(
+        (ROOT / "configs" / "experiment_exp007.yaml").read_text(encoding="utf-8")
+    )
     local_config["repository"]["expected_commit"] = manifest["git_commit"]
     local_split = json.loads((ROOT / "configs" / "publication_data_split.json").read_text(encoding="utf-8"))[
         "controlled_synthetic"
@@ -137,7 +139,9 @@ def validate_artifacts(run: Path) -> dict[str, object]:
         bundle_names = archive.namelist()
         unsafe = [name for name in bundle_names if Path(name).is_absolute() or ".." in Path(name).parts]
         binary = [name for name in bundle_names if name.endswith((".pt", ".pth", ".pkl", ".joblib"))]
-    repository_notebook = json.loads((ROOT / "notebooks" / "train_models_colab.ipynb").read_text(encoding="utf-8"))
+    repository_notebook = json.loads(
+        (ROOT / "notebooks" / "train_models_colab_exp007.ipynb").read_text(encoding="utf-8")
+    )
     executed_notebook = json.loads((run / "executed_notebook.ipynb").read_text(encoding="utf-8"))
     repository_source = [(cell["cell_type"], "".join(cell.get("source", []))) for cell in repository_notebook["cells"]]
     executed_source = [(cell["cell_type"], "".join(cell.get("source", []))) for cell in executed_notebook["cells"]]

@@ -1,0 +1,17 @@
+{
+  "experiment_id": "EXP-007",
+  "status": "open_data_diagnostic_only",
+  "confirmation_use_allowed": false,
+  "held_out_unit": "complete_trajectory",
+  "classifier": "extra_trees",
+  "seeds": [
+    42,
+    1042,
+    2042,
+    3042,
+    4042
+  ],
+  "truth_metadata_sanity_ceiling_auroc": 1.0,
+  "best_allowed_feature_set": "residual_only",
+  "best_mean_allowed_auroc": 0.8137254901960784
+}

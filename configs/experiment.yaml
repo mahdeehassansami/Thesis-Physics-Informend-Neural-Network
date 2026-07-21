@@ -1,38 +1,42 @@
-schema_version: 1
+schema_version: 2
 
 experiment:
-  id: EXP-007
-  run_id: exp007_synthetic_credibility_feasibility
-  name: Synthetic physics-prior credibility feasibility
+  id: EXP-007A
+  run_id: exp007a_counterfactual_physics_harm
+  name: Counterfactual physics-harm credibility correction
   goal: >-
-    Test whether a label-safe, frozen credibility estimator distinguishes supported from
-    deliberately misspecified simulator progression priors under held-out law, parameter,
-    noise, and operating-condition regimes before integration into a high-capacity PINN.
+    Determine whether label-safe causal evidence can identify when an actual differentiable
+    simulator-progression prior harms RUL prediction relative to its identical data-only parent
+    under a multi-condition development design and a fresh sealed test population.
   evidence: >-
-    EXP-006 verified that the supplied v2 file withholds progression truth, while the official
-    MATLAB simulator produced 40 labeled controlled trajectories and an immutable 24/8/8
-    train/validation/test split across four progression families.
+    EXP-007 failed AUROC and anti-collapse gates. Its source condition variables had zero
+    variance and its corrupt template blends generally improved the weak data-only backbone,
+    so mathematical prior correctness did not represent physics-induced negative transfer.
   hypothesis: >-
-    Cross-fitted causal evidence will achieve held-out physics-validity AUROC >= 0.80 with a
-    trajectory-bootstrap 95% lower bound above 0.50, without collapsing to all-on or all-off.
+    Cross-fitted counterfactual safe-intervention labels and physically scaled condition
+    evidence will achieve mean within-seed sealed-test AUROC >= 0.80, pass calibration and
+    anti-collapse gates, and reduce positive physics regret relative to fixed and scalar
+    physics controls.
   execution: google_colab_t4
   neural_training: true
-  method_scope: diagnostic_feasibility_before_high_capacity_pinn_integration
+  protocol: research/EXP007A_PROTOCOL_AMENDMENT.md
+  protocol_version: 0.2
+  method_scope: corrective_actual_physics_intervention_feasibility
 
 repository:
   expected_commit: null
   require_clean_git: true
 
 data:
-  dataset_id: exp006_controlled_synthetic
-  feature_cache: data/processed_features/publication/exp006/controlled_synthetic_features.csv
-  expected_feature_cache_sha256: 3199282d5abf674538797b41dc97240825cf6ec80853dffb5c9f8ca4f45bfdae
-  split_file: configs/publication_data_split.json
-  split_key: controlled_synthetic
-  physics_prior_file: configs/physics_priors.yaml
+  dataset_id: exp007a_multicondition_synthetic
+  feature_cache: data/processed_features/publication/exp007a/multicondition_features.csv
+  metadata_file: data/processed_features/publication/exp007a/multicondition_metadata.json
+  expected_feature_cache_sha256: PENDING_AFTER_FROZEN_SIMULATION
+  scenario_file: configs/exp007a_multicondition_scenarios.csv
+  expected_scenario_sha256: 051a54a2c28f898695702caf23eb3bc2de5f368f6dceb5fabbdcf53c2170d397
+  split_file: configs/exp007a_data_split.json
   target: normalized_rul
-  hidden_truth: degradation_value
-  target_test_access: evaluation_only
+  target_test_access: evaluation_only_after_development_gate
   representation: causal_feature_sequence
   sequence_length: 8
   sequence_stride: 1
@@ -64,77 +68,94 @@ data:
     - spectral_entropy
     - high_frequency_ratio
   operating_condition_columns: [load_n, speed_rpm, snr_db]
-  short_trajectory_policy: >-
-    EXP-007 uses only the controlled benchmark, whose trajectories all have at least 20
-    snapshots. The six-snapshot supplied-v2 trajectory is outside the known-truth endpoint
-    and is not silently discarded from a dataset used by this experiment.
+  condition_scaling:
+    policy: fixed_declared_physical_ranges_not_fitted_standard_deviations
+    load_n: {reference: 5000.0, range: 2400.0}
+    speed_rpm: {reference: 3060.0, range: 1080.0}
+    snr_db: {reference: 10.0, range: 8.0}
+  short_trajectory_policy: fail_if_shorter_than_sequence
+
+simulation:
+  source: Bearing_Simulation_Model-main/Bearing_Simulation_Model-main/Simulation_Model.zip
+  source_license: CC BY 4.0
+  source_citation: >-
+    Mauthe, Hagmeyer, and Zeiler (2025),
+    DOI 10.3850/978-981-94-3281-3_ESREL-SRA-E2025-P8028-cd
+  expected_trajectories: {train: 64, validation: 16, test: 16}
+  progression_families:
+    - linear_increasing
+    - progressively_increasing
+    - step_like
+    - gamma
+  development_seed: 420071
+  sealed_test_seed: 920071
+  test_seal: do_not_evaluate_until_development_target_qualification_passes
 
 cross_fit:
   policy: >-
-    Each controlled training trajectory is predicted once by a backbone and degradation
-    proxy that did not train, tune, normalize, or fit templates on that trajectory.
+    Every training trajectory is an out-of-fold counterfactual target exactly once. A fold's
+    scaler, data-only parent, templates, proxy, and physics interventions do not fit its
+    holdout trajectories.
   folds:
     - fold_id: cf_01
-      holdout_runs:
-        - pc_linear_train_01
-        - pc_linear_train_02
-        - pc_progressive_train_01
-        - pc_progressive_train_02
-        - pc_step_train_01
-        - pc_step_train_02
-        - pc_gamma_train_01
-        - pc_gamma_train_02
-      validation_runs:
-        - pc_linear_train_03
-        - pc_progressive_train_03
-        - pc_step_train_03
-        - pc_gamma_train_03
+      holdout_replicates: [1, 2, 3, 4]
+      validation_replicate: 5
     - fold_id: cf_02
-      holdout_runs:
-        - pc_linear_train_03
-        - pc_linear_train_04
-        - pc_progressive_train_03
-        - pc_progressive_train_04
-        - pc_step_train_03
-        - pc_step_train_04
-        - pc_gamma_train_03
-        - pc_gamma_train_04
-      validation_runs:
-        - pc_linear_train_05
-        - pc_progressive_train_05
-        - pc_step_train_05
-        - pc_gamma_train_05
+      holdout_replicates: [5, 6, 7, 8]
+      validation_replicate: 9
     - fold_id: cf_03
-      holdout_runs:
-        - pc_linear_train_05
-        - pc_linear_train_06
-        - pc_progressive_train_05
-        - pc_progressive_train_06
-        - pc_step_train_05
-        - pc_step_train_06
-        - pc_gamma_train_05
-        - pc_gamma_train_06
-      validation_runs:
-        - pc_linear_train_01
-        - pc_progressive_train_01
-        - pc_step_train_01
-        - pc_gamma_train_01
+      holdout_replicates: [9, 10, 11, 12]
+      validation_replicate: 13
+    - fold_id: cf_04
+      holdout_replicates: [13, 14, 15, 16]
+      validation_replicate: 1
 
 backbone:
   name: causal_lstm
-  role: identical_data_only_fallback
+  role: identical_parent_and_fallback
   hidden_dim: 64
-  epochs: 160
-  patience: 24
+  epochs: 140
+  patience: 20
   batch_size: 128
   learning_rate: 0.0005
   weight_decay: 0.00001
   gradient_clip: 5.0
   minimum_improvement: 0.000001
   mixed_precision: false
-  mixed_precision_rationale: >-
-    The network is deliberately small and reproducibility is preferred over a negligible
-    speed gain; the credibility and template computations remain in float64 on CPU.
+
+physics_intervention:
+  interpretation: actual_training_loss_with_adapted_simulator_progression_prior
+  candidate_families:
+    - linear_increasing
+    - progressively_increasing
+    - step_like
+    - gamma
+  time_scale_factors: [0.60, 1.00, 1.60]
+  candidate_count: 12
+  initialization: clone_identical_best_data_only_checkpoint
+  fine_tune_epochs: 40
+  patience: 8
+  learning_rate: 0.0002
+  weights:
+    data: 1.0
+    prior_value: 0.75
+    prior_rate: 0.15
+    monotonic: 0.02
+  template:
+    source: training_only_hidden_simulator_degradation
+    grid_points: 101
+    gaussian_bandwidth: 0.08
+    minimum_standard_deviation: 0.02
+    monotonic_projection: cumulative_maximum
+  exposure:
+    reference_load_n: 5000.0
+    reference_speed_rpm: 3060.0
+    bearing_life_exponent: 3.3333333333333335
+    reference_life_source: median_complete_training_duration_only
+    test_total_life_forbidden: true
+  attribution: >-
+    Adapted controlled-simulator progression regularization. It is not Paris crack growth,
+    ISO 281 individual-life truth, or the simulator's undisclosed governing equation.
 
 degradation_proxy:
   model: extra_trees_regressor
@@ -144,51 +165,17 @@ degradation_proxy:
   target: degradation_value
   uncertainty: standard_deviation_across_trees
 
-prior_templates:
-  source: training_only_simulator_hidden_truth
-  source_artifact: Bearing_Simulation_Model-main/Bearing_Simulation_Model-main/Simulation_Model.zip
-  source_license: CC BY 4.0
-  adaptation_record: >-
-    Newly fitted empirical lifecycle-to-degradation templates derived from EXP-006 controlled
-    outputs; neither reproduced simulator internals nor a claimed real bearing equation.
-  interpretation: empirical_family_template_not_claimed_governing_equation
-  progression_families:
-    - linear_increasing
-    - progressively_increasing
-    - step_like
-    - gamma
-  lifecycle_grid_points: 101
-  gaussian_bandwidth: 0.08
-  minimum_standard_deviation: 0.02
-  monotonic_projection: cumulative_maximum
-
-corruptions:
-  validity_tolerance: [0.85, 1.15]
-  specifications:
-    train:
-      uncertain_scales: [0.90, 1.10]
-      severe_scales: [0.55, 1.80]
-    validation:
-      uncertain_scales: [0.92, 1.08]
-      severe_scales: [0.65, 1.55]
-    test:
-      uncertain_scales: [0.94, 1.06]
-      severe_scales: [0.72, 1.40]
-  candidate_enumeration: >-
-    Enumerate all four family identities crossed with exact, two mildly uncertain, and two
-    severely biased time scales without consulting trajectory truth. Truth is used only after
-    construction to label the three within-tolerance correct-family candidates valid; the
-    remaining seventeen candidates are corrupt.
-  forbidden_credibility_inputs:
-    - rul_norm
-    - rul_minutes
-    - degradation_value
-    - degradation_family
-    - validity_label
-    - corruption_type
-    - total_trajectory_length
-    - failure_time
-    - future_observations
+counterfactual_target:
+  unit: complete_trajectory_candidate_seed
+  metric: normalized_rul_rmse
+  regret_definition: physics_rmse_minus_identical_data_only_rmse
+  harmful_regret_margin: 0.01
+  label: safe_to_apply
+  safe_value: 1
+  harmful_value: 0
+  law_correctness_role: secondary_explanatory_metadata_only
+  minimum_development_harmful_fraction: 0.20
+  minimum_development_safe_fraction: 0.20
 
 credibility:
   estimator: standardized_logistic_regression
@@ -197,30 +184,43 @@ credibility:
   calibration: validation_platt_scaling
   threshold_selection: validation_youden_j
   freeze_before_test: true
-  stop_gradient_required_for_future_pinn_integration: true
   numeric_evidence:
-    - template_absolute_residual
-    - template_standardized_residual
-    - lifecycle_disagreement
-    - rolling_absolute_residual
-    - rolling_lifecycle_disagreement
-    - prior_monotonic_violation_rate
-    - residual_relative_to_best
-    - residual_rank_fraction
+    - prior_absolute_disagreement
+    - prior_rate_disagreement
+    - rolling_prior_disagreement
+    - rolling_rate_disagreement
+    - proxy_absolute_residual
     - proxy_uncertainty
     - template_uncertainty
-    - covariate_shift_score
-    - operation_shift_score
+    - residual_relative_to_best
+    - residual_rank_fraction
+    - load_delta_scaled
+    - speed_delta_scaled
+    - snr_delta_scaled
+    - condition_distance
     - backbone_damage
     - causal_prefix_length_log
+    - time_scale_factor
   categorical_evidence: [candidate_family]
-  maximum_prior_blend: 0.5
-  fallback: identical_data_only_backbone
+  forbidden_inputs:
+    - target_rul
+    - rul_norm
+    - rul_minutes
+    - degradation_value
+    - true_family
+    - degradation_family
+    - safe_to_apply
+    - harmful_intervention
+    - physics_regret
+    - total_trajectory_length
+    - failure_time
+    - future_observations
+  fallback: exact_data_only_parent
 
 comparators:
   requested:
     - data_only
-    - priorcred_thresholded
+    - priorcred
     - inverse_residual
     - validation_selected_scalar
     - random_credibility
@@ -228,63 +228,57 @@ comparators:
     - all_off
     - oracle
     - anti_oracle
-  excluded:
-    pile_inspired:
-      reason: >-
-        PILE selects settings through a GP/PDE evidence formulation that is not faithfully
-        transferable to empirical simulator-family templates; it is documented as not
-        applicable rather than mislabeled as reproduced.
+  attribution:
+    learned_hidden_operator: adapted_attnpinn_deephpm_comparator_only
+    monotonic: adapted_multisensory_degradation_consistency_constraint
+    dynamic_fusion: prior_art_not_claimed_novel
 
 training:
   seeds: [42, 1042, 2042, 3042, 4042]
   deterministic_torch: true
   dataloader_workers: 0
   resume: true
-  recovery_granularity: completed_crossfit_fold_or_seed
+  recovery_granularity: completed_fold_candidate_or_final_candidate
   oom_policy: fail_and_record
 
 evaluation:
   credibility_metrics: [auroc, auprc, brier, ece]
   rul_metrics: [mae, mse, rmse, r2, macro_run_rmse]
   bootstrap_replicates: 2000
-  bootstrap_seed: 42007
-  bootstrap_unit_order: [trajectory, seed]
+  bootstrap_seed: 420072
+  bootstrap_unit_order: [trajectory_within_seed, seed]
   calibration_bins: 10
-  primary_endpoint: heldout_test_physics_validity_auroc
-  report_by: [seed, trajectory, true_family, candidate_family, corruption_type, condition_id]
+  probability_float_format: '%.17g'
+  primary_endpoint: sealed_test_safe_intervention_auroc
+  report_by:
+    - seed
+    - trajectory
+    - true_family
+    - candidate_family
+    - law_correctness
+    - condition_id
+    - lifecycle_region
 
 success_criteria:
   minimum_test_auroc: 0.80
   minimum_auroc_ci_lower: 0.50
-  maximum_all_on_fraction_without_explanation: 0.90
-  maximum_all_off_fraction_without_explanation: 0.90
+  maximum_all_on_fraction_per_seed: 0.90
+  maximum_all_off_fraction_per_seed: 0.90
+  require_brier_better_than_prevalence: true
+  require_positive_regret_in_harmful_all_on: true
+  require_priorcred_positive_regret_below: [all_on, validation_selected_scalar]
   decision: >-
-    Stop method escalation if aggregate held-out AUROC is below 0.80 or its trajectory/seed
-    bootstrap 95% interval includes 0.50. Diagnose identifiability rather than enlarging the
-    model. RUL-regret results in EXP-007 are feasibility diagnostics, not the final real-data
-    PriorCred-RUL claim.
+    Stop before EXP-008 unless development target qualification and every sealed-test
+    credibility, calibration, anti-collapse, and regret-reduction gate passes.
 
 runtime:
   require_cuda: true
   required_gpu_name_contains: T4
-  train_work_directory: /content/exp007_work
-  drive_output_directory: /content/drive/MyDrive/Upload/experiment_outputs_exp007
+  train_work_directory: /content/exp007a_work
+  drive_output_directory: /content/drive/MyDrive/Upload/experiment_outputs_exp007a
 
 artifacts:
   create_lightweight_bundle: true
-  exclude_from_bundle:
-    - "*.pt"
-    - "*.pth"
-    - "*.pkl"
-    - "*.joblib"
-    - seeds/*/crossfit/*/evidence.csv
-    - seeds/*/train_credibility_predictions.csv
-    - seeds/*/validation_credibility_predictions.csv
-    - seeds/*/test_credibility_predictions.csv
-    - seeds/*/validation_rul_predictions.csv
-    - seeds/*/test_rul_predictions.csv
-    - predictions/credibility_predictions.csv
-    - predictions/rul_predictions.csv
   expected:
     - run_manifest.json
     - experiment_config.yaml
@@ -292,16 +286,15 @@ artifacts:
     - environment.txt
     - dataset_summary.json
     - data_split.json
-    - model_comparison.csv
-    - training_history.csv
-    - training.log
+    - development_target_qualification.json
     - credibility_metrics.csv
     - credibility_predictions.csv
-    - rul_predictions.csv
-    - physics_regret.csv
-    - parameter_recovery.csv
+    - candidate_regret.csv
+    - model_comparison.csv
+    - training_history.csv
     - statistical_summary.json
     - gate_decision.json
+    - serialization_verification.json
     - failure_report.json
     - summary.md
     - codex_results_bundle.zip
