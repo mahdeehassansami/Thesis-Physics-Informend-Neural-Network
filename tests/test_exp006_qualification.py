@@ -53,6 +53,7 @@ def test_exp006_controlled_design_matches_immutable_split() -> None:
         "progressively_increasing": 10,
         "step_like": 10,
     }
+    json.dumps(scenario_summary)
 
 
 def _feature_rows(run_id: str, truth: bool, family: str = "") -> list[dict[str, object]]:

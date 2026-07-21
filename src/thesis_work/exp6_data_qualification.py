@@ -263,15 +263,22 @@ def validate_scenario_design(
     if nongamma[["SD_gamma_process_alpha", "SD_gamma_process_beta"]].notna().any().any():
         raise ValueError("Non-gamma scenarios must not invent gamma parameters.")
 
-    conditions = (
-        frame.groupby("publication_split")
-        .agg(
-            load_mean_n=("OC_load_mean", "unique"),
-            speed_hz=("OC_f_set", "unique"),
-            snr_db=("SD_SNR", "unique"),
+    conditions = []
+    for partition, partition_frame in frame.groupby("publication_split", sort=True):
+        conditions.append(
+            {
+                "publication_split": str(partition),
+                "load_mean_n": sorted(
+                    float(value) for value in partition_frame["OC_load_mean"].unique()
+                ),
+                "speed_hz": sorted(
+                    float(value) for value in partition_frame["OC_f_set"].unique()
+                ),
+                "snr_db": sorted(
+                    float(value) for value in partition_frame["SD_SNR"].unique()
+                ),
+            }
         )
-        .reset_index()
-    )
     return {
         "scenarios": len(frame),
         "families": sorted(actual_families),
@@ -289,7 +296,7 @@ def validate_scenario_design(
             .sort_index()
             .items()
         },
-        "condition_design": conditions.to_dict(orient="records"),
+        "condition_design": conditions,
     }
 
 
