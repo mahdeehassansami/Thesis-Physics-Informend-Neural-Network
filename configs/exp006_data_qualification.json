@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "experiment": {
+    "id": "EXP-006",
+    "run_id": "exp006_data_physics_qualification",
+    "name": "Synthetic data and physics identifiability qualification",
+    "goal": "Determine which supplied and newly controlled synthetic variables can support valid-versus-misspecified physics experiments before neural training.",
+    "hypothesis": "The supplied v2 dataset supports leakage-safe RUL evaluation but not known-truth physics applicability, while the official MATLAB simulator can produce a labeled controlled benchmark with recorded progression law and hidden degradation state.",
+    "neural_training": false,
+    "execution": "local_matlab_and_python"
+  },
+  "repository": {
+    "expected_commit": null,
+    "dirty_tree_allowed_for_tooling_development": true
+  },
+  "randomness": {
+    "scenario_generation_seed": 42006,
+    "supplied_train_validation_split_seed": 42006,
+    "matlab_rng": "twister"
+  },
+  "inputs": {
+    "supplied_data": "Datasets/Bearings_with_Varying_Degradation_Behaviors_v2/Data.mat",
+    "supplied_documentation": "Datasets/Bearings_with_Varying_Degradation_Behaviors_v2/Bearings_with_Varying_Degradation_Behaviors_v2.pdf",
+    "simulator_archive": "Bearing_Simulation_Model-main/Bearing_Simulation_Model-main/Simulation_Model.zip",
+    "simulator_documentation": "Bearing_Simulation_Model-main/Bearing_Simulation_Model-main/README_Parameterization.pdf",
+    "scenario_file": "configs/exp006_controlled_simulation_scenarios.csv",
+    "split_file": "configs/publication_data_split.json",
+    "physics_prior_file": "configs/physics_priors.yaml"
+  },
+  "derived_outputs": {
+    "root": "data/processed_features/publication/exp006",
+    "supplied_feature_cache": "data/processed_features/publication/exp006/supplied_synthetic_features.csv",
+    "supplied_metadata": "data/processed_features/publication/exp006/supplied_synthetic_metadata.json",
+    "controlled_simulator_results": "data/processed_features/publication/exp006/controlled_simulator_results",
+    "controlled_feature_cache": "data/processed_features/publication/exp006/controlled_synthetic_features.csv",
+    "controlled_metadata": "data/processed_features/publication/exp006/controlled_synthetic_metadata.json"
+  },
+  "expected_supplied_schema": {
+    "partitions": {
+      "Train_Data": 28,
+      "Test_Data": 12
+    },
+    "table_columns": [
+      "no",
+      "degradation_time",
+      "signal",
+      "Bearing",
+      "OperatingConditions",
+      "SimulationDetails"
+    ],
+    "signal_columns": [
+      "Measurement",
+      "Time",
+      "Acceleration"
+    ],
+    "degradation_family_disclosed": false,
+    "fault_location_disclosed": false
+  },
+  "controlled_benchmark": {
+    "expected_scenarios": 40,
+    "progression_families": [
+      "linear_increasing",
+      "progressively_increasing",
+      "step_like",
+      "gamma"
+    ],
+    "scenarios_per_family": 10,
+    "split_counts_per_family": {
+      "train": 6,
+      "validation": 2,
+      "test": 2
+    },
+    "required_truth": [
+      "degradation_family",
+      "degradation_value",
+      "degradation_time",
+      "fault_location",
+      "bearing_parameters",
+      "operating_conditions",
+      "simulation_details"
+    ]
+  },
+  "success_criteria": [
+    "The supplied Data.mat fingerprint and 28/12 official partition are verified.",
+    "Every supplied trajectory is exported without modifying raw data and ends at normalized RUL zero.",
+    "The intentional absence of supplied degradation-family and fault labels is recorded as an identifiability limitation.",
+    "MATLAB version and required toolbox availability are recorded.",
+    "The official simulator completes a deterministic labeled smoke run and exposes the progression family, hidden degradation trajectory, and fault location.",
+    "The 40-scenario controlled design and immutable unit-level splits pass validation.",
+    "No neural-network training or test-label-driven model selection occurs."
+  ]
+}

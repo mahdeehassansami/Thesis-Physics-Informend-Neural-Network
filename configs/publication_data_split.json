@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "created_for": "EXP-006",
+  "created_at": "2026-07-21",
+  "split_policy": "Complete physical or simulated trajectories only; no window-level random splitting.",
+  "supplied_synthetic_v2": {
+    "source_partition_preserved": true,
+    "train_selection_method": "Twenty of the 28 official training trajectories after an ID-only seeded selection; no signals, RUL values, degradation families, or fault types were used.",
+    "validation_selection_method": "Eight of the 28 official training trajectories selected with Python random.Random(42006).sample(range(1,29), 8).",
+    "train_runs": [
+      "synthetic_train_001",
+      "synthetic_train_002",
+      "synthetic_train_005",
+      "synthetic_train_008",
+      "synthetic_train_009",
+      "synthetic_train_012",
+      "synthetic_train_013",
+      "synthetic_train_014",
+      "synthetic_train_015",
+      "synthetic_train_016",
+      "synthetic_train_017",
+      "synthetic_train_018",
+      "synthetic_train_019",
+      "synthetic_train_020",
+      "synthetic_train_021",
+      "synthetic_train_023",
+      "synthetic_train_024",
+      "synthetic_train_026",
+      "synthetic_train_027",
+      "synthetic_train_028"
+    ],
+    "validation_runs": [
+      "synthetic_train_003",
+      "synthetic_train_004",
+      "synthetic_train_006",
+      "synthetic_train_007",
+      "synthetic_train_010",
+      "synthetic_train_011",
+      "synthetic_train_022",
+      "synthetic_train_025"
+    ],
+    "test_runs": [
+      "synthetic_test_001",
+      "synthetic_test_002",
+      "synthetic_test_003",
+      "synthetic_test_004",
+      "synthetic_test_005",
+      "synthetic_test_006",
+      "synthetic_test_007",
+      "synthetic_test_008",
+      "synthetic_test_009",
+      "synthetic_test_010",
+      "synthetic_test_011",
+      "synthetic_test_012"
+    ],
+    "physics_truth_available": false
+  },
+  "controlled_synthetic": {
+    "membership_source": "configs/exp006_controlled_simulation_scenarios.csv",
+    "assignment_policy": "Within each progression family, replicates 01-06 are training, 07-08 validation, and 09-10 test. Validation and test also introduce predeclared operating/noise shift.",
+    "train_runs": [
+      "pc_linear_train_01",
+      "pc_linear_train_02",
+      "pc_linear_train_03",
+      "pc_linear_train_04",
+      "pc_linear_train_05",
+      "pc_linear_train_06",
+      "pc_progressive_train_01",
+      "pc_progressive_train_02",
+      "pc_progressive_train_03",
+      "pc_progressive_train_04",
+      "pc_progressive_train_05",
+      "pc_progressive_train_06",
+      "pc_step_train_01",
+      "pc_step_train_02",
+      "pc_step_train_03",
+      "pc_step_train_04",
+      "pc_step_train_05",
+      "pc_step_train_06",
+      "pc_gamma_train_01",
+      "pc_gamma_train_02",
+      "pc_gamma_train_03",
+      "pc_gamma_train_04",
+      "pc_gamma_train_05",
+      "pc_gamma_train_06"
+    ],
+    "validation_runs": [
+      "pc_linear_validation_01",
+      "pc_linear_validation_02",
+      "pc_progressive_validation_01",
+      "pc_progressive_validation_02",
+      "pc_step_validation_01",
+      "pc_step_validation_02",
+      "pc_gamma_validation_01",
+      "pc_gamma_validation_02"
+    ],
+    "test_runs": [
+      "pc_linear_test_01",
+      "pc_linear_test_02",
+      "pc_progressive_test_01",
+      "pc_progressive_test_02",
+      "pc_step_test_01",
+      "pc_step_test_02",
+      "pc_gamma_test_01",
+      "pc_gamma_test_02"
+    ],
+    "physics_truth_available": true
+  },
+  "pronostia": {
+    "train_runs": [
+      "Bearing1_1",
+      "Bearing2_1",
+      "Bearing3_1"
+    ],
+    "validation_runs": [
+      "Bearing1_2",
+      "Bearing2_2",
+      "Bearing3_2"
+    ],
+    "test_runs": [
+      "Bearing1_3",
+      "Bearing1_4",
+      "Bearing1_5",
+      "Bearing1_6",
+      "Bearing1_7",
+      "Bearing2_3",
+      "Bearing2_4",
+      "Bearing2_5",
+      "Bearing2_6",
+      "Bearing2_7",
+      "Bearing3_3"
+    ],
+    "official_learning_test_roles_preserved": true
+  },
+  "ims": {
+    "strategy": "Frozen four-fold leave-one-trajectory-out design from EXP-004 and EXP-005.",
+    "folds_reference": "configs/colab_experiments_run_05.json#/cross_bearing/folds",
+    "all_runs": [
+      "ims_ds1_b3",
+      "ims_ds1_b4",
+      "ims_ds2_b1",
+      "ims_ds3_b3"
+    ]
+  },
+  "kaist_vibration_temperature": {
+    "role": "Single-trajectory mechanism case study only",
+    "strategy": "Chronological 65/15/20 percent split if used",
+    "cross_bearing_claim_allowed": false
+  },
+  "cwru": {
+    "role": "Excluded from direct RUL evidence",
+    "reason": "Seeded-fault classification data are not complete run-to-failure trajectories."
+  }
+}
