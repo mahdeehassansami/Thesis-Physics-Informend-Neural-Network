@@ -1,7 +1,6 @@
 # EXP-007A protocol amendment: counterfactual physics harm
 
-Status: corrective protocol frozen after structural cache qualification; no EXP-007A neural
-results observed
+Status: evaluated in EXP-007A; frozen gate failed and sealed test is now diagnostic-only
 
 Protocol version: 0.2.2
 
@@ -152,3 +151,13 @@ are not invented here. SiMBA-style dynamic fusion is prior art and is not the no
 
 ANSYS remains deferred. The amendment tests statistical identifiability and negative-transfer
 control, which additional finite-element fidelity would not by itself resolve.
+
+## Recorded outcome
+
+The independently verified five-seed result failed the frozen gate. Mean within-seed AUROC was
+`0.666703 +/- 0.059375`, with hierarchical 95% interval `[0.597772, 0.735509]`. PriorCred
+improved mean macro run RMSE by `4.96%` relative to data-only, but mean positive regret
+`0.004073` exceeded all-on (`0.003480`) and the validation-selected scalar (`0`). Every selected
+scalar was zero, making the strict below-scalar positive-regret condition impossible in the
+realized run. This remains a failure rather than a post-test amendment. The 16 sealed-test
+trajectories are now open and cannot confirm a revised protocol.

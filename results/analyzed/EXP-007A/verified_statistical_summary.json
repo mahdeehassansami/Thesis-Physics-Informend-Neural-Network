@@ -1,0 +1,18 @@
+{
+  "mean_seed_auroc": 0.6667033195377573,
+  "std_seed_auroc": 0.05937460557917582,
+  "mean_seed_auprc": 0.7255375351986103,
+  "std_seed_auprc": 0.04290401949044786,
+  "mean_seed_brier": 0.22837127243050315,
+  "std_seed_brier": 0.010541912320706823,
+  "mean_prevalence_brier": 0.246435546875,
+  "test_safe_fraction": 0.5510416666666667,
+  "test_units": 960,
+  "replicates_requested": 2000,
+  "replicates_valid": 2000,
+  "mean": 0.6687460743280703,
+  "median": 0.6689973148646777,
+  "auroc_ci_lower_95": 0.5977719425610488,
+  "auroc_ci_upper_95": 0.7355085652471194,
+  "aggregation": "trajectory_within_resampled_seed_then_mean_seed_auroc"
+}

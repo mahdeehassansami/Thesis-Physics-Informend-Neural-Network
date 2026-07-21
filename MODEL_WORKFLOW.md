@@ -189,3 +189,25 @@ protocol erratum 0.2.2 reduced the causal sequence length from eight to five bef
 training. The frozen split, feature set, target, architecture capacity, intervention, seeds,
 and gates did not change. The active cache and metadata hashes are pinned in
 `configs/experiment.yaml`.
+
+## EXP-007A completed result
+
+EXP-007A completed all five seeds on a Tesla T4 at commit
+`76d9f78227f8a8b9ff823c0883097d32d4edfc7e`. All 739 full artifacts and 376 lightweight-bundle
+entries passed independent identity and hash validation. Development contained balanced safe
+and harmful interventions for every seed, so sealed-test access was authorized as designed.
+
+The frozen gate failed. Mean within-seed AUROC was `0.666703 +/- 0.059375`, with hierarchical
+95% interval `[0.597772, 0.735509]`; this is above chance but below the required `0.80` point
+estimate. Mean Brier score beat the prevalence baseline and no seed exceeded the 90% collapse
+limit. PriorCred improved mean macro run RMSE by `4.96%` versus data-only and `4.02%` versus
+all-on, winning 61/80 and 65/80 seed-trajectory comparisons respectively, but its positive
+regret tail was worse than the declared controls.
+
+Correct simulator-family/scale candidates were safe in only `38.75%` of units, compared with
+`56.59%` for the remaining candidates. This supports the distinction between mathematical
+prior correctness and intervention safety, but it is not a passed safety-control result. Every
+validation-selected scalar was zero, making the frozen strict positive-regret comparison below
+that zero baseline impossible. Do not rescore the opened test set. EXP-008 remains blocked;
+the next allowable work is open-data diagnosis followed by a preregistered EXP-007B with a new
+sealed simulator seed if justified.

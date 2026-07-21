@@ -14,12 +14,14 @@ data/raw/*
 data/processed_features/*
 outputs/figures/*
 outputs/tables/*
+results/incoming/*
 
 # Keep directory placeholders.
 !data/raw/.gitkeep
 !data/processed_features/.gitkeep
 !outputs/figures/.gitkeep
 !outputs/tables/.gitkeep
+!results/incoming/.gitkeep
 
 # Large local research inputs, reference repositories, and disposable Colab state.
 Datasets/

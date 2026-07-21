@@ -1,6 +1,6 @@
 # EXP-007A counterfactual physics-harm runbook
 
-Status: simulator and cache qualified; Colab neural run pending
+Status: Colab run completed, independently verified, and frozen gate failed
 
 Experiment ID: `EXP-007A`
 
@@ -100,6 +100,21 @@ After cache qualification, final validation, commit, and push:
 6. Download `codex_results_bundle.zip` and place it under `results/incoming/`.
 
 Budget 60-120 minutes on a T4. The run is checkpoint-restartable at fold/candidate granularity.
+
+## Completed result
+
+The valid five-seed T4 execution used commit
+`76d9f78227f8a8b9ff823c0883097d32d4edfc7e`. Development qualification passed for every seed,
+but the final gate failed: mean seed AUROC was `0.666703` with hierarchical 95% interval
+`[0.597772, 0.735509]`, below the frozen `0.80` point threshold. PriorCred improved mean macro
+run RMSE by `4.96%` versus data-only, but its positive regret exceeded both declared controls.
+All five validation-selected scalars were zero, so the strict comparison below that control's
+zero positive regret was impossible in the realized run. The outcome remains failed rather
+than being rescored after test access.
+
+The full Colab evidence is preserved under `saved results/run_07a/colab_run_01/`; independent
+reports are under `results/analyzed/EXP-007A/`. These 16 test trajectories are now open and may
+be used only for diagnosis.
 
 ## Decision
 

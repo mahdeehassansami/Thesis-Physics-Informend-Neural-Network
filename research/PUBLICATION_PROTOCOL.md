@@ -1,7 +1,7 @@
 # Locked publication protocol: physics-prior credibility for bearing RUL
 
-Status: version 0.1 evaluated in EXP-007 and failed; corrective version 0.2.2 is frozen in
-`EXP007A_PROTOCOL_AMENDMENT.md`
+Status: version 0.1 failed in EXP-007; corrective version 0.2.2 was evaluated in EXP-007A and
+also failed its frozen gate. Both test populations are open and diagnostic-only.
 
 Protocol version: 0.1
 

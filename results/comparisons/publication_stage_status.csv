@@ -1,3 +1,4 @@
 experiment_id,status,primary_endpoint,gate,decision
 EXP-006,completed,Data/physics qualification,passed,Controlled labeled benchmark established
 EXP-007,completed,Synthetic credibility feasibility,failed,Stop and diagnose identifiability; do not proceed to EXP-008
+EXP-007A,completed,Counterfactual physics-harm credibility,failed,Average RUL improved but discrimination and tail-risk gates failed; EXP-008 remains blocked

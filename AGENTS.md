@@ -1534,3 +1534,35 @@ EXP-007 test population as confirmation evidence.
   `/content`, causing the editable path to resolve outside the clone. A non-installing pip
   dry-run reproduced the path failure. The install cell now runs with `cwd=CLONE` and exposes
   pip output; this execution repair changes no experimental condition.
+
+## 36. EXP-007A completed state and failed publication gate
+
+EXP-007A is a valid completed negative gate result. Its sealed test is now open and cannot
+confirm any revised method.
+
+- The run used commit `76d9f78227f8a8b9ff823c0883097d32d4edfc7e`, a Tesla T4, the frozen
+  64/16/16 split, 12 candidates, and five seeds. All seeds completed without OOM or numerical
+  failure, and development qualification passed before test access for every seed.
+- All 739 inventoried full artifacts and 376 lightweight-bundle entries passed independent
+  size, SHA-256, safe-path, configuration, split, scenario, cache, and metadata validation.
+- The full evidence is preserved under `saved results/run_07a/colab_run_01/`; the imported
+  lightweight evidence is under `results/incoming/`, and verified reports are under
+  `results/analyzed/EXP-007A/`.
+- Mean within-seed safe-intervention AUROC is `0.666703 +/- 0.059375`; the hierarchical 95%
+  interval is `[0.597772, 0.735509]`. Mean AUPRC is `0.725538`; mean Brier `0.228371` beats the
+  `0.246436` prevalence reference. No seed exceeds the 90% all-on/all-off limit.
+- PriorCred mean macro run RMSE is `0.164284`, improving `4.96%` over data-only and `4.02%`
+  over all-on. It wins 61/80 seed-trajectory pairs versus data-only and 65/80 versus all-on.
+  Oracle RMSE is `0.150883`, showing additional headroom.
+- The tail-risk gate fails: PriorCred mean positive regret is `0.004073`, versus `0.003480`
+  for all-on and `0` for the validation-selected scalar. Its worst positive regret is
+  `0.078220`. Every validation-selected scalar was zero, so the frozen strict below-scalar
+  condition was impossible in the realized run. Do not relax it after test access.
+- Correct family/scale candidates are safe in only `38.75%` of test units and have mean regret
+  `0.016419`; other candidates are safe in `56.59%` with mean regret `0.007709`. Mathematical
+  simulator-family correctness is not a reliable intervention-safety proxy.
+- Five seed jobs total `1264.0` seconds (`21.1` minutes); the initial log interval is `21.6`
+  minutes. The manifest's `170.6` seconds records only a later resume/finalization pass.
+- EXP-007A fails because AUROC is below `0.80` and positive regret is not reduced below both
+  declared controls. EXP-008 remains blocked. The next permitted work is diagnostic analysis
+  of the opened results, then a frozen EXP-007B with a new sealed simulator seed if supported.

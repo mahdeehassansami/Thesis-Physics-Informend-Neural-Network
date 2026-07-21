@@ -1,0 +1,32 @@
+{
+  "manifest_elapsed_seconds": 170.61263255400013,
+  "manifest_scope": "final resume and artifact finalization",
+  "per_seed_training_seconds": {
+    "42": 269.544790594,
+    "1042": 250.55429193499998,
+    "2042": 247.81761239499997,
+    "3042": 249.4431101350001,
+    "4042": 246.66359461700017
+  },
+  "sum_per_seed_training_seconds": 1264.0233996760003,
+  "mean_per_seed_training_seconds": 252.80467993520006,
+  "initial_pass_wall_seconds_from_log": 1293.629653,
+  "resume_skip_count": 5,
+  "validation_selected_scalars": {
+    "42": 0.0,
+    "1042": 0.0,
+    "2042": 0.0,
+    "3042": 0.0,
+    "4042": 0.0
+  },
+  "backbone_parameter_counts": [
+    22625
+  ],
+  "backbone_best_epochs": {
+    "42": 6,
+    "1042": 6,
+    "2042": 7,
+    "3042": 7,
+    "4042": 2
+  }
+}

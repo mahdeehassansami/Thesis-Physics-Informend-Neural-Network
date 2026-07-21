@@ -1,0 +1,3 @@
+experiment_id,target,mean_seed_auroc,seed_auroc_sd,gate,comparability_note
+EXP-007,mathematical_prior_correctness,0.6608762254901961,0.0986167739967499,failed,Different target and test population; descriptive only
+EXP-007A,counterfactual_safe_intervention,0.6667033195377573,0.05937460557917582,failed,Different target and test population; descriptive only

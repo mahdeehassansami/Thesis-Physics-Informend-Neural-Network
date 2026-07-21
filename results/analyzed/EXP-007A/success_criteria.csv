@@ -1,0 +1,8 @@
+criterion,threshold,observed,passed
+mean_within_seed_auroc,>=0.8,0.6667033195377573,False
+hierarchical_bootstrap_lower_95,>0.5,0.5977719425610488,True
+per_seed_anti_collapse,all on/off <=0.9,0.875,True
+brier_better_than_prevalence,mean Brier < mean prevalence Brier,0.22837127243050315,True
+harm_stress,harmful-candidate mean regret > 0,0.04291186748496261,True
+priorcred_positive_regret_below_all_on,PriorCred < all-on,0.004073377195833532,False
+priorcred_positive_regret_below_validation_scalar,PriorCred < validation-selected scalar,0.004073377195833532,False

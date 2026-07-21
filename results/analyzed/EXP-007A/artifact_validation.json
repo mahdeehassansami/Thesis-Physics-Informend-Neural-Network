@@ -1,0 +1,75 @@
+{
+  "status": "passed",
+  "artifact_inventory_records": 739,
+  "artifact_inventory_sha256": "beaf29c72d8b55c48e40598848599ac9383f4bfe6c839f2ed49499a9b8f62f69",
+  "artifact_inventory_sha_matches_manifest": true,
+  "missing_artifacts": [],
+  "artifact_size_mismatches": [],
+  "artifact_hash_mismatches": [],
+  "bundle_sha256": "18791d03bb7369a0d1620aea3ceb676488873deccbed1ef3a04e75a5d15a9927",
+  "bundle_entries": 376,
+  "bundle_uncompressed_bytes": 69518386,
+  "bundle_unsafe_entries": [],
+  "bundle_duplicate_entries": [],
+  "bundle_missing_from_full": [],
+  "bundle_hash_mismatches": [],
+  "executed_notebook_sha_matches_manifest": true,
+  "identity": {
+    "git_commit": "76d9f78227f8a8b9ff823c0883097d32d4edfc7e",
+    "git_object_type": "commit",
+    "config_semantically_equal_to_recorded_commit_inputs": true,
+    "config_sha256": "49101763ed5980a241f82a21b127c6af8d6040ee74946eaceccac91204f3c2e1",
+    "config_sha_matches_manifest": true,
+    "split_exactly_equal": true,
+    "split_sha256": "4a68cb4aee045732a27dfc47dfb09851465a94cb5b76771f38a6b9899a74ca1b",
+    "split_sha_matches_manifest": true,
+    "scenario_sha256": "35c8968f392ecaefcb1bacd69aef0db364824b8dd17d88ca1e380e5b67754e48",
+    "feature_sha256": "050db850cc5dd0177fc6c58cb0efb1227f305254aeae7fa0ac18a79974ac35af",
+    "metadata_sha256": "81f327a8d73312240d43c571a987770322ab64cb45d480fba5269cd0b3a8ee2b",
+    "scenario_sha_matches_manifest": true,
+    "feature_sha_matches_manifest": true,
+    "metadata_sha_matches_config": true
+  },
+  "maximum_metric_absolute_difference": 8.326672684688674e-17,
+  "maximum_model_comparison_absolute_difference": 2.220446049250313e-16,
+  "maximum_physics_regret_absolute_difference": 1.5178830414797062e-16,
+  "maximum_statistical_absolute_difference": 0.0,
+  "serialization_verification": {
+    "status": "passed",
+    "source": "reloaded_root_credibility_predictions.csv",
+    "float_format": "%.17g",
+    "maximum_absolute_difference": 0.0,
+    "per_seed": [
+      {
+        "parent_seed": 42,
+        "auroc_absolute_difference": 0.0,
+        "auprc_absolute_difference": 0.0,
+        "brier_absolute_difference": 0.0
+      },
+      {
+        "parent_seed": 1042,
+        "auroc_absolute_difference": 0.0,
+        "auprc_absolute_difference": 0.0,
+        "brier_absolute_difference": 0.0
+      },
+      {
+        "parent_seed": 2042,
+        "auroc_absolute_difference": 0.0,
+        "auprc_absolute_difference": 0.0,
+        "brier_absolute_difference": 0.0
+      },
+      {
+        "parent_seed": 3042,
+        "auroc_absolute_difference": 0.0,
+        "auprc_absolute_difference": 0.0,
+        "brier_absolute_difference": 0.0
+      },
+      {
+        "parent_seed": 4042,
+        "auroc_absolute_difference": 0.0,
+        "auprc_absolute_difference": 0.0,
+        "brier_absolute_difference": 0.0
+      }
+    ]
+  }
+}
