@@ -1,0 +1,7 @@
+criterion,passed,evidence
+All 36 jobs complete with finite reproducible metrics,True,36/36 completed; zero failures; all metrics reproduced
+Weak-PINN macro RMSE below Run 4 value 0.314238,True,0.288104
+Weak-PINN worst-bearing RMSE below 0.497089,True,0.479774
+Weak-PINN improves at least three of four folds,False,2/4 folds improved
+Weak-PINN between-bearing RMSE SD below 0.186672,True,0.167423
+Weak-PINN late-life behavior does not worsen,False,macro late MAE 0.290534 -> 0.330923; abs bias improved in 2/4 folds; worst abs bias 0.704754 -> 0.663586

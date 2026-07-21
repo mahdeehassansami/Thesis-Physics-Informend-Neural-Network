@@ -1292,3 +1292,80 @@ verified Run 4 domain-shift evidence. Its authoritative configuration is
   `experiment_outputs_run_05/` directory. The notebook intentionally retains
   `PASTE_40_CHARACTER_COMMIT_SHA` until the prepared changes are committed and pushed.
   Do not run the real experiment from an unidentified or dirty revision.
+
+## 30. EXP-005 Run 5 completed state and publication pivot
+
+EXP-005 / Run 5 is complete, archived, and independently verified. Treat it as a
+controlled partial/negative preprocessing result, not as evidence that baseline-relative
+normalization universally improves bearing RUL prediction.
+
+- The complete output is preserved under `saved results/run_05/experiment_outputs/`; the
+  analysis and independently recomputed tables are under `saved results/run_05/`.
+- The run used exact clean Git commit
+  `359fd3ceb0df7314e0714468414aba52c95b7783`, a Tesla T4, the four frozen Run 4 folds,
+  and seeds 42, 1042, and 2042. All 36 jobs completed in 51.9 minutes with no failures.
+- Configuration, split, cache, preprocessing, committed source, executed notebook,
+  artifact inventory, and lightweight bundle checks passed. All best-checkpoint and
+  final-epoch metrics reproduce from the saved predictions.
+- The Run 4 identity defect is corrected: `run_id` and `bearing_run_id` contain the
+  physical trajectory and `experiment_run_id` contains `run_05` in every test and
+  validation prediction file.
+- Weak-PINN/high ranked first by equal-bearing macro normalized RMSE (`0.288104`),
+  Strong-PINN ranked second (`0.311587`), and LSTM ranked third (`0.371753`). All macro
+  R-squared values remained negative, so Run 5 does not support a generally reliable
+  cross-bearing prediction claim.
+- Compared with Run 4, Weak-PINN improved macro RMSE by 8.3%, worst-bearing RMSE by 3.5%,
+  and between-bearing RMSE standard deviation by 10.3%. It improved only two of four
+  held-out bearings, however, and macro late-life MAE worsened from `0.290534` to
+  `0.330923`. The full predeclared success criterion therefore failed.
+- Mean signal-feature Wasserstein shift fell from `1.4482` to `0.9342` in both preflight
+  and saved-artifact reconstruction, with a reduction in every fold. RUL error did not
+  improve in every fold: IMS-DS2/B1 is the clearest counterexample. Reduced covariate
+  discrepancy is therefore not sufficient evidence of improved prognostic transfer.
+- Freeze Runs 4 and 5 as a controlled baseline pair. Do not automatically prepare Run 6
+  or tune another fixed weight grid. The next task is a formal current-literature novelty
+  matrix and publication protocol defining the central claim, modern baselines, dataset
+  scope, uncertainty treatment, ablations, statistical tests, and locked evaluation
+  before further implementation.
+- The strongest supported research direction is to test when a preprocessing assumption
+  or physics prior is trustworthy across bearings, using identifiability-, uncertainty-,
+  or reliability-aware mechanisms. This is a hypothesis motivated by Runs 4 and 5, not
+  yet a demonstrated novel method or publication claim.
+
+## 31. Locked publication direction after the novelty audit
+
+The post-Run-5 literature and implementation audit is recorded under `research/`:
+
+- `research/PUBLICATION_NOVELTY_MATRIX.md` defines the closest work, ruled-out novelty
+  claims, provisional gap, and literature-refresh requirements.
+- `research/PUBLICATION_PROTOCOL.md` locks the research questions, method boundary,
+  datasets, leakage controls, baselines, outcomes, statistics, ablations, success criteria,
+  and stop rules.
+- `research/RESEARCH_ROADMAP.md` defines the staged EXP-006 through EXP-011 progression.
+
+The central working hypothesis is that a label-safe physics-prior credibility mechanism can
+identify misspecified bearing-degradation priors and reduce physics-induced negative-transfer
+regret while retaining an explicit data-only fallback. This is not yet a demonstrated novel
+method.
+
+Do not use attention, DeepHPM, generic adaptive loss weighting, adaptive Paris parameters,
+physics-consistency scores, Bayesian/ensemble uncertainty, conformal prediction, or generic
+domain adaptation as the central novelty. Current literature already contains those ideas,
+including a 2026 PRONOSTIA study with GP-estimated sequence-specific Paris parameters,
+curriculum weighting, Bayesian optimization, ensembles, conformal calibration, and a
+Paris-consistency score.
+
+The next implementation milestone is EXP-006 data and physics-identifiability qualification.
+Before new neural training:
+
+1. inspect the synthetic MATLAB v7.3/HDF5 schema without modifying raw data;
+2. determine which generator laws and parameters are actually recoverable;
+3. build a deterministic derived-cache converter and tests;
+4. fingerprint the publication datasets;
+5. define immutable unit-level splits and machine-readable physics applicability; and
+6. prove that valid/corrupt prior labels can be constructed without target-test RUL leakage.
+
+If supplied synthetic truth is insufficient, use a transparent new simulator from published
+equations and identify it as newly generated data. Never infer or invent hidden simulator
+truth. EXP-006 must not become another fixed-weight model sweep, and its Colab Upload must not
+be prepared until the local schema, split, configuration, and validation artifacts exist.
