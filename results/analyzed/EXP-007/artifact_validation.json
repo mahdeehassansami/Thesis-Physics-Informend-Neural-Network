@@ -1,0 +1,23 @@
+{
+  "experiment_id_valid": true,
+  "status_completed": true,
+  "commit_identity_valid": true,
+  "config_hash_valid": true,
+  "config_matches_pinned_source": true,
+  "split_hash_valid": true,
+  "split_matches_source": true,
+  "dataset_hash_valid": true,
+  "requested_completed_seeds_valid": true,
+  "failure_report_empty": true,
+  "environment_matches_manifest": true,
+  "t4_cuda_valid": true,
+  "notebook_source_matches": true,
+  "notebook_hash_valid": true,
+  "inventory_count_valid": true,
+  "inventory_hash_valid": true,
+  "inventory_failures": [],
+  "bundle_safe": true,
+  "bundle_contains_no_binaries": true,
+  "bundle_file_count": 75,
+  "all_identity_and_integrity_checks_passed": true
+}

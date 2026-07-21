@@ -1,6 +1,6 @@
 # Research roadmap after EXP-005
 
-Status: approved direction pending implementation
+Status: EXP-007 completed; credibility escalation stopped at failed gate
 
 Date: 21 July 2026
 
@@ -76,10 +76,10 @@ family, hidden degradation, and fault location. The full qualification is under
 - conversion tests and cache schema
 - an EXP-006 report documenting what is and is not identifiable
 
-EXP-006 required no Colab Upload or neural training. EXP-007 synthetic credibility feasibility
-is now the next implementation milestone.
+EXP-006 required no Colab Upload or neural training. EXP-007 subsequently completed; its result
+is recorded in Stage 2.
 
-## Stage 2 — EXP-007: synthetic credibility feasibility — prepared for Colab
+## Stage 2 — EXP-007: synthetic credibility feasibility — completed, gate failed
 
 ### Goal
 
@@ -95,34 +95,32 @@ Test the diagnostic before integrating it into a high-capacity RUL model.
   feasible, random, all-on, all-off, and oracle controls.
 - Measure AUROC, AUPRC, Brier score, calibration, fallback behavior, and parameter recovery.
 
-### Decision gate
+### Decision gate — failed
 
 Stop method escalation if synthetic AUROC is below 0.80 or its 95% interval includes 0.50.
 Diagnose identifiability rather than compensating with a larger network.
 
-### Prepared implementation
+### Verified result
 
-The locked controller, configuration, cross-fitted credibility implementation, corruption
-schedule, tests, artifact contract, and Colab handoff are now implemented. The method uses a
-small causal LSTM fallback, a separately cross-fitted vibration-to-degradation proxy, and
-training-only empirical simulator-family templates. The empirical templates are an adaptation
-of the labeled simulator output, not claimed governing equations.
+The exact clean five-seed T4 run completed and passed artifact-identity and metric-reproduction
+checks. Correct within-seed AUROC is `0.660876 +/- 0.098617`; a mean-probability ensemble gives
+`0.753676`. Four of five seeds exceed 90% all-off fallback. The gate and anti-collapse rule
+therefore fail.
 
-Each causal checkpoint independently enumerates all four families and five scale settings,
-producing three valid and seventeen corrupt candidates without truth-dependent candidate
-selection. Corruption magnitudes change across train, validation, and test, while
-validation/test operation and noise changes retain valid labels for the correct family. PILE is
-recorded as not faithfully applicable to this empirical-template feasibility study rather than
-being mislabeled as reproduced.
+The source design has no speed/SNR variation, causing extreme out-of-support condition-shift
+features on validation and test. The benchmark target is also misaligned: corrupt priors
+generally reduce rather than increase RMSE relative to the weak data-only backbone. The result
+does not support H1 or justify real-data PriorCred-RUL escalation. Full verification is under
+`results/analyzed/EXP-007/`.
 
-EXP-007 remains incomplete until the downloaded Colab artifacts are independently verified.
-Do not begin EXP-008 merely because the implementation is ready.
-
-## Stage 3 — EXP-008: frozen real-data benchmark qualification
+## Stage 3 — EXP-008: frozen real-data benchmark qualification — blocked
 
 ### Goal
 
 Establish modern, leakage-safe PRONOSTIA and IMS baselines before testing PriorCred-RUL.
+
+Do not implement this stage until a protocol amendment and a new controlled feasibility test
+resolve the EXP-007 identifiability, anti-collapse, calibration, and target-alignment failures.
 
 ### Work
 
@@ -212,15 +210,18 @@ the intended paper claim has failed.
 
 ## Immediate next repository actions
 
-The next coding turn should implement only Stage 1:
+The next coding turn should not prepare EXP-008. It should:
 
-1. inspect the synthetic HDF5 schema and documentation without modifying `Data.mat`;
-2. add the derived-cache converter and schema tests;
-3. generate dataset fingerprints and the applicability manifest;
-4. draft immutable publication splits and prior definitions;
-5. validate locally without neural-network training; and
-6. only then prepare and push a self-contained EXP-006 Colab package if heavy extraction is
-   required.
+1. freeze EXP-007 as a negative feasibility result and amend the protocol before changing the
+   method;
+2. distinguish law correctness from counterfactual physics-intervention harm;
+3. run oracle-evidence-ceiling and feature-ablation diagnostics only on the now-open EXP-007
+   data, explicitly excluding them from confirmation evidence;
+4. replace zero-variance condition standardization with predeclared physical scaling or a
+   multi-condition source design;
+5. require development corruptions to create measurable positive RUL regret; and
+6. freeze the amended method and gates before using MATLAB to generate a fresh sealed test
+   population with a new seed.
 
-This sequence prevents another expensive run from being launched before the physics labels,
-units, and evaluation claims are actually identifiable.
+ANSYS is not indicated at this point: the blocker is statistical identifiability and benchmark
+target construction, not missing contact or fracture simulation fidelity.

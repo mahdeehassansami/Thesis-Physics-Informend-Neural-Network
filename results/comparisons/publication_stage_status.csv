@@ -1,0 +1,3 @@
+experiment_id,status,primary_endpoint,gate,decision
+EXP-006,completed,Data/physics qualification,passed,Controlled labeled benchmark established
+EXP-007,completed,Synthetic credibility feasibility,failed,Stop and diagnose identifiability; do not proceed to EXP-008

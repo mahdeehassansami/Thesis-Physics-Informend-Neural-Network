@@ -1,0 +1,8 @@
+criterion,passed,evidence
+identity_integrity,True,"All manifest, commit, config, split, cache, notebook, inventory, and bundle checks passed."
+all_five_seeds_completed,True,Five of five seeds completed with no recorded failures.
+mean_seed_auroc_at_least_0p80,False,Corrected mean seed AUROC=0.660876.
+hierarchical_ci_lower_above_0p50,True,"Corrected 95% interval=[0.530015, 0.811965]."
+anti_collapse_per_seed,False,4/5 seeds exceeded 90% all-off fallback.
+corrupt_priors_create_negative_transfer_stress,False,All-on corrupt-prior macro regret was negative on average; the benchmark did not create the intended harm endpoint.
+proceed_to_exp008,False,The locked AUROC and anti-collapse gates failed.

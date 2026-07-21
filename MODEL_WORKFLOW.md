@@ -136,3 +136,20 @@ identifiability; do not tune the test corruptions or enlarge the network.
 The fresh Drive handoff reads the pushed SHA from `Upload/expected_commit.txt`, so the user does
 not edit notebook source. Results must be downloaded as `experiment_outputs_exp007` and
 verified before EXP-008.
+
+## EXP-007 completed result
+
+EXP-007 completed all five seeds on a Tesla T4 in 282.1 seconds, and its code, configuration,
+split, cache, notebook, inventory, and bundle identities were verified. The predeclared
+credibility gate failed. The protocol-consistent within-seed AUROC is `0.660876 +/- 0.098617`;
+the five-seed mean-probability ensemble AUROC is `0.753676`. Both are below `0.80`, and four of
+five seeds collapse to greater than 90% all-off fallback.
+
+The failure is not a reason to enlarge the model. Source speed and SNR are constant, so the
+standardized condition-shift features extrapolate far outside training support. More
+fundamentally, the deliberately corrupt priors usually improve the weak data-only backbone,
+so prior correctness is not aligned with physics-induced RUL harm in this benchmark. EXP-008
+is blocked. The next work is a protocol amendment, an oracle/feature diagnostic on the open
+data, and a redesigned multi-condition MATLAB benchmark with a fresh sealed test population.
+The complete result is preserved in `saved results/run_07/`; verified analyses are in
+`results/analyzed/EXP-007/`.

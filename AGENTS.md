@@ -1405,10 +1405,10 @@ parameter corruptions, distinguish law mismatch from ordinary covariate shift, a
 AUROC/calibration stop rule in `research/PUBLICATION_PROTOCOL.md` before escalation to real
 bearing experiments.
 
-## 33. EXP-007 prepared state
+## 33. EXP-007 implementation and pre-run state
 
-EXP-007 is implemented and locally validated but has not yet produced a valid Colab result.
-Treat the repository as waiting for the EXP-007 T4 run and result import.
+This section records the implementation that produced EXP-007. The run is now complete; use
+Section 34 for the authoritative result and current workflow state.
 
 - The single active configuration is `configs/experiment.yaml`.
 - The runner is `src/thesis_work/exp7_credibility.py`; the notebook imports it and contains no
@@ -1435,6 +1435,43 @@ Treat the repository as waiting for the EXP-007 T4 run and result import.
   contains `expected_commit.txt`; the user must not manually edit a SHA.
 - No additional MATLAB run or ANSYS simulation is required for EXP-007.
 
-Do not prepare EXP-008 until the downloaded `experiment_outputs_exp007` artifacts are verified
-and the predeclared gate is evaluated. A failed gate must be preserved and diagnosed without
-test-driven tuning.
+The downloaded `experiment_outputs_exp007` artifacts have now been verified and the gate has
+been evaluated. The failed gate is preserved and diagnosed in Section 34.
+
+## 34. EXP-007 completed state and failed credibility gate
+
+EXP-007 is a valid completed negative feasibility result. Do not prepare EXP-008 from it and
+do not tune the frozen method or corruptions against its now-open test population.
+
+- The run used exact clean commit
+  `86e1e357f91f5c5e79d7f9d0fdcfd457ef09afe8`, the immutable EXP-006 cache and 24/8/8 split,
+  five seeds, and a Tesla T4. All jobs completed in 282.1 seconds with no OOM or model failure.
+- Configuration, split, cache, environment, executed notebook, artifact inventory, and bundle
+  identities passed independent validation. Saved RUL metrics reproduce from predictions.
+- The saved gate incorrectly pooled raw probabilities from independently calibrated seeds and
+  reported AUROC `0.542776`. The protocol-consistent mean within-seed AUROC is `0.660876`
+  (SD `0.098617`); a trajectory-first, seed-second bootstrap gives a 95% interval of
+  `[0.530015, 0.811965]`. A mean-probability ensemble gives AUROC `0.753676`. Every point
+  estimate remains below the predeclared `0.80` gate.
+- Four of five seeds exceed 90% all-off fallback, so the anti-collapse criterion also fails.
+  Mean Brier score `0.142381` is worse than the constant-prevalence reference `0.127500`.
+- Training contains only one speed/SNR condition. Its zero-variance standardized condition
+  features produce extreme extrapolation: median operation-shift score grows from about 0.31
+  in training to 69.4 in validation and 138.8 in test.
+- The benchmark does not instantiate the intended negative-transfer endpoint. Corrupt priors
+  generally improve the weak data-only backbone: mean all-on corrupt-prior macro regret is
+  `-0.024061`, where negative means lower RMSE than data-only. Law-correctness labels are
+  therefore not a valid proxy for intervention harm in this design.
+- The complete artifacts are preserved under `saved results/run_07/experiment_outputs/`.
+  Independent reports and tables are under `results/analyzed/EXP-007/`; the publication-stage
+  status is under `results/comparisons/publication_stage_status.csv`.
+- Seed 4042's job summary reports AUROC `0.597733`, while its serialized predictions reproduce
+  `0.574142`. Treat the predictions as authoritative and retain the discrepancy as an issue.
+
+The next work is a protocol amendment and diagnostic benchmark redesign, not EXP-008. Separate
+law correctness from counterfactual RUL harm, replace zero-variance shift scaling, establish an
+oracle evidence ceiling, and require development corruptions to cause positive physics regret.
+After the design and gates are frozen, MATLAB should generate a larger multi-condition
+development population and a fresh sealed test population with a new seed. ANSYS remains
+deferred because finite-element fidelity does not address the current identifiability,
+calibration, or target-alignment failures.

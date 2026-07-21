@@ -1,6 +1,6 @@
 # EXP-007 synthetic credibility feasibility runbook
 
-Status: prepared for Google Colab execution
+Status: completed; predeclared gate failed
 
 Experiment ID: `EXP-007`
 
@@ -124,3 +124,21 @@ EXP-008 is prepared.
 No additional simulation is required for EXP-007. MATLAB generated the locked benchmark in
 EXP-006. ANSYS remains deferred until the credibility diagnostic passes and a separately
 specified contact/crack/thermal validation would test a concrete physical claim.
+
+## Verified outcome
+
+The exact clean five-seed run completed on a Tesla T4 in 282.1 seconds. Artifact identity,
+inventory, split, cache, configuration, executed-notebook source, and saved RUL metrics passed
+independent validation.
+
+The saved report pooled raw probabilities from separately calibrated seeds. Recomputing the
+locked seed-level endpoint gives mean AUROC `0.660876` (SD `0.098617`) and a trajectory-first,
+seed-second bootstrap 95% interval `[0.530015, 0.811965]`. A mean-probability ensemble gives
+AUROC `0.753676`. All point estimates fail the required `0.80`; four of five seeds also exceed
+90% all-off fallback.
+
+The run exposes a zero-variance source-condition scaling failure and a deeper benchmark-target
+problem: corrupt priors generally help rather than harm the data-only backbone. Preserve this
+as a negative feasibility result. Do not tune against this opened test population and do not
+prepare EXP-008. See `results/analyzed/EXP-007/` for verified tables, issues, and recommended
+protocol amendments.

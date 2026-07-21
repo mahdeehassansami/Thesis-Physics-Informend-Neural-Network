@@ -1,0 +1,21 @@
+{
+  "experiment_id": "EXP-007",
+  "saved_pooled_auroc": 0.5427757352941176,
+  "corrected_mean_seed_auroc": 0.6608762254901961,
+  "corrected_seed_auroc_std": 0.09861677399674991,
+  "mean_probability_ensemble_auroc": 0.7536764705882353,
+  "hierarchical_bootstrap": {
+    "replicates": 2000,
+    "mean": 0.6644986213235294,
+    "median": 0.6618719362745098,
+    "ci_lower_95": 0.5300145526960784,
+    "ci_upper_95": 0.8119653799019608
+  },
+  "mean_seed_auprc": 0.22751273597151628,
+  "chance_auprc": 0.15,
+  "mean_seed_brier": 0.14238130193885837,
+  "constant_prevalence_brier": 0.1275,
+  "collapsed_all_off_seeds": 4,
+  "seeds": 5,
+  "decision": "stop_and_diagnose_identifiability"
+}
