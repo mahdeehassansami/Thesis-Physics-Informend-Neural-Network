@@ -1,0 +1,39 @@
+{
+  "experiment_id": "EXP-007B",
+  "status": "failed",
+  "decision": "stop_and_preserve_exp007b_negative_result",
+  "primary_unit": "complete_test_trajectory_within_neural_seed",
+  "trajectory_seed_units": 80,
+  "data_only_mean_macro_run_rmse": 0.16190535009528323,
+  "causal_controller_mean_macro_run_rmse": 0.16089160773134037,
+  "relative_macro_rmse_improvement_percent": 0.6261327147906234,
+  "mean_control_regret": -0.0010137423639428491,
+  "mean_positive_control_regret": 0.0019083977048478969,
+  "harm_regret_margin": 0.01,
+  "harmful_run_fraction": 0.0625,
+  "maximum_observed_run_regret": 0.013773187211378879,
+  "pooled_intervention_coverage": 0.29355888093689003,
+  "passes_minimum_relative_improvement": false,
+  "passes_maximum_mean_positive_regret": true,
+  "passes_maximum_harmful_run_fraction": true,
+  "passes_maximum_observed_run_regret": true,
+  "passes_pooled_intervention_coverage": true,
+  "safe_intervention_auroc_secondary": 0.5600174619690759,
+  "auroc_bootstrap_secondary": {
+    "replicates_requested": 2000,
+    "replicates_valid": 2000,
+    "mean": 0.5605682681645567,
+    "median": 0.5609942310749059,
+    "auroc_ci_lower_95": 0.5009323317162215,
+    "auroc_ci_upper_95": 0.6181523135098292,
+    "aggregation": "trajectory_within_resampled_seed_then_mean_seed_auroc"
+  },
+  "regret_bootstrap_secondary": {
+    "replicates": 2000,
+    "aggregation": "trajectory_within_resampled_seed_then_pooled_mean",
+    "mean_regret_ci_lower_95": -0.0028945213715052187,
+    "mean_regret_ci_upper_95": 0.0009244626600554013,
+    "mean_positive_regret_ci_lower_95": 0.000973245558997457,
+    "mean_positive_regret_ci_upper_95": 0.0031231492591084335
+  }
+}

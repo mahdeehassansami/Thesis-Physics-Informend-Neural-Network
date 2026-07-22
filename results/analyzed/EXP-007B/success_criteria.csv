@@ -1,0 +1,6 @@
+criterion,threshold,observed,passed
+relative_macro_run_rmse_improvement_percent,>=1.0,0.6261327147906234,False
+mean_positive_control_regret,<=0.005,0.0019083977048478969,True
+harmful_run_fraction,<=0.1,0.0625,True
+maximum_observed_run_regret,<=0.05,0.013773187211378879,True
+pooled_intervention_coverage,0.05..0.9,0.29355888093689003,True

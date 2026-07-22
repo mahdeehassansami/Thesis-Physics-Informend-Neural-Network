@@ -1,0 +1,33 @@
+{
+  "manifest_elapsed_seconds": 1517.90836082,
+  "manifest_elapsed_minutes": 25.298472680333337,
+  "sum_per_seed_training_seconds": 1232.635746341,
+  "sum_per_seed_training_minutes": 20.543929105683333,
+  "initial_start_to_last_seed_seconds": 1261.135614,
+  "artifact_finalization_seconds_after_last_seed": 255.80372786521912,
+  "per_seed_training_seconds": {
+    "42": 267.351654867,
+    "1042": 244.40063325799997,
+    "2042": 238.599143025,
+    "3042": 241.319954079,
+    "4042": 240.964361112
+  },
+  "validation_selected_scalars": {
+    "42": 0.0,
+    "1042": 0.0,
+    "2042": 0.0,
+    "3042": 0.0,
+    "4042": 0.0
+  },
+  "backbone_parameter_counts": [
+    22625
+  ],
+  "backbone_best_epochs": {
+    "42": 6,
+    "1042": 6,
+    "2042": 7,
+    "3042": 7,
+    "4042": 2
+  },
+  "oom_retries": 0
+}

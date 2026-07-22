@@ -1,0 +1,26 @@
+{
+  "mean_seed_auroc": 0.5600174619690759,
+  "std_seed_auroc": 0.011059091868034082,
+  "mean_seed_auprc": 0.5939116832334127,
+  "std_seed_auprc": 0.04667663753603853,
+  "mean_seed_brier": 0.24617337366581707,
+  "std_seed_brier": 0.00476181412906898,
+  "mean_prevalence_brier": 0.24383680555555554,
+  "test_safe_fraction": 0.5666666666666667,
+  "test_units": 960,
+  "replicates_requested": 2000,
+  "replicates_valid": 2000,
+  "mean": 0.5605682681645567,
+  "median": 0.5609942310749059,
+  "auroc_ci_lower_95": 0.5009323317162215,
+  "auroc_ci_upper_95": 0.6181523135098292,
+  "aggregation": "trajectory_within_resampled_seed_then_mean_seed_auroc",
+  "causal_controller_regret_bootstrap": {
+    "replicates": 2000,
+    "aggregation": "trajectory_within_resampled_seed_then_pooled_mean",
+    "mean_regret_ci_lower_95": -0.0028945213715052187,
+    "mean_regret_ci_upper_95": 0.0009244626600554013,
+    "mean_positive_regret_ci_lower_95": 0.000973245558997457,
+    "mean_positive_regret_ci_upper_95": 0.0031231492591084335
+  }
+}

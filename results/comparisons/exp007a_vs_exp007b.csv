@@ -1,0 +1,3 @@
+experiment_id,test_population,controller,mean_seed_auroc,data_only_macro_run_rmse,controller_macro_run_rmse,relative_improvement_percent,mean_positive_regret,maximum_regret,gate,comparability_note
+EXP-007A,opened_seed_920071,complete_trajectory_selector,0.6667033195377573,0.172852782159913,0.1642841175752113,4.957203741606264,0.004073377195833519,0.0782198643135102,failed,Different controller and opened test population; descriptive only
+EXP-007B,fresh_seed_920072,causal_prefix_selector_blend_0.50,0.5600174619690759,0.16190535009528323,0.16089160773134037,0.6261327147906234,0.0019083977048478969,0.013773187211378879,failed,Fresh confirmatory population; primary result

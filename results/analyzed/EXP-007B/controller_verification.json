@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "decision_rule": "single_highest_causal_probability_then_fixed_blend_or_abstain",
+  "maximum_physics_blend": 0.5,
+  "rows_verified": 7685,
+  "selected_rows": 2256,
+  "pooled_intervention_coverage": 0.29355888093689003,
+  "maximum_prediction_absolute_difference": 2.220446049250313e-16,
+  "maximum_absolute_error_difference": 4.996003610813204e-16,
+  "selected_count_matches": true,
+  "fallback_matches": true,
+  "selected_spec_matches": true,
+  "selected_family_matches": true,
+  "maximum_selected_scale_absolute_difference": 0.0,
+  "all_off_equals_data_only": true,
+  "validation_scalar_equals_data_only": true
+}
